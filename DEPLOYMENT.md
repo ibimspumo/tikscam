@@ -96,20 +96,24 @@ vercel
 vercel --prod
 ```
 
-### 6. Environment Variables setzen (für API-Key)
+### 6. Environment Variables setzen (Optional - für API-Key)
+
+**⚠️ WICHTIG:** Der API-Key ist bereits hardcoded in `app/api/tiktok-live/[username]/route.ts`!
+Diese Env-Variable ist **optional** und nur nötig wenn du einen anderen API-Key nutzen willst.
 
 **Via Vercel Dashboard:**
 
 1. Gehe zu deinem Projekt auf [vercel.com/dashboard](https://vercel.com/dashboard)
 2. Click auf dein Projekt "tikscam"
 3. Settings → Environment Variables
-4. Add Variable:
-   - **Key:** `EULERSTREAM_API_KEY`
+4. Click "Add" und fülle aus:
+   - **Name (Key):** `EULERSTREAM_API_KEY`
    - **Value:** `dein_api_key_von_eulerstream_hier`
-   - **Environments:** Production, Preview, Development
+   - **Environments:** Production ✓, Preview ✓, Development ✓ (alle auswählen)
 5. Click "Save"
+6. **Redeploy triggern:** Settings → Deployments → Latest Deployment → "Redeploy"
 
-**Wichtig:** Der API-Key ist bereits hardcoded in der App. Diese Env-Variable ist optional!
+**Ohne Environment Variable:** App nutzt den hardcoded API-Key (funktioniert out-of-the-box!)
 
 ### 7. Deployment testen
 

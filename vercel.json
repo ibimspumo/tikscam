@@ -3,8 +3,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["fra1"],
-  "env": {
-    "EULERSTREAM_API_KEY": "@eulerstream-api-key"
-  }
+  "regions": ["fra1"]
 }
