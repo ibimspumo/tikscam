@@ -62,6 +62,27 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
     };
   }, [username]);
 
+  // 🔄 Auto-Reconnect: Monitor connection and reconnect if lost
+  useEffect(() => {
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+
+    // If we had a connection but lost it (and no error is from initial connect failure)
+    if (username && !isConnected && !isConnecting && !error?.includes('Tageslimit')) {
+      console.log(`[StreamMonitor] 🔄 Connection lost, attempting reconnect in 10 seconds...`);
+
+      reconnectTimeout = setTimeout(() => {
+        console.log(`[StreamMonitor] 🔄 Reconnecting to @${username}...`);
+        connect(username);
+      }, 10000); // 10 seconds
+    }
+
+    return () => {
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+    };
+  }, [isConnected, isConnecting, username, error, connect]);
+
   // Don't render if not active
   if (!isActive) {
     return null;

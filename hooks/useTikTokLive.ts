@@ -171,6 +171,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   const lastStateUpdateRef = useRef<number>(0);
   const pendingStatsUpdateRef = useRef<Partial<StreamStats> | null>(null);
   const historySnapshotIntervalRef = useRef<NodeJS.Timeout | null>(null); // Timer for regular history snapshots
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Timer for auto-reconnect
 
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -667,8 +668,11 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     eventSource.addEventListener('gift', (e) => {
       const data = JSON.parse(e.data);
 
-      // Skip intermediate combo gifts
-      if (data.giftType === 1 && data.repeatEnd === 0) {
+      // 🔥 FIX: Skip ALL intermediate streak gifts (not just giftType === 1)
+      // Only process when streak is finished (repeatEnd = true/1) or single gifts
+      // This prevents counting streaks multiple times: 1+2+3+4+5 instead of just 5
+      if (data.repeatEnd === false || data.repeatEnd === 0) {
+        // Streak is not finished yet, skip this intermediate event
         return;
       }
 
@@ -701,6 +705,13 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       }
 
       const deltaDiamonds = diamondCount * deltaCount;
+
+      // Debug logging for gift tracking
+      console.log(`[Gift] ${userId}: ${giftName} x${repeatCount} (delta: ${deltaCount}) = ${deltaDiamonds} diamonds`, {
+        repeatEnd: data.repeatEnd,
+        giftType: data.giftType,
+        totalDiamondsAfter: '(will be calculated)'
+      });
 
       // Track user stats for gift
       updateUserStats(userId, userId, data.profilePictureUrl, 'gift', deltaDiamonds, deltaCount);

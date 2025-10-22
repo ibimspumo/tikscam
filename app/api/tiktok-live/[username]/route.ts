@@ -52,6 +52,16 @@ export async function GET(
         controller.enqueue(encoder.encode(message));
       };
 
+      // 🔄 Keep-Alive: Send heartbeat every 30 seconds to prevent timeout
+      const keepAliveInterval = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(': keep-alive\n\n'));
+        } catch (err) {
+          console.log('[TikTok Live] Keep-alive failed, connection closed');
+          clearInterval(keepAliveInterval);
+        }
+      }, 30000); // Every 30 seconds
+
       // Connection events
       tiktokConnection.on('connected', async (state) => {
         console.log(`[TikTok Live] Connected to @${username}`);
@@ -203,6 +213,7 @@ export async function GET(
           // Update cleanup handler for fallback connection
           request.signal.addEventListener('abort', () => {
             console.log(`[TikTok Live] Client disconnected from @${username}`);
+            clearInterval(keepAliveInterval);
             fallbackConnection.disconnect();
             activeConnections.delete(username);
           });
@@ -221,6 +232,7 @@ export async function GET(
       // Cleanup on client disconnect
       request.signal.addEventListener('abort', () => {
         console.log(`[TikTok Live] Client disconnected from @${username}`);
+        clearInterval(keepAliveInterval);
         tiktokConnection.disconnect();
         activeConnections.delete(username);
       });
