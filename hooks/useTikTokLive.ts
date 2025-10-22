@@ -675,23 +675,23 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       const giftName = data.giftName || `Gift ${giftId}`;
       const giftIcon = data.giftPictureUrl;
 
-      // 🔥 FIX: Skip ALL gifts with repeatEnd=false to prevent double-counting
+      // 🔥 FIX: Only skip giftType=1 (streakable) with repeatEnd=false
       //
-      // TikTok Gift Event Behavior (from tiktok-live-connector docs):
-      // - giftType 1 (streakable): ALWAYS sends 2 events even for single gifts:
-      //   1. repeatEnd=false (initial/intermediate) ❌ SKIP
-      //   2. repeatEnd=true (final count) ✅ PROCESS
+      // TikTok Gift Event Behavior:
+      // - giftType 1 (streakable like Rose, etc.): ALWAYS sends 2+ events:
+      //   Event 1: repeatEnd=false, x1 ❌ SKIP (wait for final)
+      //   Event 2: repeatEnd=true, x1 ✅ PROCESS
+      //   OR for streaks:
+      //   Events 1-49: repeatEnd=false ❌ SKIP
+      //   Event 50: repeatEnd=true, x50 ✅ PROCESS
       //
-      // - giftType ≠ 1 (non-streakable): Usually sends only 1 event with repeatEnd=true or undefined
+      // - giftType ≠ 1 (non-streakable like Galaxy, etc.): Sends ONLY 1 event:
+      //   Event 1: repeatEnd=false OR true OR undefined ✅ PROCESS IMMEDIATELY
+      //   (No second event comes!)
       //
-      // Examples:
-      // - Single Rose (giftType 1): Event 1: repeatEnd=false, x1 → Event 2: repeatEnd=true, x1 ✅
-      // - Streak Rose x50: Events 1-49: repeatEnd=false → Event 50: repeatEnd=true, x50 ✅
-      // - Non-streakable gift: repeatEnd=true or undefined ✅
-      //
-      // Solution: Skip ALL repeatEnd=false to only process the final event
-      if (data.repeatEnd === false || data.repeatEnd === 0) {
-        console.log(`[Gift] ⏭️ Skipping (waiting for repeatEnd=true): ${giftName} x${repeatCount} (giftType=${data.giftType})`);
+      // Solution: ONLY skip giftType=1 with repeatEnd=false
+      if (data.giftType === 1 && (data.repeatEnd === false || data.repeatEnd === 0)) {
+        console.log(`[Gift] ⏭️ Skipping giftType=1 (waiting for repeatEnd=true): ${giftName} x${repeatCount}`);
         return;
       }
 
