@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TikRPG - TikTok Live Stream Monitor",
+  title: "TikScam - TikTok Live Stream Monitor",
   description: "Real-time TikTok Live Stream monitoring with analytics",
 };
 

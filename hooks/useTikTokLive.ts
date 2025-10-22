@@ -170,6 +170,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   // PERFORMANCE: Throttle state updates to max 2 updates per second
   const lastStateUpdateRef = useRef<number>(0);
   const pendingStatsUpdateRef = useRef<Partial<StreamStats> | null>(null);
+  const historySnapshotIntervalRef = useRef<NodeJS.Timeout | null>(null); // Timer for regular history snapshots
 
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -412,6 +413,12 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       eventSourceRef.current.close();
     }
 
+    // Clear existing history snapshot timer
+    if (historySnapshotIntervalRef.current) {
+      clearInterval(historySnapshotIntervalRef.current);
+      historySnapshotIntervalRef.current = null;
+    }
+
     // Reset state
     setError(null);
     setRoomInfo(null);
@@ -436,6 +443,15 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         last45s: 0,
         last60s: 0,
       },
+      minuteHistory: [],
+      viewerHistory: [],
+      followerHistory: [],
+      diamondHistory: [],
+      userStats: new Map(),
+      engagementHistory: [],
+      chatActivityHistory: [],
+      peakViewers: 0,
+      peakLikesPerSecond: 0,
     });
     processedGiftsRef.current.clear();
     likeSnapshotsRef.current = [];
@@ -525,7 +541,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         setRoomInfo((prev) => ({
           ...prev,
           id: data.roomId,
-          title: data.streamTitle || `@${username}'s Live`,
+          title: data.streamTitle || `@${uniqueId}'s Live`,
           viewerCount: viewerCount,
           likeCount: likeCount,
         }));
@@ -863,6 +879,39 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       setIsConnected(false);
     });
 
+    // 🔄 Start regular history snapshots (every 15 seconds)
+    // This ensures continuous data points even when events are throttled or missing
+    console.log('⏰ Starting history snapshot timer (15s intervals)');
+    historySnapshotIntervalRef.current = setInterval(() => {
+      setStats((prev) => {
+        const now = Date.now();
+
+        // Update interval history with current stats
+        updateIntervalHistory(
+          prev.viewerCount,
+          prev.totalFollowers,
+          prev.totalDiamonds,
+          prev.streamTotalLikes,
+          chatMessagesThisIntervalRef.current
+        );
+
+        // Calculate current likes/second and update minute history
+        const likesPerSecond = calculateLikesPerSecond(prev.streamTotalLikes);
+        updateMinuteHistory(likesPerSecond.last60s);
+
+        // Return updated state with fresh history arrays
+        return {
+          ...prev,
+          viewerHistory: [...viewerHistoryRef.current],
+          followerHistory: [...followerHistoryRef.current],
+          diamondHistory: [...diamondHistoryRef.current],
+          minuteHistory: [...minuteHistoryRef.current],
+          engagementHistory: [...engagementHistoryRef.current],
+          chatActivityHistory: [...chatActivityHistoryRef.current],
+        };
+      });
+    }, 15000); // Every 15 seconds
+
     eventSource.onerror = (e: any) => {
       console.log('[TikTok Live] EventSource connection lost');
 
@@ -881,6 +930,13 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   }, []);
 
   const disconnect = useCallback(() => {
+    // Clear history snapshot timer
+    if (historySnapshotIntervalRef.current) {
+      console.log('⏰ Stopping history snapshot timer');
+      clearInterval(historySnapshotIntervalRef.current);
+      historySnapshotIntervalRef.current = null;
+    }
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -940,6 +996,12 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Clear history snapshot timer
+      if (historySnapshotIntervalRef.current) {
+        clearInterval(historySnapshotIntervalRef.current);
+      }
+
+      // Close EventSource connection
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }

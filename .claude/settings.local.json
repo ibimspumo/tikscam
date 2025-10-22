@@ -16,7 +16,7 @@
       "Bash(findstr:*)",
       "Bash(curl:*)",
       "Bash(npx supabase:*)",
-      "Read(//Users/timocorvinus/Desktop/tikrpg/**)",
+      "Read(//Users/timocorvinus/Desktop/tikscam/**)",
       "Bash(python3:*)",
       "Bash(lsof:*)",
       "Bash(timeout:*)",
@@ -27,7 +27,8 @@
       "Bash(mv:*)",
       "Bash(npx tsc:*)",
       "Bash(npx next build:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

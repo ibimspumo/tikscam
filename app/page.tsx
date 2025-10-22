@@ -25,7 +25,7 @@ function HomeContent() {
               <div className="text-2xl sm:text-3xl">🎮</div>
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  TikRPG
+                  TikScam
                 </h1>
                 <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">
                   Live Stream Analytics
@@ -50,7 +50,7 @@ function HomeContent() {
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6 sm:p-12 text-center mt-8">
               <div className="text-6xl sm:text-8xl mb-6 animate-pulse">🎥</div>
               <h2 className="text-xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
-                Willkommen bei TikRPG
+                Willkommen bei TikScam
               </h2>
               <p className="text-sm sm:text-base text-gray-400 mb-3 sm:mb-4 max-w-md mx-auto">
                 Monitore TikTok Live-Streams in Echtzeit mit detaillierten Analytics

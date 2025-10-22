@@ -1,4 +1,4 @@
-# TikRPG Changelog
+# TikScam Changelog
 
 ## 2025-10-21 - Massive Performance-Verbesserungen
 
