@@ -1,0 +1,961 @@
+/**
+ * useTikTokLive Hook (v2 - Direct TikTok Connection)
+ *
+ * React hook for TikTok Live integration using tiktok-live-connector
+ * Connects via Server-Sent Events to backend API
+ */
+
+import { useState, useRef, useCallback, useEffect } from 'react';
+
+interface ChatMessage {
+  user: string;
+  message: string;
+  timestamp: number;
+  avatar?: string;
+}
+
+interface Gift {
+  user: string;
+  gift: string;
+  count: number;
+  timestamp: number;
+  avatar?: string;
+  diamondCount?: number;
+  giftIcon?: string;
+  giftImage?: string;
+}
+
+interface Activity {
+  user: string;
+  timestamp: number;
+  type: 'join' | 'follow';
+}
+
+interface GiftType {
+  id: number;
+  name: string;
+  diamondCount: number;
+  icon?: string;
+  image?: string;
+  timesReceived: number;
+}
+
+interface LikeSnapshot {
+  timestamp: number;
+  totalLikes: number;
+}
+
+interface MinuteStats {
+  interval: number; // 15-second interval timestamp
+  likesPerSecond: number;
+  timestamp: number;
+}
+
+interface IntervalStats {
+  interval: number;
+  viewerCount: number;
+  followerCount: number;
+  diamondCount: number;
+  timestamp: number;
+}
+
+interface UserStats {
+  userId: string;
+  username: string;
+  avatar?: string;
+  totalDiamonds: number;
+  totalGifts: number;
+  chatMessages: number;
+  firstSeen: number;
+  lastSeen: number;
+}
+
+interface EngagementStats {
+  interval: number;
+  engagementRate: number; // likes per viewer
+  timestamp: number;
+}
+
+interface ChatActivityStats {
+  interval: number;
+  messageCount: number;
+  timestamp: number;
+}
+
+interface StreamStats {
+  viewerCount: number;
+  totalLikes: number;
+  streamTotalLikes: number; // Total likes from roomInfo
+  totalGifts: number;
+  totalDiamonds: number;
+  followCount: number; // Number of new follows during this session
+  totalFollowers: number; // Total followers of the account (absolute)
+  chatMessages: ChatMessage[];
+  gifts: Gift[];
+  joins: Activity[];
+  follows: Activity[];
+  giftCatalog: Map<number, GiftType>;
+  availableGifts: Map<number, GiftType>; // All available gifts from TikTok
+  likesPerSecond: {
+    last10s: number;
+    last20s: number;
+    last30s: number;
+    last45s: number;
+    last60s: number;
+  };
+  minuteHistory: MinuteStats[]; // History of likes/second for last 60 minutes
+  viewerHistory: IntervalStats[]; // History of viewers for last 60 minutes
+  followerHistory: IntervalStats[]; // History of followers for last 60 minutes
+  diamondHistory: IntervalStats[]; // History of diamonds for last 60 minutes
+
+  // New analytics
+  userStats: Map<string, UserStats>; // Per-user statistics
+  engagementHistory: EngagementStats[]; // Engagement rate over time
+  chatActivityHistory: ChatActivityStats[]; // Chat messages per interval
+  peakViewers: number; // Highest viewer count
+  peakLikesPerSecond: number; // Highest likes/second rate
+}
+
+interface RoomInfo {
+  id?: string;
+  title?: string;
+  owner?: {
+    uniqueId?: string;
+    nickname?: string;
+    displayName?: string;
+    profilePicture?: {
+      url?: string[];
+    };
+    avatarThumb?: string;
+    avatarMedium?: string;
+    avatarLarge?: string;
+    followerCount?: number;
+    verified?: boolean;
+  };
+  viewerCount?: number;
+  likeCount?: number;
+}
+
+interface UseTikTokLiveReturn {
+  connect: (uniqueId: string) => Promise<void>;
+  disconnect: () => void;
+  isConnected: boolean;
+  isConnecting: boolean;
+  stats: StreamStats;
+  roomInfo: RoomInfo | null;
+  error: string | null;
+  eventSource: EventSource | null;
+  usingApiKey: boolean; // Flag to show if EulerStream API key is active
+  retryingWithApiKey: boolean; // Flag to show when retrying with API key
+}
+
+export function useTikTokLive(): UseTikTokLiveReturn {
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const processedGiftsRef = useRef<Map<string, number>>(new Map());
+  const likeSnapshotsRef = useRef<LikeSnapshot[]>([]);
+  const minuteHistoryRef = useRef<MinuteStats[]>([]);
+  const viewerHistoryRef = useRef<IntervalStats[]>([]);
+  const followerHistoryRef = useRef<IntervalStats[]>([]);
+  const diamondHistoryRef = useRef<IntervalStats[]>([]);
+  const engagementHistoryRef = useRef<EngagementStats[]>([]);
+  const chatActivityHistoryRef = useRef<ChatActivityStats[]>([]);
+  const userStatsRef = useRef<Map<string, UserStats>>(new Map());
+  const lastMinuteUpdateRef = useRef<number>(0);
+  const lastIntervalDiamondsRef = useRef<number>(0); // Track diamonds from last interval
+  const lastIntervalFollowersRef = useRef<number>(0); // Track followers from last interval
+  const lastIntervalLikesRef = useRef<number>(0); // Track likes from last interval for engagement
+  const chatMessagesThisIntervalRef = useRef<number>(0); // Count chat messages in current interval
+  const lastIntervalNumberRef = useRef<number>(0); // Track which interval we're in
+
+  // PERFORMANCE: Throttle state updates to max 2 updates per second
+  const lastStateUpdateRef = useRef<number>(0);
+  const pendingStatsUpdateRef = useRef<Partial<StreamStats> | null>(null);
+
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string>('');
+  const [usingApiKey, setUsingApiKey] = useState<boolean>(false);
+  const [retryingWithApiKey, setRetryingWithApiKey] = useState<boolean>(false);
+
+  const [stats, setStats] = useState<StreamStats>({
+    viewerCount: 0,
+    totalLikes: 0,
+    streamTotalLikes: 0,
+    totalGifts: 0,
+    totalDiamonds: 0,
+    followCount: 0,
+    totalFollowers: 0,
+    chatMessages: [],
+    gifts: [],
+    joins: [],
+    follows: [],
+    giftCatalog: new Map(),
+    availableGifts: new Map(),
+    likesPerSecond: {
+      last10s: 0,
+      last20s: 0,
+      last30s: 0,
+      last45s: 0,
+      last60s: 0,
+    },
+    minuteHistory: [],
+    viewerHistory: [],
+    followerHistory: [],
+    diamondHistory: [],
+    userStats: new Map(),
+    engagementHistory: [],
+    chatActivityHistory: [],
+    peakViewers: 0,
+    peakLikesPerSecond: 0,
+  });
+
+  // Calculate likes per second for different time windows based on total likes
+  const calculateLikesPerSecond = useCallback((currentTotalLikes: number) => {
+    const now = Date.now();
+
+    // Add current snapshot
+    likeSnapshotsRef.current.push({
+      timestamp: now,
+      totalLikes: currentTotalLikes,
+    });
+
+    // Remove snapshots older than 60 seconds
+    const cutoff60s = now - 60000;
+    likeSnapshotsRef.current = likeSnapshotsRef.current.filter(s => s.timestamp >= cutoff60s);
+
+    // Calculate for each time window
+    const windows = [
+      { duration: 10000, key: 'last10s' },
+      { duration: 20000, key: 'last20s' },
+      { duration: 30000, key: 'last30s' },
+      { duration: 45000, key: 'last45s' },
+      { duration: 60000, key: 'last60s' },
+    ];
+
+    const results: any = {};
+
+    windows.forEach(window => {
+      const cutoff = now - window.duration;
+      const snapshotsInWindow = likeSnapshotsRef.current.filter(s => s.timestamp >= cutoff);
+
+      if (snapshotsInWindow.length < 2) {
+        // Not enough data points
+        results[window.key] = 0;
+      } else {
+        // Get oldest and newest snapshot in this window
+        const oldest = snapshotsInWindow[0];
+        const newest = snapshotsInWindow[snapshotsInWindow.length - 1];
+
+        const likeDiff = newest.totalLikes - oldest.totalLikes;
+        const timeDiff = (newest.timestamp - oldest.timestamp) / 1000; // convert to seconds
+
+        results[window.key] = timeDiff > 0 ? likeDiff / timeDiff : 0;
+      }
+    });
+
+    return {
+      last10s: results.last10s,
+      last20s: results.last20s,
+      last30s: results.last30s,
+      last45s: results.last45s,
+      last60s: results.last60s,
+    };
+  }, []);
+
+  // Update or create user stats
+  const updateUserStats = useCallback((
+    userId: string,
+    username: string,
+    avatar: string | undefined,
+    action: 'chat' | 'gift',
+    diamonds: number = 0,
+    giftCount: number = 0
+  ) => {
+    const now = Date.now();
+    const currentStats = userStatsRef.current.get(userId);
+
+    if (currentStats) {
+      // Update existing user
+      currentStats.lastSeen = now;
+      if (action === 'chat') {
+        currentStats.chatMessages++;
+      } else if (action === 'gift') {
+        currentStats.totalGifts += giftCount;
+        currentStats.totalDiamonds += diamonds;
+      }
+      userStatsRef.current.set(userId, currentStats);
+    } else {
+      // Create new user
+      const newUserStats: UserStats = {
+        userId,
+        username,
+        avatar,
+        totalDiamonds: action === 'gift' ? diamonds : 0,
+        totalGifts: action === 'gift' ? giftCount : 0,
+        chatMessages: action === 'chat' ? 1 : 0,
+        firstSeen: now,
+        lastSeen: now,
+      };
+      userStatsRef.current.set(userId, newUserStats);
+    }
+
+    // Update state
+    setStats(prev => ({
+      ...prev,
+      userStats: new Map(userStatsRef.current),
+    }));
+  }, []);
+
+  // Update history every 15 seconds
+  const updateMinuteHistory = useCallback((currentLikesPerSecond: number) => {
+    const now = Date.now();
+    const currentInterval = Math.floor(now / 15000); // Current 15-second interval
+
+    // Only update once per 15-second interval
+    if (currentInterval === lastMinuteUpdateRef.current) {
+      return minuteHistoryRef.current;
+    }
+
+    lastMinuteUpdateRef.current = currentInterval;
+
+    // Add new interval data
+    const newIntervalData: MinuteStats = {
+      interval: currentInterval,
+      likesPerSecond: currentLikesPerSecond,
+      timestamp: now,
+    };
+
+    minuteHistoryRef.current.push(newIntervalData);
+
+    // PERFORMANCE: Keep only last 15 minutes (60 intervals of 15 seconds each)
+    const cutoff = now - (15 * 60 * 1000); // 15 minutes
+    minuteHistoryRef.current = minuteHistoryRef.current.filter(m => m.timestamp >= cutoff);
+
+    return minuteHistoryRef.current;
+  }, []);
+
+  // Update interval history for viewers, followers (absolute), diamonds, engagement, chat activity
+  const updateIntervalHistory = useCallback((
+    viewerCount: number,
+    totalFollowers: number,
+    totalDiamonds: number,
+    totalLikes: number,
+    chatMessagesInInterval: number
+  ) => {
+    const now = Date.now();
+    const currentInterval = Math.floor(now / 15000);
+
+    // Check if we already updated this interval
+    if (viewerHistoryRef.current.length > 0 && viewerHistoryRef.current[viewerHistoryRef.current.length - 1].interval === currentInterval) {
+      return;
+    }
+
+    // Calculate diamonds earned in this interval (delta)
+    const diamondsThisInterval = totalDiamonds - lastIntervalDiamondsRef.current;
+    lastIntervalDiamondsRef.current = totalDiamonds;
+
+    // Calculate new followers in this interval (delta)
+    const followersThisInterval = totalFollowers - lastIntervalFollowersRef.current;
+    lastIntervalFollowersRef.current = totalFollowers;
+
+    // Calculate likes in this interval (delta)
+    const likesThisInterval = totalLikes - lastIntervalLikesRef.current;
+    lastIntervalLikesRef.current = totalLikes;
+
+    // Calculate engagement rate (likes per viewer)
+    const engagementRate = viewerCount > 0 ? likesThisInterval / viewerCount : 0;
+
+    const newIntervalData: IntervalStats = {
+      interval: currentInterval,
+      viewerCount,
+      followerCount: followersThisInterval, // New followers in THIS interval only
+      diamondCount: diamondsThisInterval, // Diamonds earned in THIS interval only
+      timestamp: now,
+    };
+
+    const engagementData: EngagementStats = {
+      interval: currentInterval,
+      engagementRate,
+      timestamp: now,
+    };
+
+    const chatActivityData: ChatActivityStats = {
+      interval: currentInterval,
+      messageCount: chatMessagesInInterval,
+      timestamp: now,
+    };
+
+    // Add to all histories
+    viewerHistoryRef.current.push(newIntervalData);
+    followerHistoryRef.current.push(newIntervalData);
+    diamondHistoryRef.current.push(newIntervalData);
+    engagementHistoryRef.current.push(engagementData);
+    chatActivityHistoryRef.current.push(chatActivityData);
+
+    // PERFORMANCE: Keep only last 15 minutes
+    const cutoff = now - (15 * 60 * 1000); // 15 minutes
+    viewerHistoryRef.current = viewerHistoryRef.current.filter(m => m.timestamp >= cutoff);
+    followerHistoryRef.current = followerHistoryRef.current.filter(m => m.timestamp >= cutoff);
+    diamondHistoryRef.current = diamondHistoryRef.current.filter(m => m.timestamp >= cutoff);
+    engagementHistoryRef.current = engagementHistoryRef.current.filter(m => m.timestamp >= cutoff);
+    chatActivityHistoryRef.current = chatActivityHistoryRef.current.filter(m => m.timestamp >= cutoff);
+  }, []);
+
+  const connect = useCallback(async (uniqueId: string) => {
+    setIsConnecting(true);
+    setCurrentUsername(uniqueId);
+
+    // Disconnect existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    // Reset state
+    setError(null);
+    setRoomInfo(null);
+    setStats({
+      viewerCount: 0,
+      totalLikes: 0,
+      streamTotalLikes: 0,
+      totalGifts: 0,
+      totalDiamonds: 0,
+      followCount: 0,
+      totalFollowers: 0,
+      chatMessages: [],
+      gifts: [],
+      joins: [],
+      follows: [],
+      giftCatalog: new Map(),
+      availableGifts: new Map(),
+      likesPerSecond: {
+        last10s: 0,
+        last20s: 0,
+        last30s: 0,
+        last45s: 0,
+        last60s: 0,
+      },
+    });
+    processedGiftsRef.current.clear();
+    likeSnapshotsRef.current = [];
+    minuteHistoryRef.current = [];
+    viewerHistoryRef.current = [];
+    followerHistoryRef.current = [];
+    diamondHistoryRef.current = [];
+    lastMinuteUpdateRef.current = 0;
+    lastIntervalDiamondsRef.current = 0;
+    lastIntervalFollowersRef.current = 0;
+
+    // Connect to SSE stream IMMEDIATELY (don't wait for other data)
+    console.log(`⚡ Connecting to TikTok Live SSE: ${uniqueId}`);
+    const eventSource = new EventSource(`/api/tiktok-live/${uniqueId}`);
+    eventSourceRef.current = eventSource;
+
+    // Fetch user data from TikTok (non-blocking)
+    fetch(`/api/tiktok-user?uniqueId=${uniqueId}`)
+      .then(async (response) => {
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const userData = result.data;
+            const totalFollowers = parseInt(userData.followerCount) || 0;
+
+            setRoomInfo({
+              owner: {
+                uniqueId: userData.uniqueId || uniqueId,
+                nickname: userData.nickname,
+                displayName: userData.nickname,
+                profilePicture: userData.avatarMedium ? {
+                  url: [userData.avatarMedium],
+                } : undefined,
+                avatarThumb: userData.avatarThumb,
+                avatarMedium: userData.avatarMedium,
+                avatarLarge: userData.avatarLarge,
+                followerCount: totalFollowers,
+                verified: userData.verified,
+              },
+            });
+
+            // Update stats with absolute follower count
+            setStats((prev) => ({
+              ...prev,
+              totalFollowers,
+            }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch user data:', err);
+      });
+
+    eventSource.addEventListener('connected', (e) => {
+      const data = JSON.parse(e.data);
+      console.log('✅ Connected to TikTok Live');
+      setIsConnecting(false);
+
+      // Check if we're using the API key (fallback mode)
+      if (data.usingApiKey) {
+        console.log('🔑 Connected using EulerStream API Key (Rate Limit Fallback)');
+        setUsingApiKey(true);
+        setRetryingWithApiKey(false); // Clear retry state
+      } else {
+        setUsingApiKey(false);
+        setRetryingWithApiKey(false);
+      }
+
+      setIsConnected(true);
+      setError(null);
+
+      // Update room info from connection state
+      if (data.state) {
+        console.log('🔍 DEBUG - streamTitle from server:', data.streamTitle);
+
+        const likeCount =
+          data.state.roomInfo?.like_count ||
+          data.state.roomInfo?.stats?.like_count ||
+          data.state.like_count ||
+          0;
+
+        const viewerCount = data.state.roomInfo?.user_count ||
+                           data.state.roomInfo?.stats?.user_count ||
+                           data.state.viewerCount ||
+                           0;
+
+        setRoomInfo((prev) => ({
+          ...prev,
+          id: data.roomId,
+          title: data.streamTitle || `@${username}'s Live`,
+          viewerCount: viewerCount,
+          likeCount: likeCount,
+        }));
+
+        setStats((prev) => ({
+          ...prev,
+          streamTotalLikes: likeCount,
+        }));
+      }
+
+      // Load available gifts catalog
+      if (data.availableGifts && Array.isArray(data.availableGifts)) {
+        console.log(`Loading ${data.availableGifts.length} available gifts`);
+        const giftsMap = new Map<number, GiftType>();
+
+        data.availableGifts.forEach((gift: any) => {
+          giftsMap.set(gift.id, {
+            id: gift.id,
+            name: gift.name || `Gift ${gift.id}`,
+            diamondCount: gift.diamond_count || 0,
+            icon: gift.image?.url_list?.[0] || gift.icon?.url_list?.[0],
+            image: gift.image?.url_list?.[0],
+            timesReceived: 0,
+          });
+        });
+
+        setStats((prev) => ({
+          ...prev,
+          availableGifts: giftsMap,
+        }));
+      }
+    });
+
+    eventSource.addEventListener('disconnected', () => {
+      console.log('Disconnected from TikTok Live');
+      setIsConnected(false);
+    });
+
+    eventSource.addEventListener('error', (e: any) => {
+      let data = {};
+      try {
+        if (e.data) {
+          data = JSON.parse(e.data);
+        }
+      } catch (err) {
+        // Silently handle parse errors
+      }
+
+      console.log('[TikTok Live] Connection error detected');
+
+      // Check if this is a rate limit error - trigger automatic retry with API key
+      let errorMessage = (data as any).message || 'Verbindung verloren';
+      const isRateLimitError = errorMessage.includes('Rate Limited') ||
+                               errorMessage.includes('rate limit') ||
+                               errorMessage.includes('rate_limit');
+
+      if (isRateLimitError) {
+        console.log('[TikTok Live] ⚠️ Rate Limit detected in SSE error! Backend should handle fallback automatically.');
+        // The backend will handle the fallback, we just show a transitional message
+        setRetryingWithApiKey(true);
+        setError('⏰ Rate Limit erreicht - Wechsle zu EulerStream API...');
+      } else if (errorMessage.includes('Failed to connect')) {
+        errorMessage = '❌ Verbindung fehlgeschlagen\n\nMögliche Gründe:\n• Stream ist offline\n• Username ist falsch\n• Netzwerkproblem';
+        setError(errorMessage);
+        setIsConnected(false);
+        setIsConnecting(false);
+      } else {
+        setError(errorMessage);
+        setIsConnected(false);
+        setIsConnecting(false);
+      }
+    });
+
+    eventSource.addEventListener('roomUser', (e) => {
+      const data = JSON.parse(e.data);
+      console.log('Room user update:', data);
+
+      // Update room info with total stream viewers if available
+      if (data.totalUser) {
+        setRoomInfo((prev) => ({
+          ...prev,
+          viewerCount: data.totalUser,
+        }));
+      }
+
+      setStats((prev) => ({
+        ...prev,
+        viewerCount: data.viewerCount || prev.viewerCount,
+      }));
+    });
+
+    eventSource.addEventListener('chat', (e) => {
+      const data = JSON.parse(e.data);
+
+      const userId = data.userId || data.secUid || 'unknown';
+      const username = data.uniqueId || data.nickname || 'Anonymous';
+      const avatar = data.profilePictureUrl;
+
+      const message: ChatMessage = {
+        user: username,
+        message: data.comment || '',
+        avatar: avatar,
+        timestamp: Date.now(),
+      };
+
+      // Track user stats
+      updateUserStats(userId, username, avatar, 'chat');
+
+      // Track chat messages per interval
+      const currentInterval = Math.floor(Date.now() / 15000);
+      if (currentInterval !== lastIntervalNumberRef.current) {
+        chatMessagesThisIntervalRef.current = 0;
+        lastIntervalNumberRef.current = currentInterval;
+      }
+      chatMessagesThisIntervalRef.current++;
+
+      setStats((prev) => ({
+        ...prev,
+        chatMessages: [...prev.chatMessages.slice(-49), message],
+      }));
+    });
+
+    eventSource.addEventListener('gift', (e) => {
+      const data = JSON.parse(e.data);
+
+      // Skip intermediate combo gifts
+      if (data.giftType === 1 && data.repeatEnd === 0) {
+        return;
+      }
+
+      const giftId = data.giftId;
+      const userId = data.uniqueId;
+      const repeatCount = data.repeatCount || 1;
+      const diamondCount = data.diamondCount || 0;
+      const giftName = data.giftName || `Gift ${giftId}`;
+      const giftIcon = data.giftPictureUrl;
+
+      // Track gift streak
+      const timestampWindow = Math.floor(Date.now() / 5000);
+      const giftKey = `${userId}_${giftId}_${timestampWindow}`;
+      const lastProcessedCount = processedGiftsRef.current.get(giftKey) || 0;
+
+      if (repeatCount <= lastProcessedCount) {
+        return;
+      }
+
+      const deltaCount = repeatCount - lastProcessedCount;
+      processedGiftsRef.current.set(giftKey, repeatCount);
+
+      // Clean old entries
+      const cutoffWindow = timestampWindow - 6;
+      for (const [key] of processedGiftsRef.current.entries()) {
+        const keyWindow = parseInt(key.split('_')[2]);
+        if (keyWindow < cutoffWindow) {
+          processedGiftsRef.current.delete(key);
+        }
+      }
+
+      const deltaDiamonds = diamondCount * deltaCount;
+
+      // Track user stats for gift
+      updateUserStats(userId, userId, data.profilePictureUrl, 'gift', deltaDiamonds, deltaCount);
+
+      setStats((prev) => {
+        // Update gift catalog (received gifts)
+        const newCatalog = new Map(prev.giftCatalog);
+        const existing = newCatalog.get(giftId);
+        newCatalog.set(giftId, {
+          id: giftId,
+          name: giftName,
+          diamondCount: diamondCount,
+          icon: giftIcon,
+          image: giftIcon,
+          timesReceived: (existing?.timesReceived || 0) + deltaCount,
+        });
+
+        // Also update available gifts catalog to show it was received
+        const newAvailableGifts = new Map(prev.availableGifts);
+        if (newAvailableGifts.has(giftId)) {
+          const availableGift = newAvailableGifts.get(giftId)!;
+          newAvailableGifts.set(giftId, {
+            ...availableGift,
+            timesReceived: (availableGift.timesReceived || 0) + deltaCount,
+          });
+        }
+
+        // Update gifts list - check if this is a streak update
+        const newGifts = [...prev.gifts];
+        const now = Date.now();
+
+        // Check if the last gift is from the same user and same gift type within 5 seconds (streak)
+        const lastGift = newGifts[newGifts.length - 1];
+        const isStreak = lastGift &&
+          lastGift.user === userId &&
+          lastGift.gift === giftName &&
+          (now - lastGift.timestamp) < 5000;
+
+        if (isStreak) {
+          // Update the existing gift with new count and timestamp
+          newGifts[newGifts.length - 1] = {
+            ...lastGift,
+            count: repeatCount, // Use the total count from the streak
+            timestamp: now, // Update timestamp to keep it fresh
+          };
+        } else {
+          // Add new gift entry
+          const gift: Gift = {
+            user: userId,
+            gift: giftName,
+            count: repeatCount,
+            avatar: data.profilePictureUrl,
+            diamondCount: diamondCount,
+            giftIcon: giftIcon,
+            giftImage: giftIcon,
+            timestamp: now,
+          };
+          newGifts.push(gift);
+        }
+
+        return {
+          ...prev,
+          totalGifts: prev.totalGifts + deltaCount,
+          totalDiamonds: prev.totalDiamonds + deltaDiamonds,
+          gifts: newGifts.slice(-50), // Keep last 50 gifts
+          giftCatalog: newCatalog,
+          availableGifts: newAvailableGifts,
+        };
+      });
+    });
+
+    eventSource.addEventListener('member', (e) => {
+      const data = JSON.parse(e.data);
+
+      const join: Activity = {
+        user: data.uniqueId || data.nickname || 'Anonymous',
+        timestamp: Date.now(),
+        type: 'join',
+      };
+
+      setStats((prev) => ({
+        ...prev,
+        joins: [...prev.joins.slice(-19), join],
+      }));
+    });
+
+    eventSource.addEventListener('like', (e) => {
+      const data = JSON.parse(e.data);
+
+      const likeCount = data.likeCount || 1;
+      const totalLikeCount = data.totalLikeCount || 0;
+
+      // PERFORMANCE: Throttle state updates to max 2 updates per second (500ms)
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastStateUpdateRef.current;
+
+      // Store pending update
+      if (!pendingStatsUpdateRef.current) {
+        pendingStatsUpdateRef.current = {};
+      }
+
+      // Update refs immediately (no throttling for calculations)
+      const newStreamTotalLikes = totalLikeCount > 0 ? totalLikeCount : 0;
+      const likesPerSecond = calculateLikesPerSecond(newStreamTotalLikes);
+      const minuteHistory = updateMinuteHistory(likesPerSecond.last60s);
+
+      // Only update state every 500ms max
+      if (timeSinceLastUpdate >= 500) {
+        lastStateUpdateRef.current = now;
+
+        setStats((prev) => {
+          // Update interval history with all metrics including chat activity
+          updateIntervalHistory(
+            prev.viewerCount,
+            prev.totalFollowers,
+            prev.totalDiamonds,
+            newStreamTotalLikes,
+            chatMessagesThisIntervalRef.current
+          );
+
+          // Track peak values
+          const newPeakViewers = Math.max(prev.peakViewers, prev.viewerCount);
+          const newPeakLikesPerSecond = Math.max(prev.peakLikesPerSecond, likesPerSecond.last10s);
+
+          return {
+            ...prev,
+            totalLikes: prev.totalLikes + likeCount,
+            streamTotalLikes: newStreamTotalLikes,
+            likesPerSecond,
+            minuteHistory: [...minuteHistory],
+            viewerHistory: [...viewerHistoryRef.current],
+            followerHistory: [...followerHistoryRef.current],
+            diamondHistory: [...diamondHistoryRef.current],
+            engagementHistory: [...engagementHistoryRef.current],
+            chatActivityHistory: [...chatActivityHistoryRef.current],
+            peakViewers: newPeakViewers,
+            peakLikesPerSecond: newPeakLikesPerSecond,
+          };
+        });
+
+        // Also update roomInfo with total likes
+        if (totalLikeCount > 0) {
+          setRoomInfo((prev) => ({
+            ...prev,
+            likeCount: totalLikeCount,
+          }));
+        }
+
+        pendingStatsUpdateRef.current = null;
+      }
+    });
+
+    eventSource.addEventListener('social', (e) => {
+      const data = JSON.parse(e.data);
+
+      // Check if it's a follow event
+      if (data.displayType && data.displayType.includes('follow')) {
+        const follow: Activity = {
+          user: data.uniqueId || 'Anonymous',
+          timestamp: Date.now(),
+          type: 'follow',
+        };
+
+        setStats((prev) => ({
+          ...prev,
+          followCount: prev.followCount + 1,
+          totalFollowers: prev.totalFollowers + 1, // Increment absolute follower count
+          follows: [...prev.follows.slice(-19), follow],
+        }));
+      }
+    });
+
+    eventSource.addEventListener('streamEnd', () => {
+      console.log('Stream ended');
+      setError('Stream wurde beendet');
+      setIsConnected(false);
+    });
+
+    eventSource.onerror = (e: any) => {
+      console.log('[TikTok Live] EventSource connection lost');
+
+      // If connection failed before getting proper error message from server
+      if (eventSource.readyState === EventSource.CLOSED) {
+        setIsConnected(false);
+        setIsConnecting(false);
+
+        // Set a helpful error message if we don't have one yet
+        setError((prevError) => {
+          if (prevError) return prevError; // Keep existing error message
+          return '⏰ Verbindung fehlgeschlagen\n\nMögliche Gründe:\n• Tageslimit erreicht - Warte bis morgen\n• Stream ist offline\n• Netzwerkproblem\n\nFür mehr Verbindungen: eulerstream.com/pricing';
+        });
+      }
+    };
+  }, []);
+
+  const disconnect = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    setIsConnected(false);
+    setRoomInfo(null);
+    setCurrentUsername('');
+    setStats({
+      viewerCount: 0,
+      totalLikes: 0,
+      streamTotalLikes: 0,
+      totalGifts: 0,
+      totalDiamonds: 0,
+      followCount: 0,
+      totalFollowers: 0,
+      chatMessages: [],
+      gifts: [],
+      joins: [],
+      follows: [],
+      giftCatalog: new Map(),
+      availableGifts: new Map(),
+      likesPerSecond: {
+        last10s: 0,
+        last20s: 0,
+        last30s: 0,
+        last45s: 0,
+        last60s: 0,
+      },
+      minuteHistory: [],
+      viewerHistory: [],
+      followerHistory: [],
+      diamondHistory: [],
+      userStats: new Map(),
+      engagementHistory: [],
+      chatActivityHistory: [],
+      peakViewers: 0,
+      peakLikesPerSecond: 0,
+    });
+    processedGiftsRef.current.clear();
+    likeSnapshotsRef.current = [];
+    minuteHistoryRef.current = [];
+    viewerHistoryRef.current = [];
+    followerHistoryRef.current = [];
+    diamondHistoryRef.current = [];
+    engagementHistoryRef.current = [];
+    chatActivityHistoryRef.current = [];
+    userStatsRef.current.clear();
+    lastMinuteUpdateRef.current = 0;
+    lastIntervalDiamondsRef.current = 0;
+    lastIntervalFollowersRef.current = 0;
+    lastIntervalLikesRef.current = 0;
+    chatMessagesThisIntervalRef.current = 0;
+    lastIntervalNumberRef.current = 0;
+    lastIntervalFollowersRef.current = 0;
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, []);
+
+  return {
+    connect,
+    disconnect,
+    isConnected,
+    isConnecting,
+    stats,
+    roomInfo,
+    error,
+    eventSource: eventSourceRef.current,
+    usingApiKey,
+    retryingWithApiKey,
+  };
+}

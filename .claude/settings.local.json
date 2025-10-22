@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app:*)",
+      "WebFetch(domain:www.eulerstream.com)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run dev:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(curl \"http://localhost:3001/api/tiktok-stream-url?uniqueId=dom.anyart\")",
+      "Bash(curl -s \"http://localhost:3001/api/tiktok-stream-url?uniqueId=dom.anyart\")",
+      "Bash(dir:*)",
+      "Bash(node:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(npx supabase:*)",
+      "Read(//Users/timocorvinus/Desktop/tikrpg/**)",
+      "Bash(python3:*)",
+      "Bash(lsof:*)",
+      "Bash(timeout:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next build:*)",
+      "Bash(git check-ignore:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
