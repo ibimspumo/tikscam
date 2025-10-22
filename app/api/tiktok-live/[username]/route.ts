@@ -106,7 +106,19 @@ export async function GET(
       const registerEventHandlers = (connection: WebcastPushConnection) => {
         connection.on('roomUser', (data) => sendEvent('roomUser', data));
         connection.on('chat', (data) => sendEvent('chat', data));
-        connection.on('gift', (data) => sendEvent('gift', data));
+        connection.on('gift', (data) => {
+          // Debug: Log all incoming gift events from TikTok
+          console.log(`[API] 🎁 Gift received from TikTok:`, {
+            user: data.uniqueId,
+            giftName: data.giftName,
+            giftId: data.giftId,
+            repeatCount: data.repeatCount,
+            repeatEnd: data.repeatEnd,
+            diamondCount: data.diamondCount,
+            giftType: data.giftType,
+          });
+          sendEvent('gift', data);
+        });
         connection.on('member', (data) => sendEvent('member', data));
         connection.on('like', (data) => sendEvent('like', data));
         connection.on('social', (data) => sendEvent('social', data));

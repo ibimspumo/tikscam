@@ -668,20 +668,31 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     eventSource.addEventListener('gift', (e) => {
       const data = JSON.parse(e.data);
 
-      // 🔥 FIX: Skip ALL intermediate streak gifts (not just giftType === 1)
-      // Only process when streak is finished (repeatEnd = true/1) or single gifts
-      // This prevents counting streaks multiple times: 1+2+3+4+5 instead of just 5
-      if (data.repeatEnd === false || data.repeatEnd === 0) {
-        // Streak is not finished yet, skip this intermediate event
-        return;
-      }
-
       const giftId = data.giftId;
       const userId = data.uniqueId;
       const repeatCount = data.repeatCount || 1;
       const diamondCount = data.diamondCount || 0;
       const giftName = data.giftName || `Gift ${giftId}`;
       const giftIcon = data.giftPictureUrl;
+
+      // 🔥 FIX: Skip ONLY intermediate streak gifts
+      // - Skip if: repeatEnd is false/0 AND repeatCount > 1 (it's a running streak)
+      // - Allow if: repeatCount === 1 (single gift, not a streak)
+      // - Allow if: repeatEnd is true/1 (streak finished)
+      // This prevents counting streaks multiple times: 1+2+3+4+5 instead of just 5
+      if ((data.repeatEnd === false || data.repeatEnd === 0) && repeatCount > 1) {
+        console.log(`[Gift] ⏭️ Skipping intermediate streak: ${giftName} x${repeatCount} (repeatEnd=${data.repeatEnd})`);
+        return;
+      }
+
+      // Enhanced debug logging for ALL processed gifts
+      console.log(`[Gift] ✅ Processing: ${userId} sent ${giftName} x${repeatCount} = ${diamondCount * repeatCount} diamonds`, {
+        repeatEnd: data.repeatEnd,
+        repeatCount: repeatCount,
+        diamondCount: diamondCount,
+        giftType: data.giftType,
+        giftId: giftId,
+      });
 
       // Track gift streak
       const timestampWindow = Math.floor(Date.now() / 5000);
@@ -706,12 +717,10 @@ export function useTikTokLive(): UseTikTokLiveReturn {
 
       const deltaDiamonds = diamondCount * deltaCount;
 
-      // Debug logging for gift tracking
-      console.log(`[Gift] ${userId}: ${giftName} x${repeatCount} (delta: ${deltaCount}) = ${deltaDiamonds} diamonds`, {
-        repeatEnd: data.repeatEnd,
-        giftType: data.giftType,
-        totalDiamondsAfter: '(will be calculated)'
-      });
+      // Debug: Show delta calculation (for streak tracking)
+      if (deltaCount !== repeatCount) {
+        console.log(`[Gift] 📊 Delta calculation: ${giftName} delta=${deltaCount} (was ${lastProcessedCount}, now ${repeatCount}) = ${deltaDiamonds} diamonds`);
+      }
 
       // Track user stats for gift
       updateUserStats(userId, userId, data.profilePictureUrl, 'gift', deltaDiamonds, deltaCount);
