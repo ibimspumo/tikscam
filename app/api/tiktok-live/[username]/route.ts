@@ -13,7 +13,8 @@ import { WebcastPushConnection, SignConfig } from 'tiktok-live-connector';
 import { NextRequest } from 'next/server';
 
 // EulerStream API Key - used as fallback when rate limited
-const EULERSTREAM_API_KEY = 'MTExZjA2MDIxYzJjNjQ2YzNjYTdkMzRhOWQ5OTdlMWE3NTAxNTc1NmU5YThkNGJiMGQwNjVi';
+// Get your free API key at: https://www.eulerstream.com/pricing
+const EULERSTREAM_API_KEY = process.env.EULERSTREAM_API_KEY || '';
 
 // Store active connections
 const activeConnections = new Map<string, WebcastPushConnection>();
