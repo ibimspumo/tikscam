@@ -59,21 +59,26 @@ export const ViewerHistoryChart = React.memo(({ viewerHistory = [] }: ViewerHist
   // Memoize expensive calculations
   const chartData = useMemo(() => {
     const now = Date.now();
-    const cutoffTime = now - (15 * 60 * 1000); // 15 minutes ago
+    const currentInterval = Math.floor(now / 15000);
+    const totalIntervals = 60; // 15 minutes in 15-second intervals
 
-    // Use the ACTUAL data from viewerHistory, filtered to last 15 minutes
-    const recentData = viewerHistory
-      .filter(m => m.timestamp >= cutoffTime)
-      .sort((a, b) => a.timestamp - b.timestamp);
+    // Create a complete timeline with all 60 intervals
+    const last15Minutes: IntervalStats[] = [];
+    for (let i = totalIntervals - 1; i >= 0; i--) {
+      const interval = currentInterval - i;
+      const timestamp = now - (i * 15000);
 
-    // Use the actual data we have, or empty array if none
-    const last15Minutes = recentData.length > 0 ? recentData : Array.from({ length: 60 }, (_, i) => ({
-      interval: Math.floor(now / 15000) - (59 - i),
-      viewerCount: 0,
-      followerCount: 0,
-      diamondCount: 0,
-      timestamp: now - ((59 - i) * 15000),
-    }));
+      // Find matching data point by timestamp (within 1 second tolerance)
+      const existing = viewerHistory.find(m => Math.abs(m.timestamp - timestamp) < 1000);
+
+      last15Minutes.push(existing || {
+        interval,
+        viewerCount: 0,
+        followerCount: 0,
+        diamondCount: 0,
+        timestamp,
+      });
+    }
 
     // Prepare data for Recharts
     const rechartsData = last15Minutes.map((stat, index) => {

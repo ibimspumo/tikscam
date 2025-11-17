@@ -119,52 +119,42 @@ export const CombinedTimelineChart = React.memo(({
   // Memoize expensive calculations
   const chartData = useMemo(() => {
     const now = Date.now();
-    const cutoffTime = now - (60 * 60 * 1000); // 60 minutes ago
+    const currentInterval = Math.floor(now / 15000);
+    const totalIntervals = 240; // 60 minutes in 15-second intervals
 
-    // Helper to merge all histories by timestamp
-    const allTimestamps = new Set<number>();
+    // Create a complete timeline with all intervals
+    const timeline: Array<{
+      timestamp: number;
+      viewers: number;
+      likesPerSecond: number;
+      newFollowers: number;
+      diamonds: number;
+      chatMessages: number;
+    }> = [];
 
-    [viewerHistory, minuteHistory, followerHistory, diamondHistory, chatActivityHistory]
-      .flat()
-      .forEach(item => {
-        if (item.timestamp >= cutoffTime) {
-          allTimestamps.add(item.timestamp);
-        }
-      });
+    for (let i = totalIntervals - 1; i >= 0; i--) {
+      const interval = currentInterval - i;
+      const timestamp = now - (i * 15000);
 
-    // Convert to sorted array
-    const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+      // Find matching data points by timestamp (within 1 second tolerance)
+      const viewerData = viewerHistory.find(v => Math.abs(v.timestamp - timestamp) < 1000);
+      const likesData = minuteHistory.find(l => Math.abs(l.timestamp - timestamp) < 1000);
+      const followerData = followerHistory.find(f => Math.abs(f.timestamp - timestamp) < 1000);
+      const diamondData = diamondHistory.find(d => Math.abs(d.timestamp - timestamp) < 1000);
+      const chatData = chatActivityHistory.find(c => Math.abs(c.timestamp - timestamp) < 1000);
 
-    // Create timeline data
-    const timeline = timestamps.map(timestamp => {
-      const viewerData = viewerHistory.find(v => v.timestamp === timestamp);
-      const likesData = minuteHistory.find(l => l.timestamp === timestamp);
-      const followerData = followerHistory.find(f => f.timestamp === timestamp);
-      const diamondData = diamondHistory.find(d => d.timestamp === timestamp);
-      const chatData = chatActivityHistory.find(c => c.timestamp === timestamp);
-
-      return {
+      timeline.push({
         timestamp,
         viewers: viewerData?.viewerCount || 0,
         likesPerSecond: likesData?.likesPerSecond || 0,
         newFollowers: followerData?.followerCount || 0,
         diamonds: diamondData?.diamondCount || 0,
         chatMessages: chatData?.messageCount || 0,
-      };
-    });
-
-    // If no data, create empty timeline
-    const finalTimeline = timeline.length > 0 ? timeline : Array.from({ length: 60 }, (_, i) => ({
-      timestamp: now - ((59 - i) * 60000), // 1 minute intervals
-      viewers: 0,
-      likesPerSecond: 0,
-      newFollowers: 0,
-      diamonds: 0,
-      chatMessages: 0,
-    }));
+      });
+    }
 
     // Prepare data for Recharts
-    const rechartsData = finalTimeline.map((point, index) => {
+    const rechartsData = timeline.map((point, index) => {
       const secondsAgo = Math.floor((now - point.timestamp) / 1000);
       const minutesAgo = Math.floor(secondsAgo / 60);
 
