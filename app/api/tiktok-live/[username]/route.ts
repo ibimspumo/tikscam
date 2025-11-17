@@ -222,7 +222,12 @@ export async function GET(
 
           // Extract error message from tiktok-live-connector's custom error format
           let errorMessage = 'Unknown error';
-          if (err && typeof err === 'object') {
+
+          // tiktok-live-connector can throw strings, objects, or Error instances
+          if (typeof err === 'string') {
+            // Direct string error
+            errorMessage = err;
+          } else if (err && typeof err === 'object') {
             // Handle custom error format: { info: string, exception: string }
             const customErr = err as { info?: string; exception?: string; message?: string };
             errorMessage = customErr.exception || customErr.info || customErr.message || 'Unknown error';
@@ -252,7 +257,9 @@ export async function GET(
       if (!connectionSuccess && lastError) {
         // Extract error message using same logic as retry loop
         let errorMessage = 'Unknown error';
-        if (lastError && typeof lastError === 'object') {
+        if (typeof lastError === 'string') {
+          errorMessage = lastError;
+        } else if (lastError && typeof lastError === 'object') {
           const customErr = lastError as { info?: string; exception?: string; message?: string; name?: string };
           errorMessage = customErr.exception || customErr.info || customErr.message || 'Unknown error';
         } else if (lastError instanceof Error) {
@@ -365,7 +372,9 @@ export async function GET(
             // Extract error message using same logic
             let retryErrorMessage = 'Failed to connect to stream even with API key';
             let retryErrorType = 'Error';
-            if (retryErr && typeof retryErr === 'object') {
+            if (typeof retryErr === 'string') {
+              retryErrorMessage = retryErr;
+            } else if (retryErr && typeof retryErr === 'object') {
               const customErr = retryErr as { info?: string; exception?: string; message?: string; name?: string };
               retryErrorMessage = customErr.exception || customErr.info || customErr.message || retryErrorMessage;
               retryErrorType = customErr.name || 'Error';
