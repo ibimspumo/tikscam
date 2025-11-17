@@ -65,8 +65,13 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
   // Auto-connect when component mounts
   useEffect(() => {
     if (username && !isConnected && !isConnecting) {
-      console.log(`[StreamMonitor] Auto-connecting to @${username}`);
-      connect(username);
+      console.log(`[StreamMonitor] Auto-connecting to @${username}${userApiKey ? ' (with API key)' : ''}`);
+      // Use user API key if available
+      if (userApiKey) {
+        connect(username, userApiKey);
+      } else {
+        connect(username);
+      }
     }
 
     return () => {
@@ -75,18 +80,34 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
         disconnect();
       }
     };
-  }, [username]);
+  }, [username, userApiKey]); // Added userApiKey as dependency
 
   // Auto-Reconnect
   useEffect(() => {
     let reconnectTimeout: NodeJS.Timeout | null = null;
 
-    if (username && !isConnected && !isConnecting && !error?.includes('Daily limit')) {
+    // Don't auto-reconnect if:
+    // - Rate limited (any variation)
+    // - API key dialog is shown
+    // - Already connecting
+    const shouldNotReconnect =
+      error?.includes('rate limit') ||
+      error?.includes('Rate Limited') ||
+      error?.includes('Daily limit') ||
+      error?.includes('API key is rate limited') ||
+      needsUserApiKey;
+
+    if (username && !isConnected && !isConnecting && !shouldNotReconnect) {
       console.log(`[StreamMonitor] 🔄 Connection lost, attempting reconnect in 10 seconds...`);
 
       reconnectTimeout = setTimeout(() => {
-        console.log(`[StreamMonitor] 🔄 Reconnecting to @${username}...`);
-        connect(username);
+        console.log(`[StreamMonitor] 🔄 Reconnecting to @${username}${userApiKey ? ' (with API key)' : ''}...`);
+        // Use user API key if available
+        if (userApiKey) {
+          connect(username, userApiKey);
+        } else {
+          connect(username);
+        }
       }, 10000);
     }
 
@@ -95,7 +116,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
         clearTimeout(reconnectTimeout);
       }
     };
-  }, [isConnected, isConnecting, username, error, connect]);
+  }, [isConnected, isConnecting, username, error, connect, needsUserApiKey]);
 
   if (!isActive) {
     return null;
