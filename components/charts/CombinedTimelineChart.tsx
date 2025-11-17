@@ -118,9 +118,16 @@ export const CombinedTimelineChart = React.memo(({
 
   // Memoize expensive calculations
   const chartData = useMemo(() => {
-    const now = Date.now();
-    const currentInterval = Math.floor(now / 15000);
     const totalIntervals = 240; // 60 minutes in 15-second intervals
+
+    // Use the most recent data point's interval as reference
+    const latestViewerData = viewerHistory.length > 0 ? viewerHistory[viewerHistory.length - 1] : null;
+    const latestLikesData = minuteHistory.length > 0 ? minuteHistory[minuteHistory.length - 1] : null;
+    const latestData = latestViewerData || latestLikesData;
+
+    const currentInterval = latestData
+      ? latestData.interval
+      : Math.floor(Date.now() / 15000);
 
     // Create a complete timeline with all intervals
     const timeline: Array<{
@@ -134,14 +141,15 @@ export const CombinedTimelineChart = React.memo(({
 
     for (let i = totalIntervals - 1; i >= 0; i--) {
       const interval = currentInterval - i;
-      const timestamp = now - (i * 15000);
 
-      // Find matching data points by timestamp (within 1 second tolerance)
-      const viewerData = viewerHistory.find(v => Math.abs(v.timestamp - timestamp) < 1000);
-      const likesData = minuteHistory.find(l => Math.abs(l.timestamp - timestamp) < 1000);
-      const followerData = followerHistory.find(f => Math.abs(f.timestamp - timestamp) < 1000);
-      const diamondData = diamondHistory.find(d => Math.abs(d.timestamp - timestamp) < 1000);
-      const chatData = chatActivityHistory.find(c => Math.abs(c.timestamp - timestamp) < 1000);
+      // Find matching data points by interval number (exact match)
+      const viewerData = viewerHistory.find(v => v.interval === interval);
+      const likesData = minuteHistory.find(l => l.interval === interval);
+      const followerData = followerHistory.find(f => f.interval === interval);
+      const diamondData = diamondHistory.find(d => d.interval === interval);
+      const chatData = chatActivityHistory.find(c => c.interval === interval);
+
+      const timestamp = viewerData?.timestamp || likesData?.timestamp || Date.now() - (i * 15000);
 
       timeline.push({
         timestamp,
@@ -155,7 +163,7 @@ export const CombinedTimelineChart = React.memo(({
 
     // Prepare data for Recharts
     const rechartsData = timeline.map((point, index) => {
-      const secondsAgo = Math.floor((now - point.timestamp) / 1000);
+      const secondsAgo = Math.floor((Date.now() - point.timestamp) / 1000);
       const minutesAgo = Math.floor(secondsAgo / 60);
 
       return {
