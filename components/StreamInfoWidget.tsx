@@ -61,7 +61,7 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Streamer Info */}
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
+        <div className="flex items-center gap-3 p-3 rounded-lg border-border border bg-muted/50">
           {streamerAvatar ? (
             <img
               src={streamerAvatar}
@@ -84,7 +84,7 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
         </div>
 
         {/* Stream Title */}
-        <div className="p-3 rounded-lg border bg-card">
+        <div className="p-3 rounded-lg border-border border bg-card">
           <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
             {t('streamInfo.streamTitle')}
           </p>
@@ -95,7 +95,7 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="p-2 rounded-lg border bg-card text-center">
+          <div className="p-2 rounded-lg border-border border bg-card text-center">
             <Heart className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
             <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
               {t('streamInfo.likes')}
@@ -104,7 +104,7 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
               {streamTotalLikes.toLocaleString('en-US')}
             </div>
           </div>
-          <div className="p-2 rounded-lg border bg-card text-center">
+          <div className="p-2 rounded-lg border-border border bg-card text-center">
             <UsersIcon className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
             <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
               {t('streamInfo.followers')}
@@ -113,7 +113,7 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
               {followerCount.toLocaleString('en-US')}
             </div>
           </div>
-          <div className="p-2 rounded-lg border bg-card text-center">
+          <div className="p-2 rounded-lg border-border border bg-card text-center">
             <Eye className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
             <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
               {t('streamInfo.viewers')}

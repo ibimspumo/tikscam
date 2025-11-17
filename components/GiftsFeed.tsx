@@ -82,7 +82,7 @@ export const GiftsFeed= React.memo(({ gifts }: GiftsFeedProps) => {
             return (
               <div
                 key={`${gift.timestamp}-${index}`}
-                className="flex-shrink-0 w-[200px] border rounded-lg p-3 bg-card hover:bg-muted/50 transition-colors"
+                className="flex-shrink-0 w-[200px] border-border border rounded-lg p-3 bg-card hover:bg-muted/50 transition-colors"
               >
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-2">

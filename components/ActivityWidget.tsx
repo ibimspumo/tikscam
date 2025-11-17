@@ -36,7 +36,7 @@ export const ActivityWidget= React.memo(({ joins, follows }: ActivityWidgetProps
             activities.map((activity, index) => (
               <div
                 key={`${activity.timestamp}-${index}`}
-                className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg border-border border bg-card hover:bg-muted/50 transition-colors"
               >
                 {activity.type === 'follow' ? (
                   <UserPlus className="h-4 w-4 text-orange-500 flex-shrink-0" />

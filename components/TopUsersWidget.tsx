@@ -62,7 +62,7 @@ export const TopUsersWidget= React.memo(({ userStats, className }: TopUsersWidge
         {users.map((user, idx) => (
           <div
             key={user.userId}
-            className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-3 p-3 rounded-lg border-border border bg-card hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex-shrink-0">
               {idx + 1}

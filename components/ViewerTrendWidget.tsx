@@ -106,7 +106,7 @@ export const ViewerTrendWidget= React.memo(({
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           {/* Current */}
-          <div className="p-3 rounded-lg border bg-card">
+          <div className="p-3 rounded-lg border-border border bg-card">
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
               {t('common.current')}
             </div>
@@ -116,7 +116,7 @@ export const ViewerTrendWidget= React.memo(({
           </div>
 
           {/* Peak */}
-          <div className="p-3 rounded-lg border bg-card">
+          <div className="p-3 rounded-lg border-border border bg-card">
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
               Peak
             </div>
@@ -126,7 +126,7 @@ export const ViewerTrendWidget= React.memo(({
           </div>
 
           {/* Average */}
-          <div className="p-3 rounded-lg border bg-card">
+          <div className="p-3 rounded-lg border-border border bg-card">
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
               {t('common.average')}
             </div>
@@ -136,7 +136,7 @@ export const ViewerTrendWidget= React.memo(({
           </div>
 
           {/* Trend */}
-          <div className="p-3 rounded-lg border bg-card">
+          <div className="p-3 rounded-lg border-border border bg-card">
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
               Trend (5min)
             </div>
