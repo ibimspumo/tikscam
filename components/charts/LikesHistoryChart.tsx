@@ -78,37 +78,31 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
   // IMPORTANT: Dependencies include minuteHistory to re-calculate when new data arrives
   const chartData = useMemo(() => {
     const now = Date.now();
-    const totalIntervals = 60; // 15 minutes / 15 seconds = 60 intervals
     const cutoffTime = now - (15 * 60 * 1000); // 15 minutes ago
 
     console.log('🔄 useMemo recalculating chart data, minuteHistory:', minuteHistory.length, 'items');
 
-    // Filter and sort data by timestamp (newest first)
+    // Use the ACTUAL data from minuteHistory, filtered to last 15 minutes
+    // Sort by timestamp (oldest to newest)
     const recentData = minuteHistory
       .filter(m => m.timestamp >= cutoffTime)
-      .sort((a, b) => a.timestamp - b.timestamp); // oldest to newest
+      .sort((a, b) => a.timestamp - b.timestamp);
 
     console.log('📈 Recent data points:', recentData.length, 'latest:', recentData.slice(-3));
 
-    // Create array with actual data, filling gaps with zeros
-    const last15Minutes: MinuteStats[] = [];
-    const currentInterval = Math.floor(now / 15000);
-
-    for (let i = totalIntervals - 1; i >= 0; i--) {
-      const interval = currentInterval - i;
-      const targetTimestamp = now - (i * 15000);
-
-      // Find data point closest to this timestamp (within 15 seconds)
-      const existing = recentData.find(m =>
-        Math.abs(m.timestamp - targetTimestamp) < 15000
-      );
-
-      last15Minutes.push(existing || {
-        interval,
+    // If we have no data, create empty array
+    if (recentData.length === 0) {
+      const emptyData = Array.from({ length: 60 }, (_, i) => ({
+        interval: Math.floor(now / 15000) - (59 - i),
         likesPerSecond: 0,
-        timestamp: targetTimestamp,
-      });
+        timestamp: now - ((59 - i) * 15000),
+      }));
+      console.log('⚠️ No data available, showing empty chart');
+      return { last15Minutes: emptyData };
     }
+
+    // Use the actual data we have
+    const last15Minutes = recentData;
 
     // Prepare data for Recharts with additional fields
     const rechartsData = last15Minutes.map((stat, index) => {
