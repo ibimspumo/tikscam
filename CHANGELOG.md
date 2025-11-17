@@ -1,6 +1,54 @@
 # TikScam Changelog
 
-## 2025-10-21 - Massive Performance-Verbesserungen
+## 2025-11-17 - Electron Desktop App Bug Fixes
+
+### 🐛 Critical Bug Fixes
+
+**Fixed "b.mask is not a function" error in Electron builds**
+- Root cause: Next.js bundled `tiktok-live-connector` which broke native Buffer APIs
+- Solution: Externalized the library using `serverExternalPackages` config
+- Added `asarUnpack` for tiktok-live-connector to prevent bundling issues
+- Set `processInitialData: false` to reduce protobuf parsing errors
+
+**Fixed "Controller is already closed" error**
+- Added `streamClosed` flag to prevent events after stream closure
+- Wrapped all `controller.enqueue()` calls in try-catch
+- Proper cleanup in all disconnect handlers
+- Fixed race conditions in SSE stream management
+
+### 🎨 Improvements
+
+**Cleaned up excessive logging**
+- Removed debug logs from production builds
+- EventSource retry errors now silent (only fatal errors logged)
+- Electron renderer only logs warnings/errors (not info)
+- Backend errors properly categorized (streamError vs connectionError)
+
+**Better error handling architecture**
+- `streamError` - Non-fatal, recoverable errors (e.g., parsing issues)
+- `connectionError` - Fatal connection errors
+- EventSource `onerror` - True network failures
+- Try-catch protection for all event handlers
+
+### 📝 Changed Files
+
+- `app/api/tiktok-live/[username]/route.ts` - Stream close handling, error architecture
+- `hooks/useTikTokLive.ts` - Cleaned logging, silent retries
+- `electron/main.ts` - Reduced console logging
+- `next.config.ts` - Added serverExternalPackages for Electron
+- `package.json` - Updated asarUnpack configuration
+
+### ✅ Desktop App Status
+
+- ✅ Connects reliably to TikTok Live streams
+- ✅ Clean logs without spam
+- ✅ Proper error handling
+- ✅ No more Buffer/mask errors
+- ✅ Stable SSE connections
+
+---
+
+## 2024-10-21 - Massive Performance-Verbesserungen
 
 ### 🚀 Performance-Optimierungen
 

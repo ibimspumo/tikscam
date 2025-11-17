@@ -351,6 +351,84 @@ Optimized for **Vercel** deployment:
 - Supports serverless functions for API routes
 - See `DEPLOYMENT.md` for detailed instructions
 
+## Electron Desktop App
+
+### Architecture
+
+The desktop app wraps the Next.js standalone build in Electron:
+
+- **electron/main.ts** - Main process (starts Next.js server, manages window)
+- **electron/preload.ts** - Preload script (security layer)
+- **electron/dist/** - Compiled TypeScript output
+- **.next/standalone/** - Next.js standalone build for Electron
+
+### Key Configuration
+
+**next.config.ts** - Electron-specific settings:
+```typescript
+output: isElectron ? 'standalone' : undefined,
+serverExternalPackages: isElectron ? ['tiktok-live-connector'] : [],
+```
+
+**package.json** - Build configuration:
+```json
+"asarUnpack": [
+  "**/*.node",
+  "**/node_modules/tiktok-live-connector/**/*"
+]
+```
+
+### Why Externalize tiktok-live-connector?
+
+The library must NOT be bundled by Next.js because:
+- It uses native Node.js Buffer APIs
+- WebSocket implementation requires native modules
+- Bundling breaks `b.mask()` function (protobuf)
+- Must run from `node_modules` with native dependencies
+
+### Build Process
+
+```bash
+# Build Electron app
+npm run build:electron    # Build Next.js standalone + compile Electron TS
+npm run build:win         # Build Windows portable .exe
+npm run build:mac         # Build macOS .dmg
+npm run build:linux       # Build Linux .AppImage
+```
+
+**Build steps:**
+1. Next.js builds in standalone mode
+2. Copies standalone files to proper structure
+3. Compiles TypeScript (electron/main.ts → electron/dist/main.js)
+4. electron-builder packages everything into .exe
+
+### Known Issues & Solutions
+
+**"b.mask is not a function" error:**
+- Cause: tiktok-live-connector was bundled by Next.js
+- Fix: Use `serverExternalPackages` to externalize it
+- Fix: Add library to `asarUnpack` in electron-builder config
+
+**"Controller is already closed" error:**
+- Cause: Events sent after SSE stream closed
+- Fix: Use `streamClosed` flag to prevent sending after close
+- Fix: Wrap `controller.enqueue()` in try-catch
+
+### Error Handling
+
+**Error event types:**
+- `streamError` - Non-fatal, recoverable (e.g., parsing errors)
+- `connectionError` - Fatal connection errors
+- EventSource `onerror` - Network failures
+
+### Desktop App Features
+
+- ✅ Portable .exe (no installation)
+- ✅ Self-contained Next.js server (port 3456)
+- ✅ Auto-port detection
+- ✅ Debug logging to AppData
+- ✅ Same features as web version
+
 ## Important
 
 Dont run Build unless told otherwise
