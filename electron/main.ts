@@ -253,9 +253,17 @@ async function createWindow(): Promise<void> {
     icon: path.join(__dirname, '..', 'resources', 'icon.png'),
   });
 
-  // Always open DevTools for debugging
+  // Open DevTools for debugging (always in production for now)
   mainWindow.webContents.once('did-finish-load', () => {
     mainWindow?.webContents.openDevTools();
+  });
+
+  // Log console errors from renderer to main process (for debugging)
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    // Only log errors and warnings to reduce noise
+    if (level >= 1) { // 1 = warning, 2 = error
+      log(`[Renderer] ${message}`);
+    }
   });
 
   // Log all navigation events

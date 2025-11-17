@@ -38,8 +38,9 @@ export async function GET(
       console.log(`[TikTok Live] Connecting to @${username}...`);
 
       // Create TikTok connection
+      // processInitialData: false helps avoid protobuf parsing errors
       const tiktokConnection = new WebcastPushConnection(username, {
-        processInitialData: true,
+        processInitialData: false,
         enableExtendedGiftInfo: true,
         enableWebsocketUpgrade: true,
         requestPollingIntervalMs: 1000,
@@ -48,9 +49,21 @@ export async function GET(
       // Store connection
       activeConnections.set(username, tiktokConnection);
 
+      // Track if stream is still open
+      let streamClosed = false;
+
       const sendEvent = (event: string, data: any) => {
-        const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-        controller.enqueue(encoder.encode(message));
+        if (streamClosed) return; // Don't send if stream is closed
+
+        try {
+          const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+          controller.enqueue(encoder.encode(message));
+        } catch (err: any) {
+          // Controller is closed - mark stream as closed to prevent further attempts
+          if (err.message?.includes('Controller is already closed')) {
+            streamClosed = true;
+          }
+        }
       };
 
       // 🔄 Keep-Alive: Send heartbeat every 30 seconds to prevent timeout
@@ -94,36 +107,98 @@ export async function GET(
       tiktokConnection.on('disconnected', () => {
         console.log(`[TikTok Live] Disconnected from @${username}`);
         sendEvent('disconnected', {});
+        streamClosed = true; // Mark stream as closed
         activeConnections.delete(username);
-        controller.close();
+        try {
+          controller.close();
+        } catch (err) {
+          // Already closed
+        }
       });
 
       tiktokConnection.on('error', (err) => {
         console.error(`[TikTok Live] Error:`, err);
-        sendEvent('error', { message: err.message });
+        // Send error event but DON'T close the stream - let it recover
+        // The error event will be treated as data, not a connection error
+        try {
+          sendEvent('streamError', {
+            message: err.message || 'Unknown error',
+            type: err.name || 'Error',
+            recoverable: true
+          });
+        } catch (sendErr) {
+          console.error('[TikTok Live] Failed to send error event:', sendErr);
+        }
       });
 
-      // Helper to register event handlers
+      // Helper to register event handlers with error protection
       const registerEventHandlers = (connection: WebcastPushConnection) => {
-        connection.on('roomUser', (data) => sendEvent('roomUser', data));
-        connection.on('chat', (data) => sendEvent('chat', data));
-        connection.on('gift', (data) => {
-          // Debug: Log all incoming gift events from TikTok
-          console.log(`[API] 🎁 Gift received from TikTok:`, {
-            user: data.uniqueId,
-            giftName: data.giftName,
-            giftId: data.giftId,
-            repeatCount: data.repeatCount,
-            repeatEnd: data.repeatEnd,
-            diamondCount: data.diamondCount,
-            giftType: data.giftType,
-          });
-          sendEvent('gift', data);
+        // Wrap each handler in try-catch to prevent stream closure
+        connection.on('roomUser', (data) => {
+          try {
+            sendEvent('roomUser', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending roomUser:', err);
+          }
         });
-        connection.on('member', (data) => sendEvent('member', data));
-        connection.on('like', (data) => sendEvent('like', data));
-        connection.on('social', (data) => sendEvent('social', data));
-        connection.on('streamEnd', (data) => sendEvent('streamEnd', data));
+
+        connection.on('chat', (data) => {
+          try {
+            sendEvent('chat', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending chat:', err);
+          }
+        });
+
+        connection.on('gift', (data) => {
+          try {
+            // Debug: Log all incoming gift events from TikTok
+            console.log(`[API] 🎁 Gift received from TikTok:`, {
+              user: data.uniqueId,
+              giftName: data.giftName,
+              giftId: data.giftId,
+              repeatCount: data.repeatCount,
+              repeatEnd: data.repeatEnd,
+              diamondCount: data.diamondCount,
+              giftType: data.giftType,
+            });
+            sendEvent('gift', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending gift:', err);
+          }
+        });
+
+        connection.on('member', (data) => {
+          try {
+            sendEvent('member', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending member:', err);
+          }
+        });
+
+        connection.on('like', (data) => {
+          try {
+            sendEvent('like', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending like:', err);
+          }
+        });
+
+        connection.on('social', (data) => {
+          try {
+            sendEvent('social', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending social:', err);
+          }
+        });
+
+        connection.on('streamEnd', (data) => {
+          try {
+            sendEvent('streamEnd', data);
+          } catch (err: any) {
+            console.error('[TikTok Live] Error sending streamEnd:', err);
+          }
+        });
       };
 
       // Register event handlers for initial connection
@@ -159,7 +234,7 @@ export async function GET(
 
           // Create new connection with API key
           const fallbackConnection = new WebcastPushConnection(username, {
-            processInitialData: true,
+            processInitialData: false,
             enableExtendedGiftInfo: true,
             enableWebsocketUpgrade: true,
             requestPollingIntervalMs: 1000,
@@ -198,13 +273,27 @@ export async function GET(
           fallbackConnection.on('disconnected', () => {
             console.log(`[TikTok Live] Disconnected from @${username}`);
             sendEvent('disconnected', {});
+            streamClosed = true; // Mark stream as closed
             activeConnections.delete(username);
-            controller.close();
+            try {
+              controller.close();
+            } catch (err) {
+              // Already closed
+            }
           });
 
           fallbackConnection.on('error', (err) => {
             console.error(`[TikTok Live] Error:`, err);
-            sendEvent('error', { message: err.message });
+            // Send error event but DON'T close the stream - let it recover
+            try {
+              sendEvent('streamError', {
+                message: err.message || 'Unknown error',
+                type: err.name || 'Error',
+                recoverable: true
+              });
+            } catch (sendErr) {
+              console.error('[TikTok Live] Failed to send error event:', sendErr);
+            }
           });
 
           // Register event handlers for fallback connection
@@ -216,16 +305,22 @@ export async function GET(
             await fallbackConnection.connect();
           } catch (retryErr: any) {
             console.error(`[TikTok Live] ❌ Failed to connect even with API key:`, retryErr);
-            sendEvent('error', {
+            sendEvent('connectionError', {
               message: retryErr.message || 'Failed to connect to stream even with API key',
               type: retryErr.name,
             });
-            controller.close();
+            streamClosed = true;
+            try {
+              controller.close();
+            } catch (err) {
+              // Already closed
+            }
           }
 
           // Update cleanup handler for fallback connection
           request.signal.addEventListener('abort', () => {
             console.log(`[TikTok Live] Client disconnected from @${username}`);
+            streamClosed = true; // Mark as closed before cleanup
             clearInterval(keepAliveInterval);
             fallbackConnection.disconnect();
             activeConnections.delete(username);
@@ -234,17 +329,23 @@ export async function GET(
         } else {
           // Not a rate limit error - send error to client
           let errorMessage = err.message || 'Failed to connect to stream';
-          sendEvent('error', {
+          sendEvent('connectionError', {
             message: errorMessage,
             type: err.name,
           });
-          controller.close();
+          streamClosed = true;
+          try {
+            controller.close();
+          } catch (err) {
+            // Already closed
+          }
         }
       }
 
       // Cleanup on client disconnect
       request.signal.addEventListener('abort', () => {
         console.log(`[TikTok Live] Client disconnected from @${username}`);
+        streamClosed = true; // Mark as closed before cleanup
         clearInterval(keepAliveInterval);
         tiktokConnection.disconnect();
         activeConnections.delete(username);

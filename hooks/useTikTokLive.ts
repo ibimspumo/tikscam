@@ -465,8 +465,10 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     lastIntervalFollowersRef.current = 0;
 
     // Connect to SSE stream IMMEDIATELY (don't wait for other data)
-    console.log(`⚡ Connecting to TikTok Live SSE: ${uniqueId}`);
-    const eventSource = new EventSource(`/api/tiktok-live/${uniqueId}`);
+    const sseUrl = `/api/tiktok-live/${uniqueId}`;
+    console.log(`⚡ Connecting to TikTok Live SSE: ${sseUrl}`);
+
+    const eventSource = new EventSource(sseUrl);
     eventSourceRef.current = eventSource;
 
     // Fetch user data from TikTok (non-blocking)
@@ -581,7 +583,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       setIsConnected(false);
     });
 
-    eventSource.addEventListener('error', (e: any) => {
+    // Handle fatal connection errors (sent as custom event from backend)
+    eventSource.addEventListener('connectionError', (e: any) => {
       let data = {};
       try {
         if (e.data) {
@@ -591,7 +594,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         // Silently handle parse errors
       }
 
-      console.log('[TikTok Live] Connection error detected');
+      console.log('[TikTok Live] Fatal connection error detected');
 
       // Check if this is a rate limit error - trigger automatic retry with API key
       let errorMessage = (data as any).message || 'Connection lost';
@@ -613,6 +616,20 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         setError(errorMessage);
         setIsConnected(false);
         setIsConnecting(false);
+      }
+    });
+
+    // Handle non-fatal stream errors (e.g., parsing errors in tiktok-live-connector)
+    eventSource.addEventListener('streamError', (e: any) => {
+      try {
+        const errorData = JSON.parse(e.data);
+        console.warn('[TikTok Live] Stream error (recoverable):', errorData);
+
+        // Log but don't disconnect - these are recoverable errors
+        // Examples: "b.mask is not a function", parsing errors, etc.
+        // The connection will stay open and continue receiving events
+      } catch (err) {
+        console.warn('[TikTok Live] Failed to parse streamError event');
       }
     });
 
@@ -942,10 +959,15 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       });
     }, 15000); // Every 15 seconds
 
-    eventSource.onerror = (e: any) => {
-      console.log('[TikTok Live] EventSource connection lost');
+    eventSource.onopen = () => {
+      console.log('📡 EventSource opened');
+    };
 
-      // If connection failed before getting proper error message from server
+    eventSource.onerror = (e: any) => {
+      // Handle connection errors silently - the backend will send proper error events
+      // This handler is triggered during normal reconnection attempts
+
+      // If connection failed permanently
       if (eventSource.readyState === EventSource.CLOSED) {
         setIsConnected(false);
         setIsConnecting(false);
