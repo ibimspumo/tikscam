@@ -29,11 +29,21 @@ interface LikesHistoryChartProps {
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+
+    // Calculate time ago in real-time
+    const now = Date.now();
+    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
+    const minutesAgo = Math.floor(secondsAgo / 60);
+    const remainingSeconds = secondsAgo % 60;
+    const timeAgoText = minutesAgo > 0
+      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
+      : `vor ${remainingSeconds}s`;
+
     return (
       <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
-        <div className="font-bold text-sm">{data.likesPerSecond.toFixed(1)} L/s</div>
+        <div className="font-bold text-base">{data.likesPerSecond.toFixed(1)} L/s</div>
         <div className="text-muted-foreground text-[10px] mt-1">
-          {data.timeAgo}
+          {timeAgoText}
         </div>
       </div>
     );

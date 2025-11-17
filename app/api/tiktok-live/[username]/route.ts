@@ -443,16 +443,48 @@ export async function GET(
                 console.warn('[TikTok Live] Phase 2 cleanup error:', cleanupErr);
               }
 
-              // ==========================================
-              // PHASE 3: Ask user for their API key
-              // ==========================================
-              console.log('[TikTok Live] 💬 Phase 3: Requesting user API key');
+              // Only ask for API key if user hasn't already provided one
+              if (!hasUserApiKey) {
+                // ==========================================
+                // PHASE 3: Ask user for their API key
+                // ==========================================
+                console.log('[TikTok Live] 💬 Phase 3: Requesting user API key');
+
+                sendEvent('needsApiKey', {
+                  phase: 'needs-user-api',
+                  message: '🔑 Server API key failed after 5 attempts.\n\nPlease provide your own EulerStream API key to continue.\n\nGet a free API key at:\nhttps://www.eulerstream.com/pricing',
+                  phase1Error: phase1Result.errorMessage,
+                  phase2Error: phase2Result.errorMessage,
+                });
+
+                streamClosed = true;
+                try {
+                  controller.close();
+                } catch (err) {
+                  // Already closed
+                }
+              } else {
+                // User already has API key - this shouldn't happen since we handle it in Phase 4 above
+                console.log('[TikTok Live] ⚠️ Phase 2 failed but user has API key - this path should not be reached');
+                streamClosed = true;
+                try {
+                  controller.close();
+                } catch (err) {
+                  // Already closed
+                }
+              }
+            }
+          } else {
+            // No server API key available
+            // Only show API key dialog if user hasn't already provided one
+            if (!hasUserApiKey) {
+              // PHASE 3: Ask for API key (only if not already provided)
+              console.log('[TikTok Live] 💬 Phase 3: No server API key, requesting user API key');
 
               sendEvent('needsApiKey', {
                 phase: 'needs-user-api',
-                message: '🔑 Server API key failed after 5 attempts.\n\nPlease provide your own EulerStream API key to continue.\n\nGet a free API key at:\nhttps://www.eulerstream.com/pricing',
-                phase1Error: phase1Result.errorMessage,
-                phase2Error: phase2Result.errorMessage,
+                message: '🔑 Direct connection failed after 5 attempts.\n\nPlease provide an EulerStream API key to continue.\n\nGet a free API key at:\nhttps://www.eulerstream.com/pricing',
+                phase1Error: errorMessage,
               });
 
               streamClosed = true;
@@ -461,22 +493,15 @@ export async function GET(
               } catch (err) {
                 // Already closed
               }
-            }
-          } else {
-            // No server API key available - go directly to Phase 3
-            console.log('[TikTok Live] 💬 Phase 3: No server API key, requesting user API key');
-
-            sendEvent('needsApiKey', {
-              phase: 'needs-user-api',
-              message: '🔑 Direct connection failed after 5 attempts.\n\nPlease provide an EulerStream API key to continue.\n\nGet a free API key at:\nhttps://www.eulerstream.com/pricing',
-              phase1Error: errorMessage,
-            });
-
-            streamClosed = true;
-            try {
-              controller.close();
-            } catch (err) {
-              // Already closed
+            } else {
+              // User already has API key - this shouldn't happen since we handle it in Phase 4 above
+              console.log('[TikTok Live] ⚠️ Phase 1 failed but user has API key - this path should not be reached');
+              streamClosed = true;
+              try {
+                controller.close();
+              } catch (err) {
+                // Already closed
+              }
             }
           }
         }

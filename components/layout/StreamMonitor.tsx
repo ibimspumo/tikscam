@@ -351,7 +351,9 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
       <ApiKeyDialog
         isOpen={needsUserApiKey}
         onClose={() => {
-          // User cancelled - just close the dialog
+          // User cancelled - close the dialog by reconnecting without API key
+          // This will trigger a new connection attempt
+          disconnect();
         }}
         onSubmit={(apiKey) => {
           setUserApiKey(apiKey);
