@@ -39,6 +39,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   const lastIntervalLikesRef = useRef<number>(0); // Track likes from last interval for engagement
   const chatMessagesThisIntervalRef = useRef<number>(0); // Count chat messages in current interval
   const lastIntervalNumberRef = useRef<number>(0); // Track which interval we're in
+  const wasConnectedRef = useRef<boolean>(false); // Track if we were ever successfully connected
 
   // PERFORMANCE: Throttle state updates to max 2 updates per second
   const lastStateUpdateRef = useRef<number>(0);
@@ -303,6 +304,9 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       historySnapshotIntervalRef.current = null;
     }
 
+    // Reset connection tracking (this is a NEW connection attempt)
+    wasConnectedRef.current = false;
+
     // Reset state
     setError(null);
     setRoomInfo(null);
@@ -418,6 +422,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
 
       setIsConnected(true);
       setError(null);
+      wasConnectedRef.current = true; // Mark that we successfully connected
 
       // Update room info from connection state
       if (data.state) {
@@ -495,12 +500,20 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       try {
         const messageEvent = e as MessageEvent;
         const data = JSON.parse(messageEvent.data);
-        console.log('[TikTok Live] 🔑 Server API key failed, requesting user API key');
-        setNeedsUserApiKey(true);
+
+        // ONLY show API key dialog if this is an INITIAL connection attempt
+        // If we were already connected before, this is a reconnect and we should NOT ask for API key
+        if (!wasConnectedRef.current) {
+          console.log('[TikTok Live] 🔑 Initial connection failed - requesting user API key');
+          setNeedsUserApiKey(true);
+          setCurrentPhase('needs-user-api');
+        } else {
+          console.log('[TikTok Live] 🔄 Reconnection failed (was previously connected) - skipping API key dialog');
+        }
+
         setError(data.message || 'Connection failed. Please provide your EulerStream API key.');
         setIsConnecting(false);
         setPermanentError(true); // Don't auto-reconnect when asking for API key
-        setCurrentPhase('needs-user-api');
       } catch (err) {
         console.warn('[TikTok Live] Failed to parse needsApiKey event');
       }

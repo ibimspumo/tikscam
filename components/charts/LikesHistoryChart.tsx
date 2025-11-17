@@ -4,6 +4,16 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 
 interface MinuteStats {
   interval: number;
@@ -15,14 +25,31 @@ interface LikesHistoryChartProps {
   minuteHistory: MinuteStats[];
 }
 
-export const LikesHistoryChart= React.memo(({ minuteHistory = [] }: LikesHistoryChartProps) => {
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
+        <div className="font-bold text-sm">{data.likesPerSecond.toFixed(1)} L/s</div>
+        <div className="text-muted-foreground text-[10px] mt-1">
+          {data.timeAgo}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistoryChartProps) => {
   const { t } = useTranslation();
+
   // Memoize expensive calculations
   const chartData = useMemo(() => {
-    // Fill in missing 15-second intervals for the last 60 minutes
+    // Fill in missing 15-second intervals for the last 15 minutes
     const now = Date.now();
     const currentInterval = Math.floor(now / 15000);
-    const totalIntervals = 60; // REDUZIERT: 15 minutes / 15 seconds = 60 intervals (statt 240)
+    const totalIntervals = 60; // 15 minutes / 15 seconds = 60 intervals
 
     const last15Minutes: MinuteStats[] = [];
     for (let i = totalIntervals - 1; i >= 0; i--) {
@@ -36,8 +63,27 @@ export const LikesHistoryChart= React.memo(({ minuteHistory = [] }: LikesHistory
       });
     }
 
-    // Find max value for scaling
-    const maxValue = Math.max(...last15Minutes.map(m => m.likesPerSecond), 1);
+    // Prepare data for Recharts with additional fields
+    const rechartsData = last15Minutes.map((stat, index) => {
+      const secondsAgo = (last15Minutes.length - 1 - index) * 15;
+      const minutesAgo = Math.floor(secondsAgo / 60);
+      const remainingSeconds = secondsAgo % 60;
+      const timeAgoText = minutesAgo > 0
+        ? `vor ${minutesAgo} Min ${remainingSeconds}s`
+        : `vor ${remainingSeconds}s`;
+
+      const isRecent = index >= 40; // Last 10 minutes (40 intervals)
+
+      return {
+        interval: stat.interval,
+        likesPerSecond: stat.likesPerSecond,
+        timestamp: stat.timestamp,
+        timeAgo: timeAgoText,
+        isRecent,
+        // For X-axis: show only every 15th point (every ~4 minutes)
+        label: index % 15 === 0 ? `-${Math.floor(secondsAgo / 60)}m` : '',
+      };
+    });
 
     // Calculate average only from actual data (not empty intervals)
     const actualData = last15Minutes.filter(m => m.likesPerSecond > 0);
@@ -53,10 +99,10 @@ export const LikesHistoryChart= React.memo(({ minuteHistory = [] }: LikesHistory
       ? Math.ceil((actualData.length * 15) / 60)
       : 0;
 
-    return { last15Minutes, maxValue, average, currentValue, dataRangeMinutes };
+    return { rechartsData, average, currentValue, dataRangeMinutes };
   }, [minuteHistory]);
 
-  const { last15Minutes, maxValue, average, currentValue, dataRangeMinutes } = chartData;
+  const { rechartsData, average, currentValue, dataRangeMinutes } = chartData;
 
   return (
     <Card>
@@ -84,66 +130,46 @@ export const LikesHistoryChart= React.memo(({ minuteHistory = [] }: LikesHistory
       </CardHeader>
 
       <CardContent>
-        {/* Chart */}
-        <div className="relative h-48 sm:h-64 flex items-end gap-[0.5px] bg-muted/50 rounded-lg p-3 sm:p-4">
-          {last15Minutes.map((stat, index) => {
-            const heightPercent = maxValue > 0 ? (stat.likesPerSecond / maxValue) * 100 : 0;
-            const isRecent = index >= 40; // Last 10 minutes (40 intervals)
-
-            // Calculate time ago in minutes and seconds
-            const secondsAgo = (last15Minutes.length - 1 - index) * 15;
-            const minutesAgo = Math.floor(secondsAgo / 60);
-            const remainingSeconds = secondsAgo % 60;
-            const timeAgoText = minutesAgo > 0
-              ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-              : `vor ${remainingSeconds}s`;
-
-            return (
-              <div
-                key={stat.interval}
-                className="relative flex-1 group"
-                style={{ height: '100%' }}
-              >
-                {/* Bar */}
-                <div
-                  className={`absolute bottom-0 w-full rounded-t transition-all duration-300 ${
-                    isRecent
-                      ? 'bg-gradient-to-t from-purple-500 to-pink-500'
-                      : 'bg-gradient-to-t from-blue-500 to-cyan-500'
-                  }`}
-                  style={{ height: `${heightPercent}%` }}
-                />
-
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                  <div className="bg-popover border text-popover-foreground text-xs rounded py-1 px-2 whitespace-nowrap shadow-xl">
-                    <div className="font-bold">{stat.likesPerSecond.toFixed(1)} L/s</div>
-                    <div className="text-muted-foreground text-[10px]">
-                      {timeAgoText}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Time labels */}
-        <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-muted-foreground">
-          <span>-15 Min</span>
-          <span>-7.5 Min</span>
-          <span>{t('common.now')}</span>
-        </div>
+        {/* Recharts Bar Chart */}
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart
+            data={rechartsData}
+            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" opacity={0.3} />
+            <XAxis
+              dataKey="label"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+            />
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+              tickFormatter={(value) => `${value}`}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
+            <Bar
+              dataKey="likesPerSecond"
+              radius={[4, 4, 0, 0]}
+              fill="url(#colorGradient)"
+              animationDuration={500}
+            />
+            <defs>
+              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(280, 100%, 70%)" stopOpacity={1} />
+                <stop offset="100%" stopColor="hsl(200, 100%, 50%)" stopOpacity={1} />
+              </linearGradient>
+            </defs>
+          </BarChart>
+        </ResponsiveContainer>
 
         {/* Legend */}
         <div className="mt-3 sm:mt-4 pt-3 border-t flex flex-wrap justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-            <span className="text-muted-foreground">{t('charts.olderThan10Min')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-gradient-to-r from-purple-500 to-pink-500"></div>
-            <span className="text-muted-foreground">{t('charts.last10Min')}</span>
+            <div className="w-3 h-3 rounded bg-gradient-to-b from-purple-500 to-blue-500"></div>
+            <span className="text-muted-foreground">{t('charts.likesPerSecondLabel')}</span>
           </div>
         </div>
       </CardContent>
