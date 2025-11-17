@@ -60,63 +60,56 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
     setUserApiKey,
     userApiKey,
     connectionStatus,
+    permanentError,
+    currentPhase,
+    currentAttempt,
+    maxAttempts,
+    lastError,
   } = useTikTokLive();
 
-  // Auto-connect when component mounts
-  useEffect(() => {
-    if (username && !isConnected && !isConnecting) {
-      console.log(`[StreamMonitor] Auto-connecting to @${username}${userApiKey ? ' (with API key)' : ''}`);
-      // Use user API key if available
-      if (userApiKey) {
-        connect(username, userApiKey);
-      } else {
-        connect(username);
-      }
+  // Helper to get phase display info
+  const getPhaseInfo = (phase: typeof currentPhase) => {
+    switch (phase) {
+      case 'direct':
+        return { icon: '📡', label: 'Phase 1: Direct Connection', color: 'text-blue-500' };
+      case 'server-api':
+        return { icon: '🔑', label: 'Phase 2: Server API Key', color: 'text-yellow-500' };
+      case 'user-api':
+        return { icon: '👤', label: 'Phase 3: Your API Key', color: 'text-green-500' };
+      case 'needs-user-api':
+        return { icon: '💬', label: 'Waiting for API Key', color: 'text-orange-500' };
+      default:
+        return { icon: '⚡', label: 'Connecting', color: 'text-primary' };
     }
+  };
+
+  const phaseInfo = getPhaseInfo(currentPhase);
+
+  // Auto-connect when component mounts (ONLY on username change)
+  useEffect(() => {
+    // ONLY auto-connect when username changes (component mount or tab switch)
+    // All other cases (reconnection) should be handled manually by user clicking "Reconnect"
+    console.log(`[StreamMonitor] ✅ Mounting for username: @${username}`);
+    connect(username);
 
     return () => {
-      if (isConnected) {
-        console.log(`[StreamMonitor] Disconnecting from @${username}`);
-        disconnect();
-      }
+      console.log(`[StreamMonitor] 🧹 Unmounting for @${username}`);
+      disconnect();
     };
-  }, [username, userApiKey]); // Added userApiKey as dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]); // ONLY username - prevents reconnection loops!
 
-  // Auto-Reconnect
+  // Auto-Reconnect (DISABLED - we use 5-phase system now, no auto-reconnect)
+  // The backend will go through all phases automatically:
+  // Phase 1: 5x direct -> Phase 2: 5x server API -> Phase 3: ask user for API key
+  // No need for auto-reconnect, the connection logic is handled entirely by the backend
   useEffect(() => {
-    let reconnectTimeout: NodeJS.Timeout | null = null;
-
-    // Don't auto-reconnect if:
-    // - Rate limited (any variation)
-    // - API key dialog is shown
-    // - Already connecting
-    const shouldNotReconnect =
-      error?.includes('rate limit') ||
-      error?.includes('Rate Limited') ||
-      error?.includes('Daily limit') ||
-      error?.includes('API key is rate limited') ||
-      needsUserApiKey;
-
-    if (username && !isConnected && !isConnecting && !shouldNotReconnect) {
-      console.log(`[StreamMonitor] 🔄 Connection lost, attempting reconnect in 10 seconds...`);
-
-      reconnectTimeout = setTimeout(() => {
-        console.log(`[StreamMonitor] 🔄 Reconnecting to @${username}${userApiKey ? ' (with API key)' : ''}...`);
-        // Use user API key if available
-        if (userApiKey) {
-          connect(username, userApiKey);
-        } else {
-          connect(username);
-        }
-      }, 10000);
+    // Auto-reconnect is DISABLED - permanent errors should NOT reconnect
+    // The user must manually click "Reconnect" button
+    if (permanentError) {
+      console.log(`[StreamMonitor] 🛑 Permanent error detected - auto-reconnect DISABLED`);
     }
-
-    return () => {
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-      }
-    };
-  }, [isConnected, isConnecting, username, error, connect, needsUserApiKey]);
+  }, [permanentError]);
 
   if (!isActive) {
     return null;
@@ -141,14 +134,52 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
               </p>
             </div>
           ) : isConnecting ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-2">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="font-semibold">{t('streamMonitor.connectingTo')} @{username}...</span>
+            <div className="flex flex-col gap-4 py-2">
+              {/* Phase Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-semibold">{t('streamMonitor.connectingTo')} @{username}</span>
+                </div>
+                {currentPhase && (
+                  <span className={`text-sm font-medium ${phaseInfo.color}`}>
+                    {phaseInfo.icon} {phaseInfo.label}
+                  </span>
+                )}
               </div>
+
+              {/* Progress Bar */}
+              {currentAttempt > 0 && maxAttempts > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Attempt {currentAttempt} of {maxAttempts}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {Math.round((currentAttempt / maxAttempts) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300 ease-out"
+                      style={{ width: `${(currentAttempt / maxAttempts) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Status Message */}
               {connectionStatus && (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-center p-2 bg-muted/50 rounded-md">
                   {connectionStatus}
+                </div>
+              )}
+
+              {/* Last Error (if any) */}
+              {lastError && (
+                <div className="text-xs p-2 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <div className="font-semibold text-destructive mb-1">Last Error:</div>
+                  <div className="text-muted-foreground line-clamp-2">{lastError}</div>
                 </div>
               )}
             </div>

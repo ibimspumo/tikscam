@@ -56,6 +56,13 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   const [needsUserApiKey, setNeedsUserApiKey] = useState<boolean>(false);
   const [userApiKey, setUserApiKey] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<string>('');
+  const [permanentError, setPermanentError] = useState<boolean>(false);
+
+  // NEW: Detailed connection phase tracking
+  const [currentPhase, setCurrentPhase] = useState<'direct' | 'server-api' | 'user-api' | 'needs-user-api' | null>(null);
+  const [currentAttempt, setCurrentAttempt] = useState<number>(0);
+  const [maxAttempts, setMaxAttempts] = useState<number>(5);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const [stats, setStats] = useState<StreamStats>({
     viewerCount: 0,
@@ -299,7 +306,13 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     // Reset state
     setError(null);
     setRoomInfo(null);
-    setNeedsUserApiKey(false); // Reset API key dialog flag
+    setNeedsUserApiKey(false);
+    setPermanentError(false);
+    setConnectionStatus('');
+    setCurrentPhase(null);
+    setCurrentAttempt(0);
+    setMaxAttempts(5);
+    setLastError(null);
     setStats({
       viewerCount: 0,
       totalLikes: 0,
@@ -477,7 +490,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       }
     });
 
-    // Handle needsApiKey event (server API key failed after 3 retries)
+    // Handle needsApiKey event (server API key failed after retries)
     eventSource.addEventListener('needsApiKey', (e: Event) => {
       try {
         const messageEvent = e as MessageEvent;
@@ -486,6 +499,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         setNeedsUserApiKey(true);
         setError(data.message || 'Connection failed. Please provide your EulerStream API key.');
         setIsConnecting(false);
+        setPermanentError(true); // Don't auto-reconnect when asking for API key
+        setCurrentPhase('needs-user-api');
       } catch (err) {
         console.warn('[TikTok Live] Failed to parse needsApiKey event');
       }
@@ -496,7 +511,22 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       try {
         const messageEvent = e as MessageEvent;
         const data = JSON.parse(messageEvent.data);
-        console.log('[TikTok Live] Status update:', data.message);
+        console.log('[TikTok Live] Status update:', data);
+
+        // Update detailed phase tracking
+        if (data.phase) {
+          setCurrentPhase(data.phase);
+        }
+        if (typeof data.attempt === 'number') {
+          setCurrentAttempt(data.attempt);
+        }
+        if (typeof data.maxAttempts === 'number') {
+          setMaxAttempts(data.maxAttempts);
+        }
+        if (data.error) {
+          setLastError(data.error);
+        }
+
         setConnectionStatus(data.message || '');
       } catch (err) {
         console.warn('[TikTok Live] Failed to parse connectionStatus event');
@@ -506,7 +536,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     // Handle fatal connection errors (sent as custom event from backend)
     eventSource.addEventListener('connectionError', (e: Event) => {
       const messageEvent = e as MessageEvent;
-      let data = {};
+      let data: any = {};
       try {
         if (messageEvent.data) {
           data = JSON.parse(messageEvent.data);
@@ -515,30 +545,28 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         // Silently handle parse errors
       }
 
-      console.log('[TikTok Live] Connection error detected');
+      console.log('[TikTok Live] 🚨 Connection error detected:', data);
 
-      // Check if this is a rate limit error - trigger automatic retry with API key
-      let errorMessage = (data as any).message || 'Connection lost';
-      const isRateLimitError = errorMessage.includes('Rate Limited') ||
-                               errorMessage.includes('rate limit') ||
-                               errorMessage.includes('rate_limit');
+      // Check if backend marked this as permanent
+      const isPermanent = data.permanent === true;
 
-      if (isRateLimitError) {
-        console.log('[TikTok Live] ⚠️ Rate Limit detected! Backend is retrying with API key...');
-        // The backend will handle the fallback, we just show a transitional message
-        setRetryingWithApiKey(true);
-        setError('⏰ Rate limit reached - Switching to EulerStream API...');
-        // Keep isConnecting true so user sees "Connecting..." state
-      } else if (errorMessage.includes('Failed to connect even with API key')) {
-        // This is a final failure after retry
-        errorMessage = '❌ Connection failed\n\nPossible reasons:\n• Stream is offline\n• Username is incorrect\n• Network problem';
+      let errorMessage = data.message || 'Connection lost';
+
+      if (isPermanent) {
+        console.log('[TikTok Live] 🛑 PERMANENT error - STOPPING all reconnection attempts');
         setError(errorMessage);
         setIsConnected(false);
         setIsConnecting(false);
+        setPermanentError(true); // Mark as permanent - no auto-reconnect!
+        setConnectionStatus(''); // Clear status
+        setCurrentPhase(null); // Clear phase
       } else {
-        // Unknown error - keep trying (don't stop connecting state immediately)
-        setError(`⏳ Connection issue - Retrying...\n\n${errorMessage}`);
-        // Don't set isConnecting to false yet - give backend a chance to retry
+        // Temporary error - allow reconnect
+        console.log('[TikTok Live] ⚠️ Temporary error - may reconnect');
+        setError(errorMessage);
+        setIsConnected(false);
+        setIsConnecting(false);
+        setConnectionStatus(''); // Clear status
       }
     });
 
@@ -887,19 +915,23 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       console.log('📡 EventSource opened');
     };
 
-    eventSource.onerror = () => {
-      // Handle connection errors silently - the backend will send proper error events
-      // This handler is triggered during normal reconnection attempts
+    eventSource.onerror = (e) => {
+      console.warn('📡 EventSource error, readyState:', eventSource.readyState);
 
-      // If connection failed permanently
+      // If connection failed permanently (EventSource closed)
       if (eventSource.readyState === EventSource.CLOSED) {
+        console.log('📡 EventSource CLOSED - stopping connection attempts');
         setIsConnected(false);
-        setIsConnecting(false);
+        setIsConnecting(false); // CRITICAL: Mark as not connecting anymore!
 
-        // Set a helpful error message if we don't have one yet
+        // Only set generic error if we don't have a specific error from backend
         setError((prevError) => {
-          if (prevError) return prevError; // Keep existing error message
-          return '⏰ Connection failed\n\nPossible reasons:\n• Daily limit reached - Try again tomorrow\n• Stream is offline\n• Network problem\n\nFor more connections: eulerstream.com/pricing';
+          if (prevError) {
+            console.log('📡 Keeping existing error:', prevError);
+            return prevError; // Keep existing error message from backend
+          }
+          // No error from backend, set generic message
+          return '⏰ Connection closed\n\nPossible reasons:\n• Daily limit reached\n• Stream is offline\n• Network problem';
         });
       }
     };
@@ -1014,5 +1046,10 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     setUserApiKey,
     userApiKey,
     connectionStatus,
+    permanentError,
+    currentPhase,
+    currentAttempt,
+    maxAttempts,
+    lastError,
   };
 }

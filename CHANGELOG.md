@@ -1,5 +1,149 @@
 # TikScam Changelog
 
+## [0.3.0] - 2025-11-17
+
+### 🎯 Intelligent 5-Phase Connection System
+
+This release introduces a **revolutionary connection system** with clear visual feedback and zero endless reconnection loops.
+
+### ✨ New Features
+
+**5-Phase Connection Strategy**
+- **Phase 1:** 5 attempts without API key (direct TikTok connection)
+- **Phase 2:** 5 attempts with server API key (if `EULERSTREAM_API_KEY` set)
+- **Phase 3:** User API key dialog (manual input with instructions)
+- **Phase 4:** 5 attempts with user-provided API key
+- **Phase 5:** Final error state (manual reconnect only)
+
+**Crystal-Clear Visual Feedback**
+- Real-time phase display with color-coded icons (📡 🔑 👤 💬)
+- Animated progress bar showing attempt X/5
+- Detailed status messages for each connection attempt
+- Last error message prominently displayed
+- All errors logged to browser console
+
+**Smart Error Handling**
+- Rate limit detection stops phase immediately (no wasted attempts)
+- Permanent error flag prevents endless reconnection loops
+- Auto-reconnect disabled when user input required
+- Clear distinction between temporary and permanent errors
+
+### 🔧 Technical Improvements
+
+**Backend (`route.ts`)**
+- Complete rewrite with 5-phase logic
+- New `tryConnect()` helper with 5-attempt retry
+- Enhanced error extraction from tiktok-live-connector
+- Per-connection API keys (not global)
+- Detailed `connectionStatus` events with phase/attempt/error data
+- `permanent: true` flag for rate limit errors
+
+**Frontend (`useTikTokLive.ts`)**
+- New state variables: `currentPhase`, `currentAttempt`, `maxAttempts`, `lastError`
+- Respects `permanent` flag from backend (stops all reconnection)
+- Enhanced connectionStatus event handler with phase tracking
+- Improved EventSource error handling
+
+**UI (`StreamMonitor.tsx`)**
+- Removed endless auto-reconnect loop
+- Auto-connect only on username change (component mount)
+- Phase-specific visual indicators
+- Progress bar with percentage
+- Status message box
+- Last error display box
+
+**Types (`stream.ts`)**
+- Extended `UseTikTokLiveReturn` with phase tracking fields
+- Type-safe phase values: `'direct' | 'server-api' | 'user-api' | 'needs-user-api' | null`
+
+### 🐛 Bug Fixes
+
+**No More Endless Reconnection Loops**
+- Fixed: Frontend kept reconnecting when `userApiKey` changed
+- Fixed: Auto-reconnect triggered on every state change
+- Fixed: `permanentError` flag not respected in useEffect dependencies
+- Fixed: EventSource close not setting `isConnecting = false`
+- Solution: Auto-connect only on `username` change, ignore all other state
+
+**Better Rate Limit Handling**
+- Fixed: Rate limit errors triggered multiple retry attempts
+- Fixed: User API key not preserved on reconnect
+- Solution: Stop phase immediately on rate limit, set `permanent: true`
+
+**Clear Error Messages**
+- Fixed: Generic "Unknown error" for tiktok-live-connector errors
+- Fixed: Error extraction failed for custom error formats
+- Solution: Handle string, object, and Error instance formats
+
+### 📊 Connection Flow Example
+
+```
+User connects to stream:
+
+📡 Phase 1: Direct Connection
+├─ Attempt 1/5... ❌ Rate Limited
+└─ Phase stopped (rate limit detected)
+
+🔑 Phase 2: Server API Key
+├─ Not available (EULERSTREAM_API_KEY not set)
+└─ Skip to Phase 3
+
+💬 Phase 3: User API Key Dialog
+├─ Dialog shown with instructions
+├─ User enters: euler_ABC123...
+└─ Click "Connect with API Key"
+
+👤 Phase 4: Your API Key
+├─ Attempt 1/5... ❌ Rate Limited
+└─ Phase stopped (rate limit detected)
+
+🛑 Phase 5: Final Error
+├─ Message: "Your API key is rate limited"
+├─ Link: https://www.eulerstream.com/pricing
+└─ User must click "Reconnect" button manually
+```
+
+### 🎨 UI/UX Improvements
+
+**Connection Status Display**
+- Phase header with icon and label
+- Color-coded phases (blue, yellow, green, orange)
+- Progress bar with smooth animations
+- Compact status message box
+- Collapsible error details
+
+**User Control**
+- No automatic reconnection after errors
+- Manual "Reconnect" button always available
+- API key dialog with clear instructions
+- Cancel button to close dialog
+
+### 📝 Changed Files
+
+**Created:**
+- `components/dialogs/ApiKeyDialog.tsx` - User API key input dialog
+
+**Modified:**
+- `app/api/tiktok-live/[username]/route.ts` - Complete 5-phase rewrite
+- `hooks/useTikTokLive.ts` - Phase tracking, permanent error handling
+- `components/layout/StreamMonitor.tsx` - Auto-connect fix, visual feedback
+- `types/stream.ts` - Extended interface with phase fields
+- `README.md` - Added 5-phase connection documentation
+
+### 🔄 Breaking Changes
+
+None - All changes are internal improvements. Public API unchanged.
+
+### 📊 Metrics
+
+- **Connection attempts:** 5 per phase (was: unlimited)
+- **Phases:** 4 total (was: 2 with endless retries)
+- **User control:** Full (was: automated chaos)
+- **Visual feedback:** Real-time (was: generic "connecting...")
+- **Reconnection loops:** 0 (was: endless)
+
+---
+
 ## [0.2.0] - 2025-11-17
 
 ### 🎉 Major Refactoring & Code Quality Improvements

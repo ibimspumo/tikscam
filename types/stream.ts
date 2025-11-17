@@ -196,4 +196,9 @@ export interface UseTikTokLiveReturn {
   setUserApiKey: (key: string) => void; // Function to set user's API key
   userApiKey: string; // Current user API key value
   connectionStatus: string; // Current connection status message
+  permanentError: boolean; // Flag to indicate permanent errors (no auto-reconnect)
+  currentPhase: 'direct' | 'server-api' | 'user-api' | 'needs-user-api' | null; // Current connection phase
+  currentAttempt: number; // Current attempt number (1-5)
+  maxAttempts: number; // Maximum attempts for current phase (always 5)
+  lastError: string | null; // Last error message from connection attempt
 }
