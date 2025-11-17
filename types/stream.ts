@@ -182,7 +182,7 @@ export interface RoomInfo {
  * Connection state for TikTok Live hook
  */
 export interface UseTikTokLiveReturn {
-  connect: (uniqueId: string) => Promise<void>;
+  connect: (uniqueId: string, customApiKey?: string) => Promise<void>;
   disconnect: () => void;
   isConnected: boolean;
   isConnecting: boolean;
@@ -192,4 +192,7 @@ export interface UseTikTokLiveReturn {
   eventSource: EventSource | null;
   usingApiKey: boolean; // Flag to show if EulerStream API key is active
   retryingWithApiKey: boolean; // Flag to show when retrying with API key
+  needsUserApiKey: boolean; // Flag to show API key dialog
+  setUserApiKey: (key: string) => void; // Function to set user's API key
+  userApiKey: string; // Current user API key value
 }

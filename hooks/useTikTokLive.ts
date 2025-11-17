@@ -53,6 +53,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   const [currentUsername, setCurrentUsername] = useState<string>('');
   const [usingApiKey, setUsingApiKey] = useState<boolean>(false);
   const [retryingWithApiKey, setRetryingWithApiKey] = useState<boolean>(false);
+  const [needsUserApiKey, setNeedsUserApiKey] = useState<boolean>(false);
+  const [userApiKey, setUserApiKey] = useState<string>('');
 
   const [stats, setStats] = useState<StreamStats>({
     viewerCount: 0,
@@ -278,7 +280,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     chatActivityHistoryRef.current = chatActivityHistoryRef.current.filter(m => m.timestamp >= cutoff);
   }, []);
 
-  const connect = useCallback(async (uniqueId: string) => {
+  const connect = useCallback(async (uniqueId: string, customApiKey?: string) => {
     setIsConnecting(true);
     setCurrentUsername(uniqueId);
 
@@ -296,6 +298,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     // Reset state
     setError(null);
     setRoomInfo(null);
+    setNeedsUserApiKey(false); // Reset API key dialog flag
     setStats({
       viewerCount: 0,
       totalLikes: 0,
@@ -338,8 +341,11 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     lastIntervalFollowersRef.current = 0;
 
     // Connect to SSE stream IMMEDIATELY (don't wait for other data)
-    const sseUrl = `/api/tiktok-live/${uniqueId}`;
-    console.log(`⚡ Connecting to TikTok Live SSE: ${sseUrl}`);
+    // Include custom API key in URL if provided
+    const sseUrl = customApiKey
+      ? `/api/tiktok-live/${uniqueId}?apiKey=${encodeURIComponent(customApiKey)}`
+      : `/api/tiktok-live/${uniqueId}`;
+    console.log(`⚡ Connecting to TikTok Live SSE: ${sseUrl}${customApiKey ? ' (with user API key)' : ''}`);
 
     const eventSource = new EventSource(sseUrl);
     eventSourceRef.current = eventSource;
@@ -467,6 +473,20 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         // Keep isConnecting true
       } catch (err) {
         console.warn('[TikTok Live] Failed to parse retrying event');
+      }
+    });
+
+    // Handle needsApiKey event (server API key failed after 3 retries)
+    eventSource.addEventListener('needsApiKey', (e: Event) => {
+      try {
+        const messageEvent = e as MessageEvent;
+        const data = JSON.parse(messageEvent.data);
+        console.log('[TikTok Live] 🔑 Server API key failed, requesting user API key');
+        setNeedsUserApiKey(true);
+        setError(data.message || 'Connection failed. Please provide your EulerStream API key.');
+        setIsConnecting(false);
+      } catch (err) {
+        console.warn('[TikTok Live] Failed to parse needsApiKey event');
       }
     });
 
@@ -977,5 +997,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     eventSource: eventSourceRef.current,
     usingApiKey,
     retryingWithApiKey,
+    needsUserApiKey,
+    setUserApiKey,
+    userApiKey,
   };
 }

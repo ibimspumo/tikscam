@@ -31,6 +31,13 @@ export async function GET(
     return new Response('Username required', { status: 400 });
   }
 
+  // Check if user provided their own API key
+  const userApiKey = request.nextUrl.searchParams.get('apiKey');
+  if (userApiKey) {
+    console.log('[TikTok Live] Using user-provided API key');
+    SignConfig.apiKey = userApiKey;
+  }
+
   // Setup Server-Sent Events
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -396,47 +403,70 @@ export async function GET(
           // Register event handlers for fallback connection
           registerEventHandlers(fallbackConnection);
 
-          // Try to connect with API key
-          try {
-            console.log(`[TikTok Live] 🔄 Retry: Connecting with EulerStream API key...`);
-            await fallbackConnection.connect();
-          } catch (retryErr) {
-            console.error(`[TikTok Live] ❌ Failed to connect even with API key:`, retryErr);
+          // Try to connect with API key (with retry logic)
+          let fallbackSuccess = false;
+          const fallbackMaxRetries = 3;
 
-            // Extract error message using same logic
-            let retryErrorMessage = 'Failed to connect to stream even with API key';
-            let retryErrorType = 'Error';
-            if (typeof retryErr === 'string') {
-              retryErrorMessage = retryErr;
-            } else if (retryErr && typeof retryErr === 'object') {
-              const customErr = retryErr as { info?: string; exception?: string | Error; message?: string; name?: string };
+          for (let fallbackAttempt = 1; fallbackAttempt <= fallbackMaxRetries && !fallbackSuccess; fallbackAttempt++) {
+            try {
+              console.log(`[TikTok Live] 🔄 Retry with API key (attempt ${fallbackAttempt}/${fallbackMaxRetries})...`);
+              await fallbackConnection.connect();
+              fallbackSuccess = true;
+              console.log(`[TikTok Live] ✅ Connected with API key on attempt ${fallbackAttempt}`);
+            } catch (retryErr) {
+              console.error(`[TikTok Live] ❌ API key connection failed on attempt ${fallbackAttempt}:`, retryErr);
 
-              // Extract from exception (can be string or Error object)
-              if (customErr.exception) {
-                if (typeof customErr.exception === 'string') {
-                  retryErrorMessage = customErr.exception;
-                } else if (customErr.exception instanceof Error) {
-                  retryErrorMessage = customErr.exception.message;
+              // If this was the last attempt, handle the failure
+              if (fallbackAttempt === fallbackMaxRetries) {
+                // Extract error message using same logic
+                let retryErrorMessage = 'Failed to connect to stream even with API key';
+                let retryErrorType = 'Error';
+                if (typeof retryErr === 'string') {
+                  retryErrorMessage = retryErr;
+                } else if (retryErr && typeof retryErr === 'object') {
+                  const customErr = retryErr as { info?: string; exception?: string | Error; message?: string; name?: string };
+
+                  // Extract from exception (can be string or Error object)
+                  if (customErr.exception) {
+                    if (typeof customErr.exception === 'string') {
+                      retryErrorMessage = customErr.exception;
+                    } else if (customErr.exception instanceof Error) {
+                      retryErrorMessage = customErr.exception.message;
+                    }
+                  } else {
+                    retryErrorMessage = customErr.info || customErr.message || retryErrorMessage;
+                  }
+
+                  retryErrorType = customErr.name || 'Error';
+                } else if (retryErr instanceof Error) {
+                  retryErrorMessage = retryErr.message;
+                  retryErrorType = retryErr.name;
+                }
+
+                // If user didn't provide their own API key, ask for it
+                if (!userApiKey) {
+                  console.log('[TikTok Live] 🔑 Requesting user API key');
+                  sendEvent('needsApiKey', {
+                    message: 'Server API key failed. Please provide your own EulerStream API key.',
+                  });
+                } else {
+                  // User API key also failed
+                  sendEvent('connectionError', {
+                    message: retryErrorMessage,
+                    type: retryErrorType,
+                  });
+                }
+
+                streamClosed = true;
+                try {
+                  controller.close();
+                } catch (err) {
+                  // Already closed
                 }
               } else {
-                retryErrorMessage = customErr.info || customErr.message || retryErrorMessage;
+                // Not the last attempt, wait before retry
+                await new Promise(resolve => setTimeout(resolve, 2000));
               }
-
-              retryErrorType = customErr.name || 'Error';
-            } else if (retryErr instanceof Error) {
-              retryErrorMessage = retryErr.message;
-              retryErrorType = retryErr.name;
-            }
-
-            sendEvent('connectionError', {
-              message: retryErrorMessage,
-              type: retryErrorType,
-            });
-            streamClosed = true;
-            try {
-              controller.close();
-            } catch (err) {
-              // Already closed
             }
           }
 

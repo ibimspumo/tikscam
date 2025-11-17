@@ -22,6 +22,7 @@ import {
   TopUsersWidget,
   WidgetErrorBoundary,
 } from '@/components/widgets';
+import { ApiKeyDialog } from '@/components/dialogs/ApiKeyDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,9 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
     error,
     usingApiKey,
     retryingWithApiKey,
+    needsUserApiKey,
+    setUserApiKey,
+    userApiKey,
   } = useTikTokLive();
 
   // Auto-connect when component mounts
@@ -282,6 +286,20 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
           />
         </>
       )}
+
+      {/* API Key Dialog */}
+      <ApiKeyDialog
+        isOpen={needsUserApiKey}
+        onClose={() => {
+          // User cancelled - just close the dialog
+        }}
+        onSubmit={(apiKey) => {
+          setUserApiKey(apiKey);
+          // Reconnect with the user's API key
+          connect(username, apiKey);
+        }}
+        error={error}
+      />
     </div>
   );
 }
