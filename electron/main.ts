@@ -125,22 +125,41 @@ async function findAvailablePort(startPort: number, maxAttempts: number = 10): P
 }
 
 /**
- * Wait for the Next.js server to be ready by checking if port is in use
+ * Wait for the Next.js server to be ready by making HTTP requests
  */
 async function waitForServer(port: number, maxRetries = 30): Promise<void> {
+  // Small initial delay to let the server start
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   for (let i = 0; i < maxRetries; i++) {
-    // Check if port is in use (server is running)
-    const portInUse = !(await isPortAvailable(port));
+    try {
+      // Try to make an HTTP request to the server
+      await new Promise<void>((resolve, reject) => {
+        const req = http.get(`http://127.0.0.1:${port}/`, {
+          timeout: 2000,
+        }, (res) => {
+          // Any response means server is running
+          log('✅ Next.js server is ready! Status:', res.statusCode);
+          res.resume(); // Consume response
+          resolve();
+        });
 
-    if (portInUse) {
-      log('✅ Next.js server is ready! Port', port, 'is in use');
-      // Give it a bit more time to fully initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+        req.on('error', (err) => {
+          reject(err);
+        });
+
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('Request timeout'));
+        });
+      });
+
+      // Server responded successfully
       return;
+    } catch (error) {
+      log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-
-    log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
-    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   throw new Error('❌ Server failed to start within timeout period');
