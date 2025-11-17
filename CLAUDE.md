@@ -61,9 +61,8 @@ The application uses **two methods** for connecting to TikTok streams, with auto
    - Supports 100+ connections/day
 
 **Key Implementation:**
-- `lib/streamManager.ts` - Server-side stream manager using direct TikTok connection
-- `hooks/useEulerStream.ts` - Client-side hook for EulerStream WebSocket fallback
-- `hooks/useTikTokLive.ts` - Main React hook that coordinates both connection methods via SSE
+- `app/api/tiktok-live/[username]/route.ts` - Server-side SSE endpoint with automatic fallback
+- `hooks/useTikTokLive.ts` - Main React hook that connects via SSE and aggregates stats
 
 ### Data Flow Architecture
 
@@ -92,13 +91,7 @@ The application uses **two methods** for connecting to TikTok streams, with auto
 │  │ - SSE endpoint streaming real-time events            │  │
 │  │ - Uses tiktok-live-connector                         │  │
 │  │ - Broadcasts: chat, gift, like, member, social, etc.│  │
-│  └──────────────────────────────────────────────────────┘  │
-│                         ↓                                    │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ lib/streamManager.ts (Server-side singleton)         │  │
-│  │ - Manages multiple simultaneous streams              │  │
-│  │ - WebcastPushConnection instances                    │  │
-│  │ - Event aggregation and statistics                   │  │
+│  │ - Automatic fallback to EulerStream on rate limit   │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
                           ↓ WebSocket
@@ -150,7 +143,7 @@ All **21 analytics widgets** are React components using `React.memo()`:
 
 **Live Feeds (8 widgets):**
 - `ChatWidget.tsx` - Last 50 messages with avatars
-- `GiftsFeed.tsx` - Horizontal scrollable gift display
+- `GiftsFeedWidget.tsx` - Horizontal scrollable gift display
 - `GiftListWidget.tsx` - All TikTok gift catalog
 - `TopUsersWidget.tsx` - Top gifters, chatters, active users
 - `DebugWidget.tsx` - Raw technical data
@@ -158,34 +151,14 @@ All **21 analytics widgets** are React components using `React.memo()`:
 
 ## API Endpoints
 
-### Stream Management
-- `POST /api/streams/start` - Start monitoring a stream (server-side)
-- `POST /api/streams/stop` - Stop monitoring a stream
-- `GET /api/streams/list` - List all active streams
-
 ### TikTok Data (SSE)
-- `GET /api/tiktok-live/[username]/route.ts` - **Main SSE endpoint for real-time events**
+- `GET /api/tiktok-live/[username]` - **Main SSE endpoint for real-time events**
   - Returns Server-Sent Events stream
-  - Event types: `chat`, `gift`, `like`, `member`, `social`, `roomUser`, `connected`, `disconnected`
+  - Event types: `chat`, `gift`, `like`, `member`, `social`, `roomUser`, `connected`, `disconnected`, `retrying`
+  - Automatic fallback to EulerStream API on rate limit
 
 ### TikTok Info APIs
-- `GET /api/tiktok-livestream` - Get stream info
-- `GET /api/tiktok-user` - Get user profile data
-
-## Services Layer
-
-**TikTok Service** (`services/tiktok/`):
-- `index.ts` - Main unified service combining WebSocket + REST API
-- `websocket.ts` - EulerStream WebSocket implementation
-- `api.ts` - REST API methods (getUserInfo, getStreamInfo, etc.)
-- `types.ts` - TypeScript type definitions
-
-**Factory pattern:**
-```typescript
-import { createTikTokLiveService } from '@/services/tiktok';
-const tiktok = createTikTokLiveService(apiKey, debug);
-await tiktok.connect(username);
-```
+- `GET /api/tiktok-user` - Get user profile data (follower count, avatar, etc.)
 
 ## Environment Variables
 

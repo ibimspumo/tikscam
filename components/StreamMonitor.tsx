@@ -13,7 +13,7 @@ import {
   ViewerHistoryChart,
   FollowerHistoryChart,
   DiamondHistoryChart,
-  GiftsFeed,
+  GiftsFeedWidget,
   EngagementRateChart,
   ViewerTrendWidget,
   CombinedTimelineChart,
@@ -226,7 +226,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
           </div>
 
           {/* Live Gifts Feed */}
-          <GiftsFeed gifts={stats.gifts} />
+          <GiftsFeedWidget gifts={stats.gifts} />
 
           {/* Top Users */}
           <TopUsersWidget userStats={stats.userStats} />

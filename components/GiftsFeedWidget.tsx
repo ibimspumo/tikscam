@@ -20,7 +20,7 @@ interface GiftsFeedProps {
   gifts: GiftItem[];
 }
 
-export const GiftsFeed= React.memo(({ gifts }: GiftsFeedProps) => {
+export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,4 +147,4 @@ export const GiftsFeed= React.memo(({ gifts }: GiftsFeedProps) => {
   );
 });
 
-GiftsFeed.displayName = 'GiftsFeed';
+GiftsFeedWidget.displayName = 'GiftsFeedWidget';

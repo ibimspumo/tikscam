@@ -7,7 +7,7 @@
 export { StreamInfoWidget } from './StreamInfoWidget';
 export { ActivityWidget } from './ActivityWidget';
 export { LikesPerSecondWidget } from './LikesPerSecondWidget';
-export { GiftsFeed } from './GiftsFeed';
+export { GiftsFeedWidget } from './GiftsFeedWidget';
 export { ViewerTrendWidget } from './ViewerTrendWidget';
 export { GiftListWidget } from './GiftListWidget';
 export { DebugWidget } from './DebugWidget';
