@@ -2,50 +2,50 @@
 
 <div align="center">
 
-**Transparenz-Tool für TikTok Live-Streams**
+**Transparency Tool for TikTok Live Streams**
 
-Schütze dich vor Betrug! Echtzeit-Analytics zum Aufdecken von Scam-Streams und Timer-Manipulation.
+Protect yourself from scams! Real-time analytics to uncover scam streams and timer manipulation.
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.6-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19.1.0-blue?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
 
-[Features](#-features) • [Installation](#-installation) • [Verwendung](#-verwendung) • [Für Entwickler](#-für-entwickler)
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [For Developers](#-for-developers)
 
 </div>
 
 ---
 
-## 🤖 Entwickelt mit AI
+## 🤖 Built with AI
 
-> **Hinweis:** Dieses Projekt wurde komplett mit **Claude AI** (Anthropic) entwickelt. Der gesamte Code, die Architektur und die Dokumentation wurden durch AI-gestützte Entwicklung erstellt.
+> **Note:** This project was completely developed with **Claude AI** (Anthropic). All code, architecture, and documentation were created through AI-assisted development.
 
 ---
 
-## 🎯 Was ist TikScam?
+## 🎯 What is TikScam?
 
-**TikScam** ist ein kostenloses **Aufklärungs-Tool**, mit dem Zuschauer von TikTok Live-Streams **selbst überprüfen** können, ob sie von Streamern betrogen werden.
+**TikScam** is a free **transparency tool** that allows TikTok Live stream viewers to **verify themselves** whether they are being scammed by streamers.
 
-### 🚨 Das Problem
+### 🚨 The Problem
 
-Viele TikTok-Streamer nutzen Tricks, um Zuschauer zu manipulieren:
+Many TikTok streamers use tricks to manipulate viewers:
 
-- ⏰ **Fake Timer** - "Noch 100 Geschenke bis zum Ziel!" (Ziel wird nie erreicht)
-- 💎 **Geschenke-Manipulation** - Empfangene Geschenke werden versteckt
-- 👥 **Viewer-Bots** - Künstlich aufgeblasene Zuschauerzahlen
-- 🎁 **Fake-Reaktionen** - Reagieren auf nie gesendete Geschenke
+- ⏰ **Fake Timers** - "Only 100 more gifts until the goal!" (Goal is never reached)
+- 💎 **Gift Manipulation** - Received gifts are hidden
+- 👥 **Viewer Bots** - Artificially inflated viewer counts
+- 🎁 **Fake Reactions** - Reacting to gifts that were never sent
 
-### ✅ Die Lösung
+### ✅ The Solution
 
-Mit TikScam kannst du **in Echtzeit** alle Stream-Daten selbst einsehen:
+With TikScam you can see all stream data **in real-time**:
 
-- 🎁 **Exakte Geschenke-Zählung** - Sieh ALLE empfangenen Geschenke mit Diamanten-Wert
-- 💎 **Gesamteinnahmen** - Berechne die echten Einnahmen des Streamers
-- 📈 **Historische Daten** - 15-Minuten-Verlauf zum Vergleichen
-- 👑 **Top-Spender-Liste** - Sieh wer wirklich zahlt
+- 🎁 **Exact Gift Counting** - See ALL received gifts with diamond value
+- 💎 **Total Earnings** - Calculate the streamer's real income
+- 📈 **Historical Data** - 15-minute history for comparison
+- 👑 **Top Gifters List** - See who's really paying
 
-**Wichtig:** Du brauchst **keine** TikTok-Zugangsdaten! Die App liest nur öffentlich verfügbare Stream-Daten.
+**Important:** You don't need TikTok credentials! The app only reads publicly available stream data.
 
 ---
 
@@ -53,133 +53,133 @@ Mit TikScam kannst du **in Echtzeit** alle Stream-Daten selbst einsehen:
 
 ### 🎯 Anti-Scam Features
 
-- **🎁 100% Geschenke-Transparenz** - Jedes Geschenk wird erfasst
-- **💎 Echtzeit-Einnahmen-Rechner** - Sieh exakt wie viel verdient wird
-- **👑 Top-Spender-Liste** - Wer zahlt wirklich?
-- **📊 15-Min-Verlaufsdaten** - Dokumentiere Scams mit Charts
-- **🔍 Geschenke-Zähler** - Automatische Zählung aller Geschenke
-- **📈 Engagement-Analyse** - Erkenne Viewer-Bots
+- **🎁 100% Gift Transparency** - Every gift is tracked
+- **💎 Real-time Earnings Calculator** - See exactly how much is earned
+- **👑 Top Gifters List** - Who's really paying?
+- **📊 15-Min Historical Data** - Document scams with charts
+- **🔍 Gift Counter** - Automatic counting of all gifts
+- **📈 Engagement Analysis** - Detect viewer bots
 
-### 🛠️ Technische Features
+### 🛠️ Technical Features
 
-- **🔴 Multi-Stream Monitoring** - Überwache mehrere Streams gleichzeitig
-- **⚡ Echtzeit-Daten** - Sofortige Event-Anzeige
-- **📊 21 Analytics-Widgets** - Umfassende Statistiken
-- **📱 Mobile-First** - Funktioniert auf allen Geräten
-- **🌙 Dark Mode** - Augenschonendes Design
+- **🔴 Multi-Stream Monitoring** - Monitor multiple streams simultaneously
+- **⚡ Real-time Data** - Instant event display
+- **📊 21 Analytics Widgets** - Comprehensive statistics
+- **📱 Mobile-First** - Works on all devices
+- **🌙 Dark Mode** - Eye-friendly design
 
 ---
 
 ## 🚀 Installation
 
-### Voraussetzungen
+### Prerequisites
 
-Du benötigst **Node.js** (v20 oder höher):
-- [nodejs.org](https://nodejs.org) - Lade die **LTS-Version** herunter
+You need **Node.js** (v20 or higher):
+- [nodejs.org](https://nodejs.org) - Download the **LTS version**
 
-### Schnellstart
+### Quick Start
 
 ```bash
-# 1. Projekt herunterladen
-git clone https://github.com/dein-username/tikscam.git
+# 1. Clone the repository
+git clone https://github.com/your-username/tikscam.git
 cd tikscam
 
-# 2. Abhängigkeiten installieren
+# 2. Install dependencies
 npm install
 
-# 3. Programm starten
+# 3. Start the application
 npm run dev
 
-# 4. Browser öffnen
-# Gehe zu: http://localhost:3000
+# 4. Open your browser
+# Go to: http://localhost:3000
 ```
 
-### API-Key (Optional)
+### API Key (Optional)
 
-Für unbegrenzte Verbindungen hole dir einen **kostenlosen** API-Key:
+For unlimited connections, get a **free** API key:
 
-1. Registriere dich bei [eulerstream.com/pricing](https://www.eulerstream.com/pricing)
-2. Kopiere deinen API-Key
-3. Erstelle `.env.local`:
+1. Register at [eulerstream.com/pricing](https://www.eulerstream.com/pricing)
+2. Copy your API key
+3. Create `.env.local`:
    ```bash
    cp .env.example .env.local
    ```
-4. Füge deinen Key ein:
+4. Add your key:
    ```bash
-   EULERSTREAM_API_KEY=dein_key_hier
+   EULERSTREAM_API_KEY=your_key_here
    ```
-5. Starte neu: `npm run dev`
+5. Restart: `npm run dev`
 
 **Limits:**
-- Ohne Key: ~10-20 Streams/Tag
-- Mit Key: 100+ Streams/Tag
+- Without key: ~10-20 streams/day
+- With key: 100+ streams/day
 
 ---
 
-## 📱 Verwendung
+## 📱 Usage
 
-### Stream überwachen
+### Monitor a Stream
 
-1. Klicke auf **"+ Stream hinzufügen"**
-2. Gib den TikTok-Benutzernamen ein (ohne @)
-3. Klicke **"Stream starten"**
-4. Dashboard zeigt alle Daten in Echtzeit
+1. Click **"+ Add Stream"**
+2. Enter the TikTok username (without @)
+3. Click **"Start Stream"**
+4. Dashboard shows all data in real-time
 
-**Wichtig:** Der Stream muss **LIVE** sein!
+**Important:** The stream must be **LIVE**!
 
-### Mehrere Streams
+### Multiple Streams
 
-- Nutze das **Tab-System** oben
-- Wechsle zwischen verschiedenen Streams
-- Schließe Tabs mit dem **X**
-
----
-
-## 🔍 Typische Scam-Beispiele
-
-### 1. Countdown-Scam ⏰
-
-**Betrug:**
-```
-Streamer: "Noch 100 Rosen bis zum Ziel!"
-Zuschauer senden 100 Rosen
-→ Streamer zählt nur 80 und fordert mehr
-```
-
-**TikScam zeigt:** Exakte Anzahl (147 Rosen) + wer hat geschickt
-
-### 2. Einnahmen-Verschleierung 💸
-
-**Betrug:**
-```
-Streamer: "Ich hab erst 50💎 bekommen, bitte helft!"
-→ In Wahrheit: 5.000💎 erhalten
-```
-
-**TikScam zeigt:** Gesamteinnahmen in Echtzeit (z.B. 12.450💎 = ~62€)
-
-### 3. Viewer-Bots 🤖
-
-**Betrug:**
-```
-Stream: 8.500 Zuschauer angezeigt
-→ Chat total inaktiv = Bots
-```
-
-**TikScam zeigt:** Zuschauer-Verlauf + Engagement-Rate (erkenne Bot-Muster)
+- Use the **tab system** at the top
+- Switch between different streams
+- Close tabs with the **X**
 
 ---
 
-## 🔧 Häufige Probleme
+## 🔍 Typical Scam Examples
+
+### 1. Countdown Scam ⏰
+
+**Scam:**
+```
+Streamer: "Only 100 more roses until the goal!"
+Viewers send 100 roses
+→ Streamer counts only 80 and asks for more
+```
+
+**TikScam shows:** Exact count (147 roses) + who sent them
+
+### 2. Earnings Concealment 💸
+
+**Scam:**
+```
+Streamer: "I've only received 50💎, please help!"
+→ In reality: 5,000💎 received
+```
+
+**TikScam shows:** Total earnings in real-time (e.g., 12,450💎 = ~$62)
+
+### 3. Viewer Bots 🤖
+
+**Scam:**
+```
+Stream: 8,500 viewers displayed
+→ Chat completely inactive = Bots
+```
+
+**TikScam shows:** Viewer history + engagement rate (detect bot patterns)
+
+---
+
+## 🔧 Common Issues
 
 ### "Stream not found"
-- Stream muss LIVE sein
-- Benutzername korrekt? (ohne @)
-- Account muss öffentlich sein
+- Stream must be LIVE
+- Username correct? (without @)
+- Account must be public
 
 ### "Rate limit exceeded"
-- Tages-Limit erreicht
-- **Lösung:** Hole dir einen [API-Key](#api-key-optional)
+- Daily limit reached
+- **Solution:** Get an [API key](#api-key-optional)
 
 ### "Port 3000 already in use"
 ```bash
@@ -189,48 +189,48 @@ npx kill-port 3000
 # Mac/Linux
 lsof -ti:3000 | xargs kill
 
-# Oder nutze anderen Port
+# Or use a different port
 npm run dev -- -p 3001
 ```
 
-### Performance-Probleme
+### Performance Issues
 ```bash
-# Production-Mode nutzen (schneller)
+# Use production mode (faster)
 npm run build
 npm start
 ```
 
 ---
 
-## 👨‍💻 Für Entwickler
+## 👨‍💻 For Developers
 
 ### Tech Stack
 
-- **Next.js 15.5.6** - React Framework mit App Router
-- **React 19.1.0** - UI-Bibliothek
+- **Next.js 15.5.6** - React Framework with App Router
+- **React 19.1.0** - UI Library
 - **TypeScript 5.9.3** - Type-Safe Development
 - **Tailwind CSS 4** - Styling
 - **TikTok Live Connector** - Direct TikTok WebSocket
 - **EulerStream SDK** - Fallback API
 
-### Architektur
+### Architecture
 
-**Dual-Connection-Strategie:**
-1. **Primary:** Direct TikTok Connection (kostenlos, limited)
-2. **Fallback:** EulerStream API (mit Key, unlimited)
+**Dual-Connection Strategy:**
+1. **Primary:** Direct TikTok Connection (free, limited)
+2. **Fallback:** EulerStream API (with key, unlimited)
 
 **Performance:**
-- React.memo auf allen 21 Komponenten
+- React.memo on all 21 components
 - Event Throttling (500ms)
 - 15-Min Rolling Window
-- **Ergebnis:** 96% weniger Re-Renders, 70% weniger CPU
+- **Result:** 96% fewer re-renders, 70% less CPU
 
-### Projektstruktur
+### Project Structure
 
 ```
 tikscam/
 ├── app/
-│   ├── api/tiktok-live/[username]/  # SSE Endpoint (⭐ Hauptroute)
+│   ├── api/tiktok-live/[username]/  # SSE Endpoint (⭐ Main route)
 │   └── page.tsx                     # Dashboard
 ├── components/                      # 21 Widgets
 │   └── StreamMonitor.tsx            # Main Component
@@ -252,82 +252,67 @@ npm run lint   # Linting
 
 ### Contributing
 
-1. Fork das Repository
-2. Feature-Branch: `git checkout -b feature/name`
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/name`
 3. Commit: `git commit -m 'Add feature'`
 4. Push: `git push origin feature/name`
-5. Pull Request öffnen
+5. Open Pull Request
 
-**Code-Style:**
+**Code Style:**
 - TypeScript strict mode
-- ESLint Regeln beachten
-- Komponenten-Kommentare auf Deutsch
+- Follow ESLint rules
+- Use translation files for all text
 
 ---
 
-## ⚖️ Ethische Nutzung
+## ⚖️ Ethical Usage
 
-### ✅ Legitime Nutzung
+### ✅ Legitimate Use
 
-- Überprüfung von Stream-Versprechen
-- Dokumentation von Betrug
-- Schutz vor Manipulation
+- Verifying stream promises
+- Documenting fraud
+- Protection against manipulation
 
-### ❌ Unethische Nutzung
+### ❌ Unethical Use
 
-- Belästigung von Streamern
-- Doxxing oder persönliche Angriffe
-- Spam in Chats
+- Harassment of streamers
+- Doxxing or personal attacks
+- Chat spam
 
-### 💡 Bei Scam-Verdacht
+### 💡 When Suspecting a Scam
 
-1. **Dokumentieren** - Screenshots machen
-2. **Zweimal überlegen** - Könnte es ein Fehler sein?
-3. **Respektvoll kommunizieren** - Streamer kontaktieren
-4. **Bei klarem Betrug** - Zahlungen stoppen, andere warnen
+1. **Document** - Take screenshots
+2. **Think twice** - Could it be a mistake?
+3. **Communicate respectfully** - Contact the streamer
+4. **If clear fraud** - Stop payments, warn others
 
-**Die meisten Streamer sind ehrlich!** TikScam soll nur die schwarzen Schafe finden.
-
----
-
-## 🔮 Roadmap
-
-### v0.2.0
-- [ ] Stream-Recording
-- [ ] Export-Funktionen (CSV/JSON)
-- [ ] Push-Benachrichtigungen
-- [ ] Discord/Slack Integration
-
-### v0.3.0
-- [ ] React-Window (Virtualisierung)
-- [ ] WebWorker für Performance
-- [ ] Offline-Support
+**Most streamers are honest!** TikScam is only meant to find the bad actors.
 
 ---
 
-## 📄 Lizenz
+## 📄 License
 
-MIT-Lizenz - siehe [LICENSE](LICENSE)
+MIT License - see [LICENSE](LICENSE)
 
 **Disclaimer:**
-- Nur für Aufklärungszwecke
-- Keine Haftung für Missbrauch
-- TikTok ist ein Trademark von ByteDance Ltd.
+- For educational purposes only
+- No liability for misuse
+- TikTok is a trademark of ByteDance Ltd.
 
 ---
 
 ## 🙏 Credits
 
-**Technologien:**
+**Technologies:**
 - [Next.js](https://nextjs.org)
 - [TikTok Live Connector](https://github.com/zerodytrash/TikTok-Live-Connector)
 - [EulerStream](https://www.eulerstream.com)
 - [Tailwind CSS](https://tailwindcss.com)
 
-**Dank an:**
+**Thanks to:**
 - **zerodytrash** - TikTok Live Connector
-- **EulerStream** - Kostenlose API
-- **Claude AI (Anthropic)** - Für die komplette Entwicklung dieses Projekts
+- **EulerStream** - Free API
+- **Claude AI (Anthropic)** - For the complete development of this project
 
 ---
 
@@ -335,16 +320,16 @@ MIT-Lizenz - siehe [LICENSE](LICENSE)
 
 **Version:** `0.1.0`
 **Status:** ✅ Production Ready
-**Maintained:** ✅ Aktiv
+**Maintained:** ✅ Active
 
 ---
 
 <div align="center">
 
-**Made with ❤️ (and 🤖 Claude AI) für Transparenz und faire Streams**
+**Made with ❤️ (and 🤖 Claude AI) for transparency and fair streams**
 
-*Schütze dich vor Betrug. Unterstütze ehrliche Creator.*
+*Protect yourself from scams. Support honest creators.*
 
-[⬆ Zurück nach oben](#tikscam-)
+[⬆ Back to top](#tikscam-)
 
 </div>
