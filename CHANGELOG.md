@@ -1,5 +1,21 @@
 # TikScam Changelog
 
+## [0.3.1] - 2025-11-17
+
+### 🐛 Bug Fixes
+
+**Fixed "Invalid URL" error on Vercel deployment**
+- Issue: tiktok-live-connector sometimes throws "Invalid URL: ?version_code=..." errors on first connection attempt
+- Root cause: Library tries to parse URL parameters without protocol/host
+- Solution: Added detection for URL parameter patterns (`version_code=`, `browser_platform=`) to `isTemporaryError()` helper
+- Result: These URL parsing errors are now categorized as temporary and retried automatically
+
+### 📝 Changed Files
+
+- `app/api/tiktok-live/[username]/route.ts` - Enhanced `isTemporaryError()` with URL parameter detection
+
+---
+
 ## [0.3.0] - 2025-11-17
 
 ### 🎯 Intelligent 5-Phase Connection System

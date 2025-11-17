@@ -102,7 +102,9 @@ export async function GET(
         return errorMessage?.includes('Websocket connection failed') ||
                errorMessage?.includes('Unexpected server response') ||
                errorMessage?.includes('Invalid URL') ||
-               errorMessage?.includes('ECONNREFUSED');
+               errorMessage?.includes('ECONNREFUSED') ||
+               errorMessage?.includes('version_code=') || // TikTok library URL parsing error
+               errorMessage?.includes('browser_platform='); // TikTok library URL parsing error
       };
 
       // Helper to register event handlers
