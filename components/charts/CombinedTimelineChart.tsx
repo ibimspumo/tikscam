@@ -1,21 +1,32 @@
 'use client';
 
 /**
- * CombinedTimelineChartV2 - THE HIGHLIGHT
+ * CombinedTimelineChart - THE HIGHLIGHT
  * Shows multiple metrics combined in one timeline:
  * - Viewers (line, blue)
  * - Likes/Second (line, pink)
- * - {t('charts.newFollowers')} (bars, orange)
+ * - New Followers (bars, orange)
  * - Diamonds (bars, cyan)
  * - Chat Messages (bars, gray)
  *
  * All on the same X-axis (15-second intervals over 60 minutes)
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart } from 'lucide-react';
+import { LineChart as LineChartIcon } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import {
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface IntervalStats {
   interval: number;
@@ -45,7 +56,58 @@ interface CombinedTimelineChartProps {
   chatActivityHistory: ChatActivityStats[];
 }
 
-export const CombinedTimelineChart= React.memo(({
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+
+    // Calculate time ago from timestamp
+    const now = Date.now();
+    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
+    const minutesAgo = Math.floor(secondsAgo / 60);
+    const remainingSeconds = secondsAgo % 60;
+    const timeAgoText = minutesAgo > 0
+      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
+      : `vor ${remainingSeconds}s`;
+
+    return (
+      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl max-w-xs">
+        <div className="font-bold text-muted-foreground mb-2">{timeAgoText}</div>
+        <div className="space-y-1">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-blue-400">👥 Viewers:</span>
+            <span className="font-semibold">{data.viewers.toLocaleString('en-US')}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-pink-400">❤️ Likes/s:</span>
+            <span className="font-semibold">{data.likesPerSecond.toFixed(1)}</span>
+          </div>
+          {data.newFollowers > 0 && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-orange-400">➕ Followers:</span>
+              <span className="font-semibold">+{data.newFollowers}</span>
+            </div>
+          )}
+          {data.diamonds > 0 && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-cyan-400">💎 Diamonds:</span>
+              <span className="font-semibold">{data.diamonds}</span>
+            </div>
+          )}
+          {data.chatMessages > 0 && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-400">💬 Messages:</span>
+              <span className="font-semibold">{data.chatMessages}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+export const CombinedTimelineChart = React.memo(({
   viewerHistory = [],
   minuteHistory = [],
   followerHistory = [],
@@ -53,55 +115,76 @@ export const CombinedTimelineChart= React.memo(({
   chatActivityHistory = [],
 }: CombinedTimelineChartProps) => {
   const { t } = useTranslation();
-  const now = Date.now();
-  const currentInterval = Math.floor(now / 15000);
-  const totalIntervals = 240; // 60 minutes
 
-  // Fill in missing intervals
-  const timeline: Array<{
-    interval: number;
-    timestamp: number;
-    viewers: number;
-    likesPerSecond: number;
-    newFollowers: number;
-    diamonds: number;
-    chatMessages: number;
-  }> = [];
+  // Memoize expensive calculations
+  const chartData = useMemo(() => {
+    const now = Date.now();
+    const cutoffTime = now - (60 * 60 * 1000); // 60 minutes ago
 
-  for (let i = totalIntervals - 1; i >= 0; i--) {
-    const interval = currentInterval - i;
-    const timestamp = now - (i * 15000);
+    // Helper to merge all histories by timestamp
+    const allTimestamps = new Set<number>();
 
-    const viewerData = viewerHistory.find(v => v.interval === interval);
-    const likesData = minuteHistory.find(l => l.interval === interval);
-    const followerData = followerHistory.find(f => f.interval === interval);
-    const diamondData = diamondHistory.find(d => d.interval === interval);
-    const chatData = chatActivityHistory.find(c => c.interval === interval);
+    [viewerHistory, minuteHistory, followerHistory, diamondHistory, chatActivityHistory]
+      .flat()
+      .forEach(item => {
+        if (item.timestamp >= cutoffTime) {
+          allTimestamps.add(item.timestamp);
+        }
+      });
 
-    timeline.push({
-      interval,
-      timestamp,
-      viewers: viewerData?.viewerCount || 0,
-      likesPerSecond: likesData?.likesPerSecond || 0,
-      newFollowers: followerData?.followerCount || 0,
-      diamonds: diamondData?.diamondCount || 0,
-      chatMessages: chatData?.messageCount || 0,
+    // Convert to sorted array
+    const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+
+    // Create timeline data
+    const timeline = timestamps.map(timestamp => {
+      const viewerData = viewerHistory.find(v => v.timestamp === timestamp);
+      const likesData = minuteHistory.find(l => l.timestamp === timestamp);
+      const followerData = followerHistory.find(f => f.timestamp === timestamp);
+      const diamondData = diamondHistory.find(d => d.timestamp === timestamp);
+      const chatData = chatActivityHistory.find(c => c.timestamp === timestamp);
+
+      return {
+        timestamp,
+        viewers: viewerData?.viewerCount || 0,
+        likesPerSecond: likesData?.likesPerSecond || 0,
+        newFollowers: followerData?.followerCount || 0,
+        diamonds: diamondData?.diamondCount || 0,
+        chatMessages: chatData?.messageCount || 0,
+      };
     });
-  }
 
-  // Calculate max values for scaling
-  const maxViewers = Math.max(...timeline.map(t => t.viewers), 1);
-  const maxLikesPerSecond = Math.max(...timeline.map(t => t.likesPerSecond), 1);
-  const maxFollowers = Math.max(...timeline.map(t => t.newFollowers), 1);
-  const maxDiamonds = Math.max(...timeline.map(t => t.diamonds), 1);
-  const maxChat = Math.max(...timeline.map(t => t.chatMessages), 1);
+    // If no data, create empty timeline
+    const finalTimeline = timeline.length > 0 ? timeline : Array.from({ length: 60 }, (_, i) => ({
+      timestamp: now - ((59 - i) * 60000), // 1 minute intervals
+      viewers: 0,
+      likesPerSecond: 0,
+      newFollowers: 0,
+      diamonds: 0,
+      chatMessages: 0,
+    }));
+
+    // Prepare data for Recharts
+    const rechartsData = finalTimeline.map((point, index) => {
+      const secondsAgo = Math.floor((now - point.timestamp) / 1000);
+      const minutesAgo = Math.floor(secondsAgo / 60);
+
+      return {
+        ...point,
+        label: index % 20 === 0 ? `-${minutesAgo}m` : '', // Show label every 20 points
+      };
+    });
+
+    return { rechartsData };
+  }, [viewerHistory, minuteHistory, followerHistory, diamondHistory, chatActivityHistory]);
+
+  const { rechartsData } = chartData;
 
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <LineChart className="h-4 w-4" />
+            <LineChartIcon className="h-4 w-4" />
             {t('charts.combinedTimelineTitle')}
           </CardTitle>
           <div className="text-xs text-muted-foreground">
@@ -111,139 +194,78 @@ export const CombinedTimelineChart= React.memo(({
       </CardHeader>
 
       <CardContent>
-        {/* Chart Area */}
-        <div className="relative bg-muted/50 rounded-lg p-4" style={{ height: '400px' }}>
-          {/* Grid Lines */}
-          <div className="absolute inset-4 flex flex-col justify-between pointer-events-none">
-            {[0, 1, 2, 3, 4].map(i => (
-              <div key={i} className="border-t border-border/50" />
-            ))}
-          </div>
+        {/* Recharts Combined Chart */}
+        <ResponsiveContainer width="100%" height={400}>
+          <ComposedChart
+            data={rechartsData}
+            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" opacity={0.3} />
+            <XAxis
+              dataKey="label"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+            />
+            <YAxis
+              yAxisId="left"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
 
-          {/* Main Chart */}
-          <div className="relative h-full flex items-end gap-[1px]">
-            {timeline.map((point, index) => {
-              const isRecent = index >= 200; // Last 10 minutes
+            {/* Bars (background layer) */}
+            <Bar
+              yAxisId="right"
+              dataKey="chatMessages"
+              fill="hsl(220, 9%, 46%)"
+              opacity={0.6}
+              radius={[2, 2, 0, 0]}
+            />
+            <Bar
+              yAxisId="right"
+              dataKey="diamonds"
+              fill="hsl(189, 94%, 43%)"
+              opacity={0.7}
+              radius={[2, 2, 0, 0]}
+            />
+            <Bar
+              yAxisId="right"
+              dataKey="newFollowers"
+              fill="hsl(25, 95%, 53%)"
+              opacity={0.7}
+              radius={[2, 2, 0, 0]}
+            />
 
-              // Calculate heights as percentages
-              const viewerHeight = (point.viewers / maxViewers) * 100;
-              const likesHeight = (point.likesPerSecond / maxLikesPerSecond) * 100;
-              const followerHeight = (point.newFollowers / maxFollowers) * 40; // Max 40% of chart
-              const diamondHeight = (point.diamonds / maxDiamonds) * 40;
-              const chatHeight = (point.chatMessages / maxChat) * 30;
-
-              const secondsAgo = (timeline.length - 1 - index) * 15;
-              const minutesAgo = Math.floor(secondsAgo / 60);
-              const remainingSeconds = secondsAgo % 60;
-              const timeAgoText = minutesAgo > 0
-                ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-                : `vor ${remainingSeconds}s`;
-
-              return (
-                <div
-                  key={point.interval}
-                  className="relative flex-1 h-full group"
-                >
-                  {/* Bars (background layer) */}
-                  <div className="absolute bottom-0 w-full h-full flex flex-col justify-end gap-[1px]">
-                    {/* Chat Messages (gray bars) */}
-                    {point.chatMessages > 0 && (
-                      <div
-                        className={`w-full ${isRecent ? 'bg-gray-500' : 'bg-gray-600'} rounded-t`}
-                        style={{ height: `${chatHeight}%` }}
-                      />
-                    )}
-
-                    {/* Diamonds (cyan bars) */}
-                    {point.diamonds > 0 && (
-                      <div
-                        className={`w-full ${isRecent ? 'bg-cyan-500' : 'bg-cyan-600'} rounded-t`}
-                        style={{ height: `${diamondHeight}%` }}
-                      />
-                    )}
-
-                    {/* {t('charts.newFollowers')} (orange bars) */}
-                    {point.newFollowers > 0 && (
-                      <div
-                        className={`w-full ${isRecent ? 'bg-orange-500' : 'bg-orange-600'} rounded-t`}
-                        style={{ height: `${followerHeight}%` }}
-                      />
-                    )}
-                  </div>
-
-                  {/* Lines (foreground layer) */}
-                  {/* Viewers Line (blue) */}
-                  {index < timeline.length - 1 && point.viewers > 0 && (
-                    <div
-                      className="absolute w-[2px] bg-blue-400"
-                      style={{
-                        bottom: `${viewerHeight}%`,
-                        height: '4px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                      }}
-                    />
-                  )}
-
-                  {/* Likes/Second Line (pink) */}
-                  {index < timeline.length - 1 && point.likesPerSecond > 0 && (
-                    <div
-                      className="absolute w-[2px] bg-pink-400"
-                      style={{
-                        bottom: `${likesHeight}%`,
-                        height: '4px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                      }}
-                    />
-                  )}
-
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
-                    <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 whitespace-nowrap shadow-xl">
-                      <div className="font-bold text-muted-foreground mb-1">{timeAgoText}</div>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-400">👥</span>
-                          <span>{point.viewers} {t('charts.viewersLabel')}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-pink-400">❤️</span>
-                          <span>{point.likesPerSecond.toFixed(1)} Likes/s</span>
-                        </div>
-                        {point.newFollowers > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-orange-400">➕</span>
-                            <span>+{point.newFollowers} Follower</span>
-                          </div>
-                        )}
-                        {point.diamonds > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-cyan-400">💎</span>
-                            <span>{point.diamonds} Diamonds</span>
-                          </div>
-                        )}
-                        {point.chatMessages > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">💬</span>
-                            <span>{point.chatMessages} messages</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Time Labels */}
-        <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-muted-foreground">
-          <span>-60 Min</span>
-          <span>-30 Min</span>
-          <span>{t('common.now')}</span>
-        </div>
+            {/* Lines (foreground layer) */}
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="viewers"
+              stroke="hsl(200, 100%, 50%)"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={500}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="likesPerSecond"
+              stroke="hsl(330, 100%, 71%)"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={500}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
 
         {/* Legend */}
         <div className="mt-4 pt-4 border-t grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 text-[10px] sm:text-xs">

@@ -29,18 +29,9 @@ interface LikesHistoryChartProps {
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-
-    console.log('🔍 Tooltip Debug:', {
-      value: payload[0].value,
-      dataKey: payload[0].dataKey,
-      likesPerSecond: data.likesPerSecond,
-      fullPayload: payload[0],
-    });
-
-    // Use the likesPerSecond directly from data
     const value = data.likesPerSecond || 0;
 
-    // Calculate time ago from interval position
+    // Calculate time ago from timestamp
     const now = Date.now();
     const secondsAgo = Math.floor((now - data.timestamp) / 1000);
     const minutesAgo = Math.floor(secondsAgo / 60);
@@ -55,11 +46,6 @@ const CustomTooltip = ({ active, payload }: any) => {
         <div className="text-muted-foreground text-[10px] mt-1">
           {timeAgoText}
         </div>
-        {/* DEBUG INFO */}
-        <div className="text-[8px] text-red-400 mt-1 border-t pt-1">
-          payload.value: {payload[0].value?.toFixed(1)}<br/>
-          data.likesPerSecond: {data.likesPerSecond?.toFixed(1)}
-        </div>
       </div>
     );
   }
@@ -69,18 +55,10 @@ const CustomTooltip = ({ active, payload }: any) => {
 export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistoryChartProps) => {
   const { t } = useTranslation();
 
-  console.log('📊 LikesHistoryChart render:', {
-    minuteHistoryLength: minuteHistory.length,
-    latestData: minuteHistory.slice(-5),
-  });
-
   // Memoize expensive calculations
-  // IMPORTANT: Dependencies include minuteHistory to re-calculate when new data arrives
   const chartData = useMemo(() => {
     const now = Date.now();
     const cutoffTime = now - (15 * 60 * 1000); // 15 minutes ago
-
-    console.log('🔄 useMemo recalculating chart data, minuteHistory:', minuteHistory.length, 'items');
 
     // Use the ACTUAL data from minuteHistory, filtered to last 15 minutes
     // Sort by timestamp (oldest to newest)
@@ -88,18 +66,12 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
       .filter(m => m.timestamp >= cutoffTime)
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    console.log('📈 Recent data points:', recentData.length, 'latest:', recentData.slice(-3));
-
     // Use the actual data we have, or empty array if none
     const last15Minutes = recentData.length > 0 ? recentData : Array.from({ length: 60 }, (_, i) => ({
       interval: Math.floor(now / 15000) - (59 - i),
       likesPerSecond: 0,
       timestamp: now - ((59 - i) * 15000),
     }));
-
-    if (recentData.length === 0) {
-      console.log('⚠️ No data available, showing empty chart');
-    }
 
     // Prepare data for Recharts with additional fields
     const rechartsData = last15Minutes.map((stat, index) => {
@@ -137,17 +109,10 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
       ? Math.ceil((actualData.length * 15) / 60)
       : 0;
 
-    console.log('📊 Final recharts data (last 5):', rechartsData.slice(-5).map(d => ({
-      likesPerSecond: d.likesPerSecond,
-      timestamp: new Date(d.timestamp).toLocaleTimeString(),
-    })));
-
     return { rechartsData, average, currentValue, dataRangeMinutes };
   }, [minuteHistory]);
 
   const { rechartsData, average, currentValue, dataRangeMinutes } = chartData;
-
-  console.log('🎨 Rendering chart with', rechartsData?.length || 0, 'data points');
 
   return (
     <Card>

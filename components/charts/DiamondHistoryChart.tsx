@@ -4,6 +4,15 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gem } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface IntervalStats {
   interval: number;
@@ -17,44 +26,83 @@ interface DiamondHistoryChartProps {
   diamondHistory: IntervalStats[];
 }
 
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const value = data.diamondCount || 0;
+
+    // Calculate time ago from timestamp
+    const now = Date.now();
+    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
+    const minutesAgo = Math.floor(secondsAgo / 60);
+    const remainingSeconds = secondsAgo % 60;
+    const timeAgoText = minutesAgo > 0
+      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
+      : `vor ${remainingSeconds}s`;
+
+    return (
+      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
+        <div className="font-bold text-base">{value.toLocaleString('en-US')} 💎</div>
+        <div className="text-muted-foreground text-[10px] mt-1">
+          {timeAgoText}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const DiamondHistoryChart= React.memo(({ diamondHistory = [] }: DiamondHistoryChartProps) => {
   const { t } = useTranslation();
+
+  // Memoize expensive calculations
   const chartData = useMemo(() => {
     const now = Date.now();
-    const currentInterval = Math.floor(now / 15000);
-    const totalIntervals = 60; // REDUZIERT: 15 minutes
+    const cutoffTime = now - (15 * 60 * 1000); // 15 minutes ago
 
-    const last15Minutes: IntervalStats[] = [];
-    for (let i = totalIntervals - 1; i >= 0; i--) {
-      const interval = currentInterval - i;
-      const existing = diamondHistory.find(m => m.interval === interval);
+    // Use the ACTUAL data from diamondHistory, filtered to last 15 minutes
+    const recentData = diamondHistory
+      .filter(m => m.timestamp >= cutoffTime)
+      .sort((a, b) => a.timestamp - b.timestamp);
 
-      last15Minutes.push(existing || {
-        interval,
-        viewerCount: 0,
-        followerCount: 0,
-        diamondCount: 0,
-        timestamp: now - (i * 15000),
-      });
-    }
+    // Use the actual data we have, or empty array if none
+    const last15Minutes = recentData.length > 0 ? recentData : Array.from({ length: 60 }, (_, i) => ({
+      interval: Math.floor(now / 15000) - (59 - i),
+      viewerCount: 0,
+      followerCount: 0,
+      diamondCount: 0,
+      timestamp: now - ((59 - i) * 15000),
+    }));
 
-    const maxValue = Math.max(...last15Minutes.map(m => m.diamondCount), 1);
+    // Prepare data for Recharts
+    const rechartsData = last15Minutes.map((stat, index) => {
+      const secondsAgo = (last15Minutes.length - 1 - index) * 15;
+      const timeAgoText = secondsAgo > 60
+        ? `vor ${Math.floor(secondsAgo / 60)} Min`
+        : `vor ${secondsAgo}s`;
 
-    // Calculate total only from actual data (not empty intervals)
+      return {
+        ...stat,
+        timeAgo: timeAgoText,
+        label: index % 15 === 0 ? `-${Math.floor(secondsAgo / 60)}m` : '',
+      };
+    });
+
+    // Calculate statistics
     const actualData = last15Minutes.filter(m => m.diamondCount > 0);
     const total = actualData.reduce((sum, m) => sum + m.diamondCount, 0);
 
     const currentValue = last15Minutes[last15Minutes.length - 1]?.diamondCount || 0;
 
-    // Calculate time range
     const dataRangeMinutes = actualData.length > 0
       ? Math.ceil((actualData.length * 15) / 60)
       : 0;
 
-    return { last15Minutes, maxValue, total, currentValue, dataRangeMinutes };
+    return { rechartsData, total, currentValue, dataRangeMinutes };
   }, [diamondHistory]);
 
-  const { last15Minutes, maxValue, total, currentValue, dataRangeMinutes } = chartData;
+  const { rechartsData, total, currentValue, dataRangeMinutes } = chartData;
 
   return (
     <Card>
@@ -82,59 +130,45 @@ export const DiamondHistoryChart= React.memo(({ diamondHistory = [] }: DiamondHi
       </CardHeader>
 
       <CardContent>
-        {/* Chart */}
-        <div className="relative h-48 sm:h-64 flex items-end gap-[0.5px] bg-muted/50 rounded-lg p-3 sm:p-4">
-          {last15Minutes.map((stat, index) => {
-            const heightPercent = maxValue > 0 ? (stat.diamondCount / maxValue) * 100 : 0;
-            const isRecent = index >= 40;
+        {/* Recharts Bar Chart */}
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart
+            data={rechartsData}
+            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" opacity={0.3} />
+            <XAxis
+              dataKey="label"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+            />
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={10}
+              tickLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
+            <Bar
+              dataKey="diamondCount"
+              radius={[4, 4, 0, 0]}
+              fill="url(#diamondGradient)"
+              animationDuration={500}
+            />
+            <defs>
+              <linearGradient id="diamondGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(189, 94%, 43%)" stopOpacity={1} />
+                <stop offset="100%" stopColor="hsl(217, 91%, 60%)" stopOpacity={1} />
+              </linearGradient>
+            </defs>
+          </BarChart>
+        </ResponsiveContainer>
 
-            const secondsAgo = (last15Minutes.length - 1 - index) * 15;
-            const minutesAgo = Math.floor(secondsAgo / 60);
-            const remainingSeconds = secondsAgo % 60;
-            const timeAgoText = minutesAgo > 0
-              ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-              : `vor ${remainingSeconds}s`;
-
-            return (
-              <div
-                key={stat.interval}
-                className="relative flex-1 group"
-                style={{ height: '100%' }}
-              >
-                <div
-                  className={`absolute bottom-0 w-full rounded-t transition-all duration-300 ${
-                    isRecent
-                      ? 'bg-gradient-to-t from-cyan-500 to-blue-500'
-                      : 'bg-gradient-to-t from-cyan-600 to-cyan-800'
-                  }`}
-                  style={{ height: `${heightPercent}%` }}
-                />
-
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                  <div className="bg-popover border text-popover-foreground text-xs rounded py-1 px-2 whitespace-nowrap shadow-xl">
-                    <div className="font-bold">{stat.diamondCount.toLocaleString('en-US')}</div>
-                    <div className="text-muted-foreground text-[10px]">{timeAgoText}</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-muted-foreground">
-          <span>-15 Min</span>
-          <span>-7.5 Min</span>
-          <span>{t('common.now')}</span>
-        </div>
-
+        {/* Legend */}
         <div className="mt-3 sm:mt-4 pt-3 border-t flex flex-wrap justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-gradient-to-r from-cyan-600 to-cyan-800"></div>
-            <span className="text-muted-foreground">{t('charts.olderThan10Min')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-            <span className="text-muted-foreground">{t('charts.last10Min')}</span>
+            <div className="w-3 h-3 rounded bg-gradient-to-b from-cyan-500 to-blue-600"></div>
+            <span className="text-muted-foreground">{t('charts.diamondsLabel')} (letzte 15 Min)</span>
           </div>
         </div>
       </CardContent>
