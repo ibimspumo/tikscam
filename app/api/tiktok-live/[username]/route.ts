@@ -228,17 +228,41 @@ export async function GET(
             // Direct string error
             errorMessage = err;
           } else if (err && typeof err === 'object') {
-            // Handle custom error format: { info: string, exception: string }
-            const customErr = err as { info?: string; exception?: string; message?: string };
-            errorMessage = customErr.exception || customErr.info || customErr.message || 'Unknown error';
+            // Handle custom error format: { info: string, exception: string | Error }
+            const customErr = err as { info?: string; exception?: string | Error; message?: string };
+
+            // Extract from exception (can be string or Error object)
+            if (customErr.exception) {
+              if (typeof customErr.exception === 'string') {
+                errorMessage = customErr.exception;
+              } else if (customErr.exception instanceof Error) {
+                errorMessage = customErr.exception.message;
+              }
+            } else {
+              errorMessage = customErr.info || customErr.message || 'Unknown error';
+            }
           } else if (err instanceof Error) {
             errorMessage = err.message;
           }
 
-          // Check if it's a temporary WebSocket error (worth retrying)
+          // Check if it's a temporary error (worth retrying)
           const isTemporaryError =
             errorMessage?.includes('Websocket connection failed') ||
-            errorMessage?.includes('Unexpected server response');
+            errorMessage?.includes('Unexpected server response') ||
+            errorMessage?.includes('Invalid URL');
+
+          // Check if it's a rate limit error (should NOT retry, go to fallback instead)
+          const isRateLimitError =
+            errorMessage?.includes('Rate Limited') ||
+            errorMessage?.includes('rate limit') ||
+            errorMessage?.includes('rate_limit') ||
+            errorMessage?.includes('SignatureRateLimitError');
+
+          if (isRateLimitError) {
+            // Don't retry rate limits, break and handle fallback below
+            console.warn(`[TikTok Live] ⚠️ Rate limit detected on attempt ${attempt}, will try EulerStream fallback`);
+            break;
+          }
 
           if (isTemporaryError && attempt < maxRetries) {
             console.warn(`[TikTok Live] ⚠️ Temporary error on attempt ${attempt}, retrying in 2s...`);
@@ -260,8 +284,18 @@ export async function GET(
         if (typeof lastError === 'string') {
           errorMessage = lastError;
         } else if (lastError && typeof lastError === 'object') {
-          const customErr = lastError as { info?: string; exception?: string; message?: string; name?: string };
-          errorMessage = customErr.exception || customErr.info || customErr.message || 'Unknown error';
+          const customErr = lastError as { info?: string; exception?: string | Error; message?: string; name?: string };
+
+          // Extract from exception (can be string or Error object)
+          if (customErr.exception) {
+            if (typeof customErr.exception === 'string') {
+              errorMessage = customErr.exception;
+            } else if (customErr.exception instanceof Error) {
+              errorMessage = customErr.exception.message;
+            }
+          } else {
+            errorMessage = customErr.info || customErr.message || 'Unknown error';
+          }
         } else if (lastError instanceof Error) {
           errorMessage = lastError.message;
         }
@@ -375,8 +409,19 @@ export async function GET(
             if (typeof retryErr === 'string') {
               retryErrorMessage = retryErr;
             } else if (retryErr && typeof retryErr === 'object') {
-              const customErr = retryErr as { info?: string; exception?: string; message?: string; name?: string };
-              retryErrorMessage = customErr.exception || customErr.info || customErr.message || retryErrorMessage;
+              const customErr = retryErr as { info?: string; exception?: string | Error; message?: string; name?: string };
+
+              // Extract from exception (can be string or Error object)
+              if (customErr.exception) {
+                if (typeof customErr.exception === 'string') {
+                  retryErrorMessage = customErr.exception;
+                } else if (customErr.exception instanceof Error) {
+                  retryErrorMessage = customErr.exception.message;
+                }
+              } else {
+                retryErrorMessage = customErr.info || customErr.message || retryErrorMessage;
+              }
+
               retryErrorType = customErr.name || 'Error';
             } else if (retryErr instanceof Error) {
               retryErrorMessage = retryErr.message;
