@@ -3,11 +3,12 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, UserPlus, Users } from 'lucide-react';
+import { Activity as ActivityIcon, UserPlus, Users } from 'lucide-react';
+import type { Activity } from '@/types';
 
 interface ActivityWidgetProps {
-  joins: Array<{ user: string; timestamp: number }>;
-  follows: Array<{ user: string; timestamp: number }>;
+  joins: Activity[];
+  follows: Activity[];
 }
 
 export const ActivityWidget= React.memo(({ joins, follows }: ActivityWidgetProps) => {
@@ -22,7 +23,7 @@ export const ActivityWidget= React.memo(({ joins, follows }: ActivityWidgetProps
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Activity className="h-4 w-4" />
+          <ActivityIcon className="h-4 w-4" />
           Activity
         </CardTitle>
       </CardHeader>

@@ -3,21 +3,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Gem } from 'lucide-react';
-
-interface GiftItem {
-  user: string;
-  gift: string;
-  count: number;
-  timestamp: number;
-  avatar?: string;
-  diamondCount?: number;
-  giftIcon?: string;
-  giftImage?: string;
-}
+import { Gift as GiftIcon, Gem } from 'lucide-react';
+import type { Gift } from '@/types';
 
 interface GiftsFeedProps {
-  gifts: GiftItem[];
+  gifts: Gift[];
 }
 
 export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
@@ -34,7 +24,7 @@ export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Gift className="h-5 w-5" />
+            <GiftIcon className="h-5 w-5" />
             Live Gifts Feed
           </CardTitle>
         </CardHeader>
@@ -52,7 +42,7 @@ export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Gift className="h-5 w-5" />
+            <GiftIcon className="h-5 w-5" />
             Live Gifts Feed
           </CardTitle>
           <Badge variant="secondary">{gifts.length} Gifts</Badge>
@@ -119,7 +109,7 @@ export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
                       }}
                     />
                   ) : (
-                    <Gift className="h-12 w-12 text-muted-foreground" />
+                    <GiftIcon className="h-12 w-12 text-muted-foreground" />
                   )}
                 </div>
 

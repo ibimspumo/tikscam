@@ -6,148 +6,21 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-
-interface ChatMessage {
-  user: string;
-  message: string;
-  timestamp: number;
-  avatar?: string;
-}
-
-interface Gift {
-  user: string;
-  gift: string;
-  count: number;
-  timestamp: number;
-  avatar?: string;
-  diamondCount?: number;
-  giftIcon?: string;
-  giftImage?: string;
-}
-
-interface Activity {
-  user: string;
-  timestamp: number;
-  type: 'join' | 'follow';
-}
-
-interface GiftType {
-  id: number;
-  name: string;
-  diamondCount: number;
-  icon?: string;
-  image?: string;
-  timesReceived: number;
-}
-
-interface LikeSnapshot {
-  timestamp: number;
-  totalLikes: number;
-}
-
-interface MinuteStats {
-  interval: number; // 15-second interval timestamp
-  likesPerSecond: number;
-  timestamp: number;
-}
-
-interface IntervalStats {
-  interval: number;
-  viewerCount: number;
-  followerCount: number;
-  diamondCount: number;
-  timestamp: number;
-}
-
-interface UserStats {
-  userId: string;
-  username: string;
-  avatar?: string;
-  totalDiamonds: number;
-  totalGifts: number;
-  chatMessages: number;
-  firstSeen: number;
-  lastSeen: number;
-}
-
-interface EngagementStats {
-  interval: number;
-  engagementRate: number; // likes per viewer
-  timestamp: number;
-}
-
-interface ChatActivityStats {
-  interval: number;
-  messageCount: number;
-  timestamp: number;
-}
-
-interface StreamStats {
-  viewerCount: number;
-  totalLikes: number;
-  streamTotalLikes: number; // Total likes from roomInfo
-  totalGifts: number;
-  totalDiamonds: number;
-  followCount: number; // Number of new follows during this session
-  totalFollowers: number; // Total followers of the account (absolute)
-  chatMessages: ChatMessage[];
-  gifts: Gift[];
-  joins: Activity[];
-  follows: Activity[];
-  giftCatalog: Map<number, GiftType>;
-  availableGifts: Map<number, GiftType>; // All available gifts from TikTok
-  likesPerSecond: {
-    last10s: number;
-    last20s: number;
-    last30s: number;
-    last45s: number;
-    last60s: number;
-  };
-  minuteHistory: MinuteStats[]; // History of likes/second for last 60 minutes
-  viewerHistory: IntervalStats[]; // History of viewers for last 60 minutes
-  followerHistory: IntervalStats[]; // History of followers for last 60 minutes
-  diamondHistory: IntervalStats[]; // History of diamonds for last 60 minutes
-
-  // New analytics
-  userStats: Map<string, UserStats>; // Per-user statistics
-  engagementHistory: EngagementStats[]; // Engagement rate over time
-  chatActivityHistory: ChatActivityStats[]; // Chat messages per interval
-  peakViewers: number; // Highest viewer count
-  peakLikesPerSecond: number; // Highest likes/second rate
-}
-
-interface RoomInfo {
-  id?: string;
-  title?: string;
-  owner?: {
-    uniqueId?: string;
-    nickname?: string;
-    displayName?: string;
-    profilePicture?: {
-      url?: string[];
-    };
-    avatarThumb?: string;
-    avatarMedium?: string;
-    avatarLarge?: string;
-    followerCount?: number;
-    verified?: boolean;
-  };
-  viewerCount?: number;
-  likeCount?: number;
-}
-
-interface UseTikTokLiveReturn {
-  connect: (uniqueId: string) => Promise<void>;
-  disconnect: () => void;
-  isConnected: boolean;
-  isConnecting: boolean;
-  stats: StreamStats;
-  roomInfo: RoomInfo | null;
-  error: string | null;
-  eventSource: EventSource | null;
-  usingApiKey: boolean; // Flag to show if EulerStream API key is active
-  retryingWithApiKey: boolean; // Flag to show when retrying with API key
-}
+import type {
+  ChatMessage,
+  Gift,
+  Activity,
+  GiftType,
+  LikeSnapshot,
+  MinuteStats,
+  IntervalStats,
+  UserStats,
+  EngagementStats,
+  ChatActivityStats,
+  StreamStats,
+  RoomInfo,
+  UseTikTokLiveReturn,
+} from '@/types';
 
 export function useTikTokLive(): UseTikTokLiveReturn {
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -236,7 +109,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       { duration: 60000, key: 'last60s' },
     ];
 
-    const results: any = {};
+    const results: Record<string, number> = {};
 
     windows.forEach(window => {
       const cutoff = now - window.duration;
@@ -560,7 +433,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         console.log(`Loading ${data.availableGifts.length} available gifts`);
         const giftsMap = new Map<number, GiftType>();
 
-        data.availableGifts.forEach((gift: any) => {
+        data.availableGifts.forEach((gift: { id: number; name?: string; diamond_count?: number; image?: { url_list?: string[] }; icon?: { url_list?: string[] } }) => {
           giftsMap.set(gift.id, {
             id: gift.id,
             name: gift.name || `Gift ${gift.id}`,
@@ -584,9 +457,10 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     });
 
     // Handle retry notification (e.g., when switching to API key fallback)
-    eventSource.addEventListener('retrying', (e: any) => {
+    eventSource.addEventListener('retrying', (e: Event) => {
       try {
-        const data = JSON.parse(e.data);
+        const messageEvent = e as MessageEvent;
+        const data = JSON.parse(messageEvent.data);
         console.log('[TikTok Live] ⏳ Backend is retrying connection...', data.message);
         setRetryingWithApiKey(data.usingApiKey || false);
         setError(data.message || '⏳ Retrying connection...');
@@ -597,11 +471,12 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     });
 
     // Handle fatal connection errors (sent as custom event from backend)
-    eventSource.addEventListener('connectionError', (e: any) => {
+    eventSource.addEventListener('connectionError', (e: Event) => {
+      const messageEvent = e as MessageEvent;
       let data = {};
       try {
-        if (e.data) {
-          data = JSON.parse(e.data);
+        if (messageEvent.data) {
+          data = JSON.parse(messageEvent.data);
         }
       } catch (err) {
         // Silently handle parse errors
@@ -635,9 +510,10 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     });
 
     // Handle non-fatal stream errors (e.g., parsing errors in tiktok-live-connector)
-    eventSource.addEventListener('streamError', (e: any) => {
+    eventSource.addEventListener('streamError', (e: Event) => {
       try {
-        const errorData = JSON.parse(e.data);
+        const messageEvent = e as MessageEvent;
+        const errorData = JSON.parse(messageEvent.data);
         console.warn('[TikTok Live] Stream error (recoverable):', errorData);
 
         // Log but don't disconnect - these are recoverable errors
@@ -978,7 +854,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       console.log('📡 EventSource opened');
     };
 
-    eventSource.onerror = (e: any) => {
+    eventSource.onerror = () => {
       // Handle connection errors silently - the backend will send proper error events
       // This handler is triggered during normal reconnection attempts
 

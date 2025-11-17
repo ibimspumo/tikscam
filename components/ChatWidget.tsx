@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface ChatMessage {
-  user: string;
-  message: string;
-  timestamp: number;
-  avatar?: string;
-}
+import type { ChatMessage } from '@/types';
 
 interface ChatWidgetProps {
   messages: ChatMessage[];
