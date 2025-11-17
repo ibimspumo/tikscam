@@ -120,42 +120,88 @@ For unlimited connections, get a **free** API key:
 
 TikScam is also available as a **standalone desktop application**!
 
-### Download Desktop Version
+### 📥 Download Desktop Version
 
-**Coming soon:** Pre-built installers will be available in the [Releases](https://github.com/ibimspumo/tikscam/releases) section.
+Pre-built portable executables are available in the [Releases](https://github.com/ibimspumo/tikscam/releases) section.
 
-### Build Desktop App Yourself
+- **Windows:** `TikScam-0.1.0.exe` (portable, no installation required)
+- **macOS:** `TikScam-0.1.0.dmg` (drag to Applications)
+- **Linux:** `TikScam-0.1.0.AppImage` (make executable and run)
+
+### ✨ Desktop Features
+
+- ✅ **Portable** - No installation, just download and run
+- ✅ **Self-contained** - Includes Next.js server (runs on port 3456)
+- ✅ **Auto-port detection** - Automatically finds free port if 3456 is taken
+- ✅ **Debug logging** - Logs saved to `AppData/Roaming/tikscam/tikscam-debug.log`
+- ✅ **Same features** - 100% identical to web version
+
+### 🔧 Build Desktop App Yourself
 
 ```bash
 # 1. Install dependencies (if not already done)
 npm install
 
 # 2. Build for your platform
-npm run build:win      # Windows (.exe)
-npm run build:mac      # macOS (.dmg)
-npm run build:linux    # Linux (.AppImage)
+npm run build:win      # Windows portable .exe
+npm run build:mac      # macOS .dmg
+npm run build:linux    # Linux .AppImage
 
-# 3. Find your installer in the dist/ folder
+# 3. Find your executable in the dist/ folder
 ```
 
-### Development Mode (Desktop)
+**Build outputs:**
+- Windows: `dist/TikScam 0.1.0.exe` (~120 MB)
+- macOS: `dist/TikScam-0.1.0.dmg`
+- Linux: `dist/TikScam-0.1.0.AppImage`
+
+### 🛠️ Development Mode (Desktop)
 
 ```bash
 # Run both Next.js dev server and Electron together
 npm run dev:electron
 ```
 
-### Desktop vs Web Version
+This will:
+1. Start Next.js dev server on port 3000
+2. Open Electron window
+3. Enable hot reload
+
+### 📊 Desktop vs Web Version
 
 | Feature | Web Version | Desktop Version |
 |---------|-------------|-----------------|
-| Installation | None (browser) | Install once |
-| Updates | Automatic | Download new version |
-| API Key | .env.local | Same (.env.local) |
-| Code | 100% identical | 100% identical |
-| Performance | Browser-dependent | Native performance |
+| **Installation** | None (browser) | Portable .exe |
+| **Updates** | Automatic | Download new .exe |
+| **API Key** | .env.local | .env.local (optional) |
+| **Code** | 100% identical | 100% identical |
+| **Performance** | Browser-dependent | Native Chromium |
+| **Port** | 3000 (customizable) | 3456 (auto-detect) |
+| **Offline** | No | Yes (after download) |
+
+### 🔍 Desktop Troubleshooting
+
+**App won't start?**
+- Check the log file: `C:\Users\<YourUsername>\AppData\Roaming\tikscam\tikscam-debug.log`
+- Make sure port 3456 is not blocked by firewall
+
+**"Internal Server Error"?**
+- The Next.js server failed to start
+- Check logs for details
+- Try closing other apps that might use port 3456
+
+**Want to add API key?**
+- Windows: Place `.env.local` next to the .exe
+- macOS: Inside the app bundle (`TikScam.app/Contents/Resources/app/.env.local`)
+- Linux: Next to the AppImage
 
 **Note:** Both versions share the exact same codebase. Any feature added to the web version automatically works in the desktop version!
+
+### 📚 More Information
+
+For detailed desktop app documentation, see:
+- [ELECTRON.md](ELECTRON.md) - Developer guide for building
+- [DESKTOP_USER_GUIDE.md](DESKTOP_USER_GUIDE.md) - End-user documentation
 
 ---
 
@@ -249,12 +295,17 @@ npm start
 
 ### Tech Stack
 
+**Web/Desktop Core:**
 - **Next.js 15.5.6** - React Framework with App Router
 - **React 19.1.0** - UI Library
 - **TypeScript 5.9.3** - Type-Safe Development
 - **Tailwind CSS 4** - Styling
 - **TikTok Live Connector** - Direct TikTok WebSocket
 - **EulerStream SDK** - Fallback API
+
+**Desktop Only:**
+- **Electron 28.1.0** - Desktop app framework
+- **electron-builder** - Build and packaging tool
 
 ### Architecture
 
@@ -281,16 +332,32 @@ tikscam/
 │   └── useTikTokLive.ts            # Connection Hook
 ├── contexts/
 │   └── StreamManagerContext.tsx    # Multi-Stream State
-└── services/tiktok/                # API Services
+├── services/tiktok/                # API Services
+├── electron/                        # Desktop app (Electron)
+│   ├── main.ts                     # Main process
+│   └── preload.ts                  # Security layer
+└── scripts/
+    └── copy-standalone-files.js    # Build helper
 ```
 
 ### Commands
 
+**Web Version:**
 ```bash
-npm run dev    # Development Server
+npm run dev    # Development Server (http://localhost:3000)
 npm run build  # Production Build
 npm start      # Production Server
 npm run lint   # Linting
+```
+
+**Desktop Version:**
+```bash
+npm run dev:electron    # Development mode with hot reload
+npm run build:electron  # Build Next.js standalone + compile Electron
+npm run build:win       # Build Windows portable .exe
+npm run build:mac       # Build macOS .dmg
+npm run build:linux     # Build Linux .AppImage
+npm run build:release   # Build for all platforms
 ```
 
 ### Contributing

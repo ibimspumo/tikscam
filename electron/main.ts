@@ -5,8 +5,10 @@ import net from 'net';
 import http from 'http';
 import fs from 'fs';
 
-const isDev = process.env.NODE_ENV !== 'production';
-let PORT = parseInt(process.env.PORT || '3000', 10);
+// Check if we're in development mode (running with npm run dev:electron)
+// In production, app will be packaged and app.isPackaged will be true
+const isDev = !app.isPackaged;
+let PORT = parseInt(process.env.PORT || '3456', 10);
 
 // Setup logging to file for debugging
 const logFile = path.join(app.getPath('userData'), 'tikscam-debug.log');
@@ -413,8 +415,7 @@ app.on('ready', async () => {
       log('⏳ Waiting for Next.js server to be ready...');
       await waitForServer(PORT);
     } else {
-      // In dev mode, use port 3000 (assumes external dev server is running)
-      PORT = 3000;
+      // In dev mode, assume external dev server is running on port 3000
       log('🔌 Port:', PORT);
       log('⏳ Waiting for external dev server...');
       await new Promise(resolve => setTimeout(resolve, 2000));
