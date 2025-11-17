@@ -1,51 +1,73 @@
-# TikScam 🎭🔍
-
 <div align="center">
 
-**Transparency Tool for TikTok Live Streams**
+# 🎭 TikScam
 
-Protect yourself from scams! Real-time analytics to uncover scam streams and timer manipulation.
+**Real-time transparency tool for TikTok Live streams**
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.5.6-black?style=flat-square&logo=next.js)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19.1.0-blue?style=flat-square&logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
+Detect scam patterns, fake timers, and gift manipulation with live analytics
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [For Developers](#-for-developers)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://typescriptlang.org)
+[![Electron](https://img.shields.io/badge/Electron-28-47848F?logo=electron)](https://electronjs.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Desktop App](#-desktop-app) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 🤖 Built with AI
+## 📋 Table of Contents
 
-> **Note:** This project was completely developed with **Claude AI** (Anthropic). All code, architecture, and documentation were created through AI-assisted development.
+- [About](#-about)
+- [The Problem](#-the-problem)
+- [The Solution](#-the-solution)
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Desktop App](#-desktop-app)
+- [Usage](#-usage)
+- [API Key Setup](#-api-key-setup-optional)
+- [For Developers](#-for-developers)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## 🎯 What is TikScam?
+## 🎯 About
 
-**TikScam** is a free **transparency tool** that allows TikTok Live stream viewers to **verify themselves** whether they are being scammed by streamers.
+**TikScam** is a free, open-source transparency tool that empowers TikTok Live stream viewers to verify whether they're being scammed by streamers. The application provides real-time analytics on gifts, viewer counts, earnings, chat activity, and more—all without requiring TikTok credentials.
 
-### 🚨 The Problem
+### 🤖 Built with AI
 
-Many TikTok streamers use tricks to manipulate viewers:
+> This project was entirely developed using **Claude AI** (Anthropic). All code, architecture, and documentation were created through AI-assisted development.
 
-- ⏰ **Fake Timers** - "Only 100 more gifts until the goal!" (Goal is never reached)
-- 💎 **Gift Manipulation** - Received gifts are hidden
-- 👥 **Viewer Bots** - Artificially inflated viewer counts
-- 🎁 **Fake Reactions** - Reacting to gifts that were never sent
+---
 
-### ✅ The Solution
+## 🚨 The Problem
 
-With TikScam you can see all stream data **in real-time**:
+Many TikTok streamers use deceptive tactics to manipulate viewers:
 
-- 🎁 **Exact Gift Counting** - See ALL received gifts with diamond value
-- 💎 **Total Earnings** - Calculate the streamer's real income
-- 📈 **Historical Data** - 15-minute history for comparison
-- 👑 **Top Gifters List** - See who's really paying
+- **⏰ Fake Timers** – "Only 100 more gifts until the goal!" (goal is never reached)
+- **💎 Gift Manipulation** – Hiding or undercounting received gifts
+- **👥 Viewer Bots** – Artificially inflating viewer numbers
+- **🎁 Fake Reactions** – Reacting to gifts that were never sent
 
-**Important:** You don't need TikTok credentials! The app only reads publicly available stream data.
+---
+
+## ✅ The Solution
+
+TikScam provides **100% transparent, real-time stream data**:
+
+- 🎁 **Exact Gift Tracking** – See every gift with diamond values
+- 💰 **Earnings Calculator** – Track the streamer's real-time income
+- 📊 **Historical Analytics** – 15-minute data history with charts
+- 👑 **Top Gifters Leaderboard** – See who's actually paying
+- 📈 **Engagement Metrics** – Detect bot patterns and fake viewers
+- 💬 **Chat Monitoring** – Live chat feed with user avatars
+
+**Important:** No TikTok login required! The app only reads publicly available stream data.
 
 ---
 
@@ -53,31 +75,27 @@ With TikScam you can see all stream data **in real-time**:
 
 ### 🎯 Anti-Scam Features
 
-- **🎁 100% Gift Transparency** - Every gift is tracked
-- **💎 Real-time Earnings Calculator** - See exactly how much is earned
-- **👑 Top Gifters List** - Who's really paying?
-- **📊 15-Min Historical Data** - Document scams with charts
-- **🔍 Gift Counter** - Automatic counting of all gifts
-- **📈 Engagement Analysis** - Detect viewer bots
+- **🎁 100% Gift Transparency** – Track every single gift in real-time
+- **💎 Live Earnings Display** – See exact diamond earnings (convertible to USD)
+- **👑 Top Gifters Ranking** – Identify the biggest spenders
+- **📊 15-Min Historical Data** – Document scams with charts and graphs
+- **🔍 Automatic Gift Counting** – No manual counting needed
+- **📈 Engagement Analysis** – Detect viewer bots and fake engagement
 
 ### 🛠️ Technical Features
 
-- **🔴 Multi-Stream Monitoring** - Monitor multiple streams simultaneously
-- **⚡ Real-time Data** - Instant event display
-- **📊 21 Analytics Widgets** - Comprehensive statistics
-- **📱 Mobile-First** - Works on all devices
-- **🌙 Dark Mode** - Eye-friendly design
+- **🔴 Multi-Stream Support** – Monitor multiple streams simultaneously
+- **⚡ Real-Time Updates** – Instant event display via Server-Sent Events (SSE)
+- **📊 21 Analytics Widgets** – Comprehensive statistics dashboard
+- **📱 Mobile-First Design** – Responsive on all devices
+- **🌙 Dark Mode** – Eye-friendly interface
+- **💻 Desktop & Web Versions** – Use in browser or as standalone app
 
 ---
 
-## 🚀 Installation
+## 🚀 Quick Start
 
-### Prerequisites
-
-You need **Node.js** (v20 or higher):
-- [nodejs.org](https://nodejs.org) - Download the **LTS version**
-
-### Quick Start
+### Web Version (3 steps)
 
 ```bash
 # 1. Clone the repository
@@ -87,121 +105,67 @@ cd tikscam
 # 2. Install dependencies
 npm install
 
-# 3. Start the application
+# 3. Start the development server
 npm run dev
-
-# 4. Open your browser
-# Go to: http://localhost:3000
 ```
 
-### API Key (Optional)
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-For unlimited connections, get a **free** API key:
-
-1. Register at [eulerstream.com/pricing](https://www.eulerstream.com/pricing)
-2. Copy your API key
-3. Create `.env.local`:
-   ```bash
-   cp .env.example .env.local
-   ```
-4. Add your key:
-   ```bash
-   EULERSTREAM_API_KEY=your_key_here
-   ```
-5. Restart: `npm run dev`
-
-**Limits:**
-- Without key: ~10-20 streams/day
-- With key: 100+ streams/day
+**Requirements:** Node.js 20+ ([download here](https://nodejs.org))
 
 ---
 
-## 💻 Desktop App (Windows/Mac/Linux)
+## 💻 Desktop App
 
-TikScam is also available as a **standalone desktop application**!
+Run TikScam as a **standalone desktop application** (Windows, macOS, Linux).
 
-### 📥 Download Desktop Version
+### 📥 Download
 
-Pre-built portable executables are available in the [Releases](https://github.com/ibimspumo/tikscam/releases) section.
+Pre-built executables are available in [Releases](https://github.com/ibimspumo/tikscam/releases).
 
-- **Windows:** `TikScam-0.1.0.exe` (portable, no installation required)
-- **macOS:** `TikScam-0.1.0.dmg` (drag to Applications)
-- **Linux:** `TikScam-0.1.0.AppImage` (make executable and run)
+| Platform | Status | Instructions |
+|----------|--------|--------------|
+| **Windows** | ✅ **Available** | Download `TikScam-0.1.0.exe` (portable, no installation) |
+| **macOS** | 🛠️ Build from source | See [build instructions](#build-for-your-platform) |
+| **Linux** | 🛠️ Build from source | See [build instructions](#build-for-your-platform) |
 
 ### ✨ Desktop Features
 
-- ✅ **Portable** - No installation, just download and run
-- ✅ **Self-contained** - Includes Next.js server (runs on port 3456)
-- ✅ **Auto-port detection** - Automatically finds free port if 3456 is taken
-- ✅ **Debug logging** - Logs saved to `AppData/Roaming/tikscam/tikscam-debug.log`
-- ✅ **Same features** - 100% identical to web version
+- ✅ **Portable** – No installation required (Windows .exe)
+- ✅ **Self-Contained** – Includes Next.js server (runs on port 3456)
+- ✅ **Auto-Port Detection** – Finds free port if 3456 is taken
+- ✅ **Debug Logging** – Logs saved to AppData folder
+- ✅ **Identical Features** – 100% same as web version
 
-### 🔧 Build Desktop App Yourself
+### 🔧 Build for Your Platform
 
 ```bash
-# 1. Install dependencies (if not already done)
+# Install dependencies
 npm install
 
-# 2. Build for your platform
+# Build desktop app
 npm run build:win      # Windows portable .exe
 npm run build:mac      # macOS .dmg
 npm run build:linux    # Linux .AppImage
-
-# 3. Find your executable in the dist/ folder
 ```
 
 **Build outputs:**
-- Windows: `dist/TikScam 0.1.0.exe` (~120 MB)
-- macOS: `dist/TikScam-0.1.0.dmg`
-- Linux: `dist/TikScam-0.1.0.AppImage`
+- Windows: `dist/TikScam 0.1.0.exe` (~150 MB)
+- macOS: `dist/TikScam-0.1.0.dmg` (~120 MB)
+- Linux: `dist/TikScam-0.1.0.AppImage` (~130 MB)
 
 ### 🛠️ Development Mode (Desktop)
 
 ```bash
-# Run both Next.js dev server and Electron together
 npm run dev:electron
 ```
 
-This will:
-1. Start Next.js dev server on port 3000
-2. Open Electron window
-3. Enable hot reload
+This starts both Next.js dev server and Electron with hot reload enabled.
 
-### 📊 Desktop vs Web Version
+### 📚 Desktop Documentation
 
-| Feature | Web Version | Desktop Version |
-|---------|-------------|-----------------|
-| **Installation** | None (browser) | Portable .exe |
-| **Updates** | Automatic | Download new .exe |
-| **API Key** | .env.local | .env.local (optional) |
-| **Code** | 100% identical | 100% identical |
-| **Performance** | Browser-dependent | Native Chromium |
-| **Port** | 3000 (customizable) | 3456 (auto-detect) |
-| **Offline** | No | Yes (after download) |
-
-### 🔍 Desktop Troubleshooting
-
-**App won't start?**
-- Check the log file: `C:\Users\<YourUsername>\AppData\Roaming\tikscam\tikscam-debug.log`
-- Make sure port 3456 is not blocked by firewall
-
-**"Internal Server Error"?**
-- The Next.js server failed to start
-- Check logs for details
-- Try closing other apps that might use port 3456
-
-**Want to add API key?**
-- Windows: Place `.env.local` next to the .exe
-- macOS: Inside the app bundle (`TikScam.app/Contents/Resources/app/.env.local`)
-- Linux: Next to the AppImage
-
-**Note:** Both versions share the exact same codebase. Any feature added to the web version automatically works in the desktop version!
-
-### 📚 More Information
-
-For detailed desktop app documentation, see:
-- [ELECTRON.md](ELECTRON.md) - Developer guide for building
-- [DESKTOP_USER_GUIDE.md](DESKTOP_USER_GUIDE.md) - End-user documentation
+- [ELECTRON.md](ELECTRON.md) – Developer guide for building desktop apps
+- [DESKTOP_USER_GUIDE.md](DESKTOP_USER_GUIDE.md) – End-user documentation
 
 ---
 
@@ -209,68 +173,321 @@ For detailed desktop app documentation, see:
 
 ### Monitor a Stream
 
-1. Click **"+ Add Stream"**
+1. Click **"+ Add Stream"** button
 2. Enter the TikTok username (without @)
 3. Click **"Start Stream"**
-4. Dashboard shows all data in real-time
+4. View real-time analytics on your dashboard
 
-**Important:** The stream must be **LIVE**!
+**Important:** The stream must be **LIVE** for the connection to work.
 
 ### Multiple Streams
 
-- Use the **tab system** at the top
-- Switch between different streams
-- Close tabs with the **X**
+- Use the **tab system** at the top to switch between streams
+- Each tab maintains independent connection and statistics
+- Close tabs with the **X** button
 
----
+### Example Scam Detection
 
-## 🔍 Typical Scam Examples
-
-### 1. Countdown Scam ⏰
-
-**Scam:**
+**Scenario 1: Countdown Scam ⏰**
 ```
 Streamer: "Only 100 more roses until the goal!"
 Viewers send 100 roses
 → Streamer counts only 80 and asks for more
+
+TikScam shows: Exact count (147 roses) + who sent them
 ```
 
-**TikScam shows:** Exact count (147 roses) + who sent them
-
-### 2. Earnings Concealment 💸
-
-**Scam:**
+**Scenario 2: Earnings Concealment 💸**
 ```
 Streamer: "I've only received 50💎, please help!"
-→ In reality: 5,000💎 received
+→ Reality: 5,000💎 received
+
+TikScam shows: Total earnings (12,450💎 ≈ $62 USD)
 ```
 
-**TikScam shows:** Total earnings in real-time (e.g., 12,450💎 = ~$62)
-
-### 3. Viewer Bots 🤖
-
-**Scam:**
+**Scenario 3: Viewer Bots 🤖**
 ```
 Stream: 8,500 viewers displayed
-→ Chat completely inactive = Bots
-```
+→ Chat completely inactive
 
-**TikScam shows:** Viewer history + engagement rate (detect bot patterns)
+TikScam shows: Engagement rate + chat activity (detect bots)
+```
 
 ---
 
-## 🔧 Common Issues
+## 🔑 API Key Setup (Optional)
+
+For **unlimited stream connections**, get a free API key from [EulerStream](https://www.eulerstream.com/pricing).
+
+### Limits
+
+- **Without API Key:** ~10-20 streams per day (direct TikTok connection)
+- **With API Key:** 100+ streams per day (EulerStream fallback)
+
+### Setup
+
+1. Register at [eulerstream.com/pricing](https://www.eulerstream.com/pricing)
+2. Copy your API key
+3. Create `.env.local` in the project root:
+
+```bash
+EULERSTREAM_API_KEY=your_api_key_here
+```
+
+4. Restart the application: `npm run dev`
+
+**Desktop App:** Place `.env.local` next to the executable or inside the app bundle.
+
+---
+
+## 👨‍💻 For Developers
+
+### Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| **Framework** | Next.js 15.5.6 (App Router) |
+| **UI Library** | React 19.1.0 |
+| **Language** | TypeScript 5.9.3 (strict mode) |
+| **Styling** | Tailwind CSS 4 + ShadCN UI |
+| **Desktop** | Electron 28.1.0 |
+| **TikTok Connection** | tiktok-live-connector 2.1.0 |
+| **API Fallback** | @eulerstream/euler-websocket-sdk |
+
+### Architecture
+
+**Dual-Connection Strategy:**
+
+1. **Primary:** Direct TikTok connection (free, ~10-20 streams/day)
+2. **Fallback:** EulerStream API (with key, 100+ streams/day)
+
+**Data Flow:**
+
+```
+┌─────────────────────────────────────────┐
+│  React Components (21 widgets)         │
+│  └── useTikTokLive Hook                │
+│      └── Server-Sent Events (SSE)      │
+└─────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────┐
+│  Next.js API Route (SSE endpoint)      │
+│  └── tiktok-live-connector             │
+│      └── TikTok WebSocket              │
+└─────────────────────────────────────────┘
+```
+
+**Performance Optimizations:**
+
+- ✅ React.memo on all 21 components
+- ✅ Event throttling (500ms for likes)
+- ✅ 15-minute rolling window (60 snapshots @ 15s intervals)
+- ✅ Error boundaries for critical widgets
+- ✅ Shared type system (zero `any` types)
+
+**Result:** 96% fewer re-renders, ~70% less CPU, ~50% less RAM
+
+### Project Structure
+
+```
+tikscam/
+├── app/
+│   ├── api/
+│   │   ├── tiktok-live/[username]/  # SSE endpoint ⭐
+│   │   └── tiktok-user/             # User profile API
+│   └── page.tsx                     # Homepage
+│
+├── components/
+│   ├── widgets/      # Analytics widgets (11 files)
+│   ├── charts/       # Data visualization (6 files)
+│   ├── layout/       # Page layout (3 files)
+│   ├── dialogs/      # Modal dialogs (1 file)
+│   └── ui/           # ShadCN base components
+│
+├── types/            # Shared TypeScript types
+│   ├── stream.ts     # Stream data types
+│   └── widgets.ts    # Widget prop types
+│
+├── hooks/
+│   └── useTikTokLive.ts  # Main TikTok connection hook ⭐
+│
+├── contexts/
+│   └── StreamManagerContext.tsx  # Multi-stream state
+│
+├── electron/         # Desktop app (Electron)
+│   ├── main.ts       # Main process
+│   └── preload.ts    # Security layer
+│
+└── lib/
+    ├── i18n/         # Internationalization
+    └── utils.ts      # Utility functions
+```
+
+### Commands
+
+**Web Development:**
+
+```bash
+npm run dev        # Start dev server (http://localhost:3000)
+npm run build      # Production build
+npm start          # Start production server
+npm run lint       # Run ESLint
+```
+
+**Desktop Development:**
+
+```bash
+npm run dev:electron      # Dev mode with hot reload
+npm run build:electron    # Build Next.js + compile Electron
+npm run build:win         # Build Windows .exe
+npm run build:mac         # Build macOS .dmg
+npm run build:linux       # Build Linux .AppImage
+```
+
+### Code Quality
+
+- ✅ **TypeScript strict mode** – Zero `any` types
+- ✅ **ESLint** – Code quality enforcement
+- ✅ **Prettier** – Consistent formatting
+- ✅ **Error Boundaries** – Graceful error handling
+- ✅ **Organized Structure** – Components grouped by function
+
+### Adding a New Widget
+
+1. Create component in `components/widgets/YourWidget.tsx`:
+
+```typescript
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+export const YourWidget = React.memo(({ data }: Props) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Your Widget</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Your widget content */}
+      </CardContent>
+    </Card>
+  );
+});
+```
+
+2. Export in `components/widgets.ts`:
+
+```typescript
+export { YourWidget } from './widgets/YourWidget';
+```
+
+3. Import in `components/layout/StreamMonitor.tsx`:
+
+```typescript
+import { YourWidget } from '@/components/widgets';
+
+// Add to JSX
+<YourWidget data={stats.yourData} />
+```
+
+4. Wrap with `<WidgetErrorBoundary>` if critical:
+
+```typescript
+<WidgetErrorBoundary>
+  <YourWidget data={stats.yourData} />
+</WidgetErrorBoundary>
+```
+
+---
+
+## 📚 Documentation
+
+- [CLAUDE.md](CLAUDE.md) – Project instructions for Claude AI
+- [ELECTRON.md](ELECTRON.md) – Desktop app development guide
+- [DESKTOP_USER_GUIDE.md](DESKTOP_USER_GUIDE.md) – End-user desktop documentation
+- [DEPLOYMENT.md](DEPLOYMENT.md) – Vercel deployment guide
+- [IMPROVEMENTS.md](IMPROVEMENTS.md) – Future enhancement ideas
+- [CHANGELOG.md](CHANGELOG.md) – Version history
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+### Getting Started
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `npm run build` (ensures no TypeScript errors)
+5. Commit: `git commit -m 'Add amazing feature'`
+6. Push: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+### Code Style
+
+- ✅ **TypeScript strict mode** – No `any` types
+- ✅ **Follow ESLint rules** – Run `npm run lint`
+- ✅ **Use Prettier** – Automatic formatting
+- ✅ **Error boundaries** – Wrap critical widgets
+- ✅ **Translation files** – Use i18n for all text
+- ✅ **Component organization:**
+  - `components/widgets/` – Analytics widgets
+  - `components/charts/` – Data visualization
+  - `components/layout/` – Page layout
+  - `components/dialogs/` – Modal dialogs
+
+### Reporting Issues
+
+Found a bug or have a feature request? [Open an issue](https://github.com/ibimspumo/tikscam/issues) with:
+
+- Clear description
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Screenshots (if applicable)
+
+---
+
+## ⚖️ Ethical Usage
+
+### ✅ Legitimate Use
+
+- Verifying stream promises and goals
+- Documenting fraudulent behavior
+- Protecting yourself from manipulation
+
+### ❌ Unethical Use
+
+- Harassment of streamers
+- Doxxing or personal attacks
+- Spamming chat
+
+### 💡 If You Suspect a Scam
+
+1. **Document** – Take screenshots of evidence
+2. **Think twice** – Could it be a mistake?
+3. **Communicate** – Contact the streamer respectfully
+4. **If fraud is clear** – Stop payments and warn others
+
+**Remember:** Most streamers are honest! TikScam is meant to find the bad actors.
+
+---
+
+## 🐛 Troubleshooting
 
 ### "Stream not found"
-- Stream must be LIVE
-- Username correct? (without @)
-- Account must be public
+
+- Ensure the stream is **LIVE**
+- Check the username (without @)
+- Verify the account is public
 
 ### "Rate limit exceeded"
-- Daily limit reached
-- **Solution:** Get an [API key](#api-key-optional)
+
+- You've reached the daily limit (~10-20 streams)
+- **Solution:** Get a [free API key](#-api-key-setup-optional)
 
 ### "Port 3000 already in use"
+
 ```bash
 # Windows
 npx kill-port 3000
@@ -283,6 +500,7 @@ npm run dev -- -p 3001
 ```
 
 ### Performance Issues
+
 ```bash
 # Use production mode (faster)
 npm run build
@@ -291,159 +509,9 @@ npm start
 
 ---
 
-## 👨‍💻 For Developers
-
-### Tech Stack
-
-**Web/Desktop Core:**
-- **Next.js 15.5.6** - React Framework with App Router
-- **React 19.1.0** - UI Library
-- **TypeScript 5.9.3** - Type-Safe Development
-- **Tailwind CSS 4** - Styling
-- **TikTok Live Connector** - Direct TikTok WebSocket
-- **EulerStream SDK** - Fallback API
-
-**Desktop Only:**
-- **Electron 28.1.0** - Desktop app framework
-- **electron-builder** - Build and packaging tool
-
-### Architecture
-
-**Dual-Connection Strategy:**
-1. **Primary:** Direct TikTok Connection (free, limited)
-2. **Fallback:** EulerStream API (with key, unlimited)
-
-**Performance Optimizations:**
-- ✅ React.memo on all 21 components
-- ✅ Event Throttling (500ms for likes)
-- ✅ 15-Min Rolling Window (60 snapshots @ 15s)
-- ✅ Error Boundaries for critical widgets
-- ✅ Shared Type System (no duplicated types)
-- **Result:** 96% fewer re-renders, 70% less CPU, 50% less RAM
-
-**Code Quality:**
-- ✅ TypeScript strict mode with zero `any` types
-- ✅ ESLint + Prettier for consistent formatting
-- ✅ Organized component structure (widgets/, charts/, layout/)
-- ✅ Centralized error handling
-
-### Project Structure
-
-```
-tikscam/
-├── app/
-│   ├── api/
-│   │   ├── tiktok-live/[username]/  # SSE Endpoint (⭐ Main route)
-│   │   └── tiktok-user/             # User profile API
-│   └── page.tsx                     # Homepage with tabs
-│
-├── components/                      # Organized structure
-│   ├── widgets/      (11 files)    # Analytics widgets
-│   ├── charts/       (6 files)     # Data visualization
-│   ├── layout/       (3 files)     # StreamMonitor, StreamTabs
-│   ├── dialogs/      (1 file)      # AddStreamDialog
-│   └── ui/                          # ShadCN components
-│
-├── types/                           # Shared TypeScript types
-│   ├── stream.ts                    # Stream data types
-│   └── widgets.ts                   # Widget prop types
-│
-├── hooks/
-│   └── useTikTokLive.ts            # Main connection hook
-│
-├── contexts/
-│   └── StreamManagerContext.tsx    # Multi-stream state
-│
-├── lib/
-│   ├── i18n/                       # Internationalization
-│   └── utils.ts                    # Utility functions
-│
-├── electron/                        # Desktop app (Electron)
-│   ├── main.ts                     # Main process
-│   └── preload.ts                  # Security layer
-│
-└── scripts/
-    └── copy-standalone-files.js    # Build helper for Electron
-```
-
-### Commands
-
-**Web Version:**
-```bash
-npm run dev    # Development Server (http://localhost:3000)
-npm run build  # Production Build
-npm start      # Production Server
-npm run lint   # Linting
-```
-
-**Desktop Version:**
-```bash
-npm run dev:electron    # Development mode with hot reload
-npm run build:electron  # Build Next.js standalone + compile Electron
-npm run build:win       # Build Windows portable .exe
-npm run build:mac       # Build macOS .dmg
-npm run build:linux     # Build Linux .AppImage
-npm run build:release   # Build for all platforms
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/name`
-3. Make your changes
-4. Run tests: `npm run build` (ensures no TypeScript errors)
-5. Commit: `git commit -m 'Add feature'`
-6. Push: `git push origin feature/name`
-7. Open Pull Request
-
-**Code Style:**
-- ✅ TypeScript strict mode (zero `any` types)
-- ✅ Follow ESLint rules (run `npm run lint`)
-- ✅ Use Prettier for formatting
-- ✅ Wrap new widgets with `<WidgetErrorBoundary>`
-- ✅ Use translation files for all text (i18n)
-- ✅ Add new components to appropriate subdirectory:
-  - `components/widgets/` - Analytics widgets
-  - `components/charts/` - Data visualization
-  - `components/layout/` - Page layout components
-  - `components/dialogs/` - Modal dialogs
-
-**Adding a New Widget:**
-1. Create component in `components/widgets/YourWidget.tsx`
-2. Export in `components/widgets.ts`
-3. Import in `components/layout/StreamMonitor.tsx`
-4. Wrap with `<WidgetErrorBoundary>` if critical
-
----
-
-## ⚖️ Ethical Usage
-
-### ✅ Legitimate Use
-
-- Verifying stream promises
-- Documenting fraud
-- Protection against manipulation
-
-### ❌ Unethical Use
-
-- Harassment of streamers
-- Doxxing or personal attacks
-- Chat spam
-
-### 💡 When Suspecting a Scam
-
-1. **Document** - Take screenshots
-2. **Think twice** - Could it be a mistake?
-3. **Communicate respectfully** - Contact the streamer
-4. **If clear fraud** - Stop payments, warn others
-
-**Most streamers are honest!** TikScam is only meant to find the bad actors.
-
----
-
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE)
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
 
 **Disclaimer:**
 - For educational purposes only
@@ -455,31 +523,35 @@ MIT License - see [LICENSE](LICENSE)
 ## 🙏 Credits
 
 **Technologies:**
-- [Next.js](https://nextjs.org)
-- [TikTok Live Connector](https://github.com/zerodytrash/TikTok-Live-Connector)
-- [EulerStream](https://www.eulerstream.com)
-- [Tailwind CSS](https://tailwindcss.com)
+- [Next.js](https://nextjs.org) – React framework
+- [TikTok Live Connector](https://github.com/zerodytrash/TikTok-Live-Connector) – TikTok WebSocket library
+- [EulerStream](https://www.eulerstream.com) – Free API fallback
+- [Tailwind CSS](https://tailwindcss.com) – Styling framework
+- [ShadCN UI](https://ui.shadcn.com) – Component library
+- [Electron](https://electronjs.org) – Desktop app framework
 
-**Thanks to:**
-- **zerodytrash** - TikTok Live Connector
-- **EulerStream** - Free API
-- **Claude AI (Anthropic)** - For the complete development of this project
+**Special Thanks:**
+- **zerodytrash** – TikTok Live Connector library
+- **EulerStream** – Free API access
+- **Claude AI (Anthropic)** – Complete project development
 
 ---
 
-## 📊 Status
+## 📊 Project Status
 
-**Version:** `0.1.0`
-**Status:** ✅ Production Ready
-**Maintained:** ✅ Active
+| Version | Status | Maintained |
+|---------|--------|------------|
+| **0.1.0** | ✅ Production Ready | ✅ Active |
 
 **Recent Improvements:**
 - ✅ Shared type system (zero `any` types)
-- ✅ Error boundaries for critical widgets
+- ✅ Error boundaries for widget crashes
 - ✅ ESLint + Prettier configuration
 - ✅ Organized component structure
 - ✅ Improved connection retry UX
 - ✅ Vercel deployment fixes
+
+**Upcoming Features:** See [IMPROVEMENTS.md](IMPROVEMENTS.md)
 
 ---
 
@@ -489,6 +561,6 @@ MIT License - see [LICENSE](LICENSE)
 
 *Protect yourself from scams. Support honest creators.*
 
-[⬆ Back to top](#tikscam-)
+[⬆ Back to top](#-tikscam)
 
 </div>
