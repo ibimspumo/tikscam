@@ -1,7 +1,7 @@
 'use client';
 
 import { StreamManagerProvider } from '@/contexts/StreamManagerContext';
-import { StreamTabs } from '@/components/StreamTabs';
+import { StreamTabs } from '@/components/layout/StreamTabs';
 
 export default function Home() {
   return (

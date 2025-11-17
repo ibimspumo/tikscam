@@ -208,16 +208,22 @@ Stream tabs are persisted in `sessionStorage`:
 
 ### Adding a New Widget Component
 
-1. Create component in `components/` using `React.memo()`:
+1. Create component in `components/widgets/` or `components/charts/` using `React.memo()`:
 ```typescript
+// components/widgets/MyWidget.tsx
 export const MyWidget = React.memo(({ data }: Props) => {
   const memoizedValue = useMemo(() => expensiveCalc(data), [data]);
   return <div>...</div>;
 });
 ```
 
-2. Add to `StreamMonitor.tsx` imports and JSX
-3. Pass relevant stats as props from `useTikTokLive` hook
+2. Add export to `components/widgets.ts`:
+```typescript
+export { MyWidget } from './widgets/MyWidget';
+```
+
+3. Import in `StreamMonitor.tsx` and add to JSX
+4. Pass relevant stats as props from `useTikTokLive` hook
 
 ### Adding a New Event Type
 
@@ -251,36 +257,64 @@ Check these in order:
 tikscam/
 ├── app/
 │   ├── api/
-│   │   ├── streams/              # Stream management endpoints
 │   │   ├── tiktok-live/[username]/ # Main SSE endpoint ⭐
-│   │   ├── tiktok-livestream/    # Stream info API
 │   │   └── tiktok-user/          # User profile API
 │   ├── layout.tsx                # Root layout (dark mode only)
 │   ├── page.tsx                  # Homepage with StreamTabs
 │   └── globals.css               # Tailwind imports
 │
-├── components/                   # 21 React widgets (all memoized)
-│   ├── StreamMonitor.tsx         # Main dashboard ⭐
-│   ├── StreamTabs.tsx            # Multi-stream tab manager
-│   ├── AddStreamDialog.tsx       # Add new stream modal
-│   └── [...Widget.tsx]           # Analytics widgets
+├── components/                   # Organized component structure
+│   ├── widgets/                  # Analytics widgets (11 files)
+│   │   ├── StreamInfoWidget.tsx
+│   │   ├── ActivityWidget.tsx
+│   │   ├── LikesPerSecondWidget.tsx
+│   │   ├── GiftsFeedWidget.tsx
+│   │   ├── ViewerTrendWidget.tsx
+│   │   ├── GiftListWidget.tsx
+│   │   ├── DebugWidget.tsx
+│   │   ├── ChatWidget.tsx
+│   │   ├── GiftsWidget.tsx
+│   │   ├── TopUsersWidget.tsx
+│   │   └── ErrorBoundary.tsx     # Error handling
+│   │
+│   ├── charts/                   # Data visualization (6 files)
+│   │   ├── LikesHistoryChart.tsx
+│   │   ├── ViewerHistoryChart.tsx
+│   │   ├── FollowerHistoryChart.tsx
+│   │   ├── DiamondHistoryChart.tsx
+│   │   ├── EngagementRateChart.tsx
+│   │   └── CombinedTimelineChart.tsx
+│   │
+│   ├── layout/                   # Page layout (3 files)
+│   │   ├── StreamMonitor.tsx     # Main dashboard ⭐
+│   │   ├── StreamTabs.tsx        # Multi-stream tab manager
+│   │   └── StatsCard.tsx         # Stat display card
+│   │
+│   ├── dialogs/                  # Modal dialogs (1 file)
+│   │   └── AddStreamDialog.tsx   # Add new stream modal
+│   │
+│   ├── ui/                       # ShadCN base components
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── input.tsx
+│   │   └── tabs.tsx
+│   │
+│   └── widgets.ts                # Central export barrel file ⭐
+│
+├── types/                        # Shared TypeScript types ⭐
+│   ├── stream.ts                 # Stream data types
+│   ├── widgets.ts                # Widget prop types
+│   └── index.ts                  # Central export
 │
 ├── hooks/
-│   ├── useTikTokLive.ts          # Main TikTok connection hook ⭐
-│   ├── useEulerStream.ts         # EulerStream WebSocket hook
-│   └── useStreamStats.ts         # Stats calculations
+│   └── useTikTokLive.ts          # Main TikTok connection hook ⭐
 │
 ├── contexts/
 │   └── StreamManagerContext.tsx  # Multi-stream state management
 │
-├── services/tiktok/
-│   ├── index.ts                  # Unified service layer
-│   ├── websocket.ts              # EulerStream WebSocket
-│   ├── api.ts                    # REST API methods
-│   └── types.ts                  # Type definitions
-│
 ├── lib/
-│   └── streamManager.ts          # Server-side stream manager ⭐
+│   ├── i18n/                     # Internationalization
+│   └── utils.ts                  # Utility functions
 │
 └── .env.local                    # API keys (gitignored)
 ```

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useStreamManager } from '@/contexts/StreamManagerContext';
 import { StreamMonitor } from './StreamMonitor';
-import { AddStreamDialog } from './AddStreamDialog';
+import { AddStreamDialog } from '@/components/dialogs/AddStreamDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { X, Plus } from 'lucide-react';
