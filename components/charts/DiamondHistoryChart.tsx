@@ -82,7 +82,7 @@ export const DiamondHistoryChart= React.memo(({ diamondHistory = [] }: DiamondHi
         viewerCount: 0,
         followerCount: 0,
         diamondCount: 0,
-        timestamp: existing?.timestamp || Date.now() - (i * 15000),
+        timestamp: Date.now() - (i * 15000),
       });
     }
 

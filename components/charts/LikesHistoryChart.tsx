@@ -79,7 +79,7 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
       last15Minutes.push(existing || {
         interval,
         likesPerSecond: 0,
-        timestamp: existing?.timestamp || Date.now() - (i * 15000),
+        timestamp: Date.now() - (i * 15000),
       });
     }
 

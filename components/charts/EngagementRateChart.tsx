@@ -82,7 +82,7 @@ export const EngagementRateChart= React.memo(({ engagementHistory = [] }: Engage
       last15Minutes.push(existing || {
         interval,
         engagementRate: 0,
-        timestamp: existing?.timestamp || Date.now() - (i * 15000),
+        timestamp: Date.now() - (i * 15000),
       });
     }
 
