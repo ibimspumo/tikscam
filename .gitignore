@@ -71,3 +71,33 @@ extract-*.js
 
 # logs
 *.log
+
+# Electron Build Artifacts
+dist/                           # electron-builder output directory
+/electron/dist/                 # compiled TypeScript files
+*.exe                           # Windows installer
+*.msi                           # Windows installer (alternative)
+*.dmg                           # macOS installer
+*.pkg                           # macOS installer (alternative)
+*.AppImage                      # Linux AppImage
+*.deb                           # Linux Debian package
+*.rpm                           # Linux RPM package
+*.snap                          # Linux Snap package
+*.tar.gz                        # Linux tarball
+*.zip                           # Compressed builds
+*-win.exe                       # Platform-specific builds
+*-mac.dmg
+*-linux.AppImage
+/release/                       # Alternative build output folder
+/out/electron/                  # Alternative electron output
+
+# Electron Builder Cache
+.electron-builder-cache/
+electron-builder.yml.bak
+
+# App Resources (keep directory structure, ignore actual icons if you want)
+# Uncomment the following lines if you want to keep icon files private:
+# /resources/*.ico
+# /resources/*.icns
+# /resources/*.png
+/dist

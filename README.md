@@ -81,7 +81,7 @@ You need **Node.js** (v20 or higher):
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/tikscam.git
+git clone https://github.com/ibimspumo/tikscam.git
 cd tikscam
 
 # 2. Install dependencies
@@ -113,6 +113,49 @@ For unlimited connections, get a **free** API key:
 **Limits:**
 - Without key: ~10-20 streams/day
 - With key: 100+ streams/day
+
+---
+
+## 💻 Desktop App (Windows/Mac/Linux)
+
+TikScam is also available as a **standalone desktop application**!
+
+### Download Desktop Version
+
+**Coming soon:** Pre-built installers will be available in the [Releases](https://github.com/ibimspumo/tikscam/releases) section.
+
+### Build Desktop App Yourself
+
+```bash
+# 1. Install dependencies (if not already done)
+npm install
+
+# 2. Build for your platform
+npm run build:win      # Windows (.exe)
+npm run build:mac      # macOS (.dmg)
+npm run build:linux    # Linux (.AppImage)
+
+# 3. Find your installer in the dist/ folder
+```
+
+### Development Mode (Desktop)
+
+```bash
+# Run both Next.js dev server and Electron together
+npm run dev:electron
+```
+
+### Desktop vs Web Version
+
+| Feature | Web Version | Desktop Version |
+|---------|-------------|-----------------|
+| Installation | None (browser) | Install once |
+| Updates | Automatic | Download new version |
+| API Key | .env.local | Same (.env.local) |
+| Code | 100% identical | 100% identical |
+| Performance | Browser-dependent | Native performance |
+
+**Note:** Both versions share the exact same codebase. Any feature added to the web version automatically works in the desktop version!
 
 ---
 

@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
+// Detect if we're building for Electron
+const isElectron = process.env.BUILD_TARGET === 'electron';
+
 const nextConfig: NextConfig = {
+  // Electron-specific configuration
+  output: isElectron ? 'standalone' : undefined,
+
   eslint: {
     // Disable ESLint during production builds (Vercel)
     ignoreDuringBuilds: true,
@@ -11,5 +17,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false, // We keep this false to catch real errors
   },
 };
+
+// Log build mode for debugging
+if (isElectron) {
+  console.log('🔧 Building for Electron (standalone mode)');
+} else {
+  console.log('🌐 Building for Web');
+}
 
 export default nextConfig;
