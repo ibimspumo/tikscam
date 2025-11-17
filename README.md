@@ -316,6 +316,7 @@ If you don't have a server API key, TikScam will automatically show a dialog whe
 | **UI Library** | React 19.1.0 |
 | **Language** | TypeScript 5.9.3 (strict mode) |
 | **Styling** | Tailwind CSS 4 + ShadCN UI |
+| **Charts** | Recharts 2.x |
 | **Desktop** | Electron 28.1.0 |
 | **TikTok Connection** | tiktok-live-connector 2.1.0 |
 | **API Fallback** | @eulerstream/euler-websocket-sdk |
@@ -603,6 +604,7 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 - [EulerStream](https://www.eulerstream.com) – Free API fallback
 - [Tailwind CSS](https://tailwindcss.com) – Styling framework
 - [ShadCN UI](https://ui.shadcn.com) – Component library
+- [Recharts](https://recharts.org) – Data visualization library
 - [Electron](https://electronjs.org) – Desktop app framework
 
 **Special Thanks:**
@@ -616,11 +618,15 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 | Component | Version | Status |
 |-----------|---------|--------|
-| **Web App** | 0.3.0 | ✅ Production Ready |
+| **Web App** | 0.3.1 | ✅ Production Ready |
 | **Desktop App** | 0.1.0 | ✅ Production Ready |
 | **Maintained** | - | ✅ Active |
 
-**Recent Improvements (v0.3.0):**
+**Recent Improvements (v0.3.1):**
+- ✅ **Recharts Integration** – Rebuilt all 6 charts with Recharts library for better UX
+- ✅ **Interactive Tooltips** – Hover over charts to see detailed values and timestamps
+- ✅ **Smooth Animations** – Professional 500ms transitions for all chart updates
+- ✅ **SVG Gradients** – Beautiful color gradients for bars and areas
 - ✅ **100% Type Safety** – Zero `any` types across entire codebase
 - ✅ **Accessibility (WCAG 2.1)** – ARIA labels for all interactive elements
 - ✅ **Memory Leak Fixes** – Proper EventSource and timer cleanup
