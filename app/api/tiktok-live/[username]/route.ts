@@ -334,7 +334,7 @@ export async function GET(
 
         } else {
           // Not a rate limit error - send error to client
-          let errorMessage = err.message || 'Failed to connect to stream';
+          const errorMessage = err.message || 'Failed to connect to stream';
           sendEvent('connectionError', {
             message: errorMessage,
             type: err.name,

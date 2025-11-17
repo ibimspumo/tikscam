@@ -213,7 +213,7 @@ export const GiftListWidget= React.memo(({ giftCatalog }: GiftListWidgetProps) =
 
               {filteredAndSortedGifts.length === 0 && searchTerm && (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t('search.noResultsFor')} "{searchTerm}"
+                  {t('search.noResultsFor')} &quot;{searchTerm}&quot;
                 </div>
               )}
             </>

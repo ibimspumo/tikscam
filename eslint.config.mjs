@@ -20,6 +20,26 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      // Warnings for console usage (allow warn and error)
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+
+      // Prefer const over let
+      "prefer-const": "error",
+
+      // TypeScript specific
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      }],
+
+      // React specific
+      "react-hooks/exhaustive-deps": "warn",
+      "react/display-name": "off", // We use .displayName manually
+    },
+  },
 ];
 
 export default eslintConfig;

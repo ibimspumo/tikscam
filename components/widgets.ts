@@ -3,6 +3,9 @@
  * All widgets are built with ShadCN UI
  */
 
+// Error Boundary
+export { ErrorBoundary, WidgetErrorBoundary } from './ErrorBoundary';
+
 // Core widgets
 export { StreamInfoWidget } from './StreamInfoWidget';
 export { ActivityWidget } from './ActivityWidget';

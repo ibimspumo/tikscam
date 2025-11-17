@@ -19,8 +19,8 @@ import {
   CombinedTimelineChart,
   StatsCard,
   ChatWidget,
-  GiftsWidget,
-  TopUsersWidget
+  TopUsersWidget,
+  WidgetErrorBoundary,
 } from './widgets';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -226,7 +226,9 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
           </div>
 
           {/* Live Gifts Feed */}
-          <GiftsFeedWidget gifts={stats.gifts} />
+          <WidgetErrorBoundary>
+            <GiftsFeedWidget gifts={stats.gifts} />
+          </WidgetErrorBoundary>
 
           {/* Top Users */}
           <TopUsersWidget userStats={stats.userStats} />
@@ -253,7 +255,9 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
               <LikesHistoryChart minuteHistory={stats.minuteHistory} />
               <ViewerHistoryChart viewerHistory={stats.viewerHistory} />
               <EngagementRateChart engagementHistory={stats.engagementHistory} />
+              <WidgetErrorBoundary>
               <ChatWidget messages={stats.chatMessages} />
+            </WidgetErrorBoundary>
             </div>
 
             {/* Column 3 */}

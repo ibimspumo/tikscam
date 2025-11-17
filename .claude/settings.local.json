@@ -28,7 +28,8 @@
       "Bash(npx tsc:*)",
       "Bash(npx next build:*)",
       "Bash(git check-ignore:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

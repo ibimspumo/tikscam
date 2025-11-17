@@ -4,7 +4,6 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { ChatMessage } from '@/types';
 
 interface ChatWidgetProps {
