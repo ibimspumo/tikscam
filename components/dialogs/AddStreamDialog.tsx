@@ -38,20 +38,27 @@ export function AddStreamDialog({ open, onOpenChange }: AddStreamDialogProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-stream-title"
+      aria-describedby="add-stream-description"
+    >
       <Card className="w-full max-w-md mx-4 shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">{t('addStreamDialog.title')}</CardTitle>
+            <CardTitle id="add-stream-title" className="text-xl">{t('addStreamDialog.title')}</CardTitle>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
+              aria-label="Close dialog"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <CardDescription>
+          <CardDescription id="add-stream-description">
             {t('addStreamDialog.description')}
           </CardDescription>
         </CardHeader>

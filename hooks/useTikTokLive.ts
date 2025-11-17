@@ -880,6 +880,13 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       historySnapshotIntervalRef.current = null;
     }
 
+    // Clear reconnect timeout
+    if (reconnectTimeoutRef.current) {
+      console.log('⏰ Clearing reconnect timeout');
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -942,11 +949,19 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       // Clear history snapshot timer
       if (historySnapshotIntervalRef.current) {
         clearInterval(historySnapshotIntervalRef.current);
+        historySnapshotIntervalRef.current = null;
+      }
+
+      // Clear reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
 
       // Close EventSource connection
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
+        eventSourceRef.current = null;
       }
     };
   }, []);

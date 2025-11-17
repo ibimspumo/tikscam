@@ -141,6 +141,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
                 variant="destructive"
                 size="sm"
                 onClick={disconnect}
+                aria-label={`Disconnect from @${username}`}
               >
                 {t('streamMonitor.disconnect')}
               </Button>
@@ -154,6 +155,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
               <Button
                 size="sm"
                 onClick={() => connect(username)}
+                aria-label={`Reconnect to @${username}`}
               >
                 {t('streamMonitor.reconnect')}
               </Button>
@@ -179,6 +181,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="gap-2"
+                      aria-label="Get free EulerStream API key"
                     >
                       <Key className="h-4 w-4" />
                       Kostenlosen API-Key holen

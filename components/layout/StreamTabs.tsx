@@ -33,6 +33,7 @@ export function StreamTabs() {
               size="lg"
               onClick={() => setShowAddDialog(true)}
               className="gap-2"
+              aria-label="Add new stream"
             >
               <Plus className="h-5 w-5" />
               {t('streamTabs.addStream')}
@@ -78,6 +79,7 @@ export function StreamTabs() {
                     size="sm"
                     onClick={() => setShowAddDialog(true)}
                     className="gap-2"
+                    aria-label="Add new stream"
                   >
                     <Plus className="h-4 w-4" />
                     {t('streamTabs.addStream')}

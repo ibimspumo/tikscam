@@ -35,7 +35,7 @@ export async function GET(
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      console.log(`[TikTok Live] Connecting to @${username}...`);
+      console.warn(`[TikTok Live] Connecting to @${username}...`);
 
       // Create TikTok connection
       // processInitialData: false helps avoid protobuf parsing errors
@@ -52,15 +52,15 @@ export async function GET(
       // Track if stream is still open
       let streamClosed = false;
 
-      const sendEvent = (event: string, data: any) => {
+      const sendEvent = (event: string, data: unknown) => {
         if (streamClosed) return; // Don't send if stream is closed
 
         try {
           const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
           controller.enqueue(encoder.encode(message));
-        } catch (err: any) {
+        } catch (err) {
           // Controller is closed - mark stream as closed to prevent further attempts
-          if (err.message?.includes('Controller is already closed')) {
+          if (err instanceof Error && err.message?.includes('Controller is already closed')) {
             streamClosed = true;
           }
         }
@@ -70,8 +70,8 @@ export async function GET(
       const keepAliveInterval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(': keep-alive\n\n'));
-        } catch (err) {
-          console.log('[TikTok Live] Keep-alive failed, connection closed');
+        } catch {
+          console.warn('[TikTok Live] Keep-alive failed, connection closed');
           clearInterval(keepAliveInterval);
         }
       }, 30000); // Every 30 seconds
@@ -121,9 +121,11 @@ export async function GET(
         // Send error event but DON'T close the stream - let it recover
         // The error event will be treated as data, not a connection error
         try {
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          const errorType = err instanceof Error ? err.name : 'Error';
           sendEvent('streamError', {
-            message: err.message || 'Unknown error',
-            type: err.name || 'Error',
+            message: errorMessage,
+            type: errorType,
             recoverable: true
           });
         } catch (sendErr) {
@@ -137,7 +139,7 @@ export async function GET(
         connection.on('roomUser', (data) => {
           try {
             sendEvent('roomUser', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending roomUser:', err);
           }
         });
@@ -145,7 +147,7 @@ export async function GET(
         connection.on('chat', (data) => {
           try {
             sendEvent('chat', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending chat:', err);
           }
         });
@@ -163,7 +165,7 @@ export async function GET(
               giftType: data.giftType,
             });
             sendEvent('gift', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending gift:', err);
           }
         });
@@ -171,7 +173,7 @@ export async function GET(
         connection.on('member', (data) => {
           try {
             sendEvent('member', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending member:', err);
           }
         });
@@ -179,7 +181,7 @@ export async function GET(
         connection.on('like', (data) => {
           try {
             sendEvent('like', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending like:', err);
           }
         });
@@ -187,7 +189,7 @@ export async function GET(
         connection.on('social', (data) => {
           try {
             sendEvent('social', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending social:', err);
           }
         });
@@ -195,7 +197,7 @@ export async function GET(
         connection.on('streamEnd', (data) => {
           try {
             sendEvent('streamEnd', data);
-          } catch (err: any) {
+          } catch (err) {
             console.error('[TikTok Live] Error sending streamEnd:', err);
           }
         });
@@ -208,15 +210,16 @@ export async function GET(
       try {
         console.log(`[TikTok Live] 🔄 Attempting connection (without API key)...`);
         await tiktokConnection.connect();
-      } catch (err: any) {
-        console.error(`[TikTok Live] ❌ Initial connection failed:`, err.message);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        console.error(`[TikTok Live] ❌ Initial connection failed:`, errorMessage);
 
         // Check if it's a rate limit error
         const isRateLimitError =
-          err.name === 'SignatureRateLimitError' ||
-          err.message?.includes('Rate Limited') ||
-          err.message?.includes('rate limit') ||
-          err.message?.includes('rate_limit');
+          (err as Error).name === 'SignatureRateLimitError' ||
+          errorMessage?.includes('Rate Limited') ||
+          errorMessage?.includes('rate limit') ||
+          errorMessage?.includes('rate_limit');
 
         if (isRateLimitError) {
           console.log(`[TikTok Live] ⚠️ Rate limit detected! Activating EulerStream API key...`);
@@ -292,9 +295,11 @@ export async function GET(
             console.error(`[TikTok Live] Error:`, err);
             // Send error event but DON'T close the stream - let it recover
             try {
+              const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+              const errorType = err instanceof Error ? err.name : 'Error';
               sendEvent('streamError', {
-                message: err.message || 'Unknown error',
-                type: err.name || 'Error',
+                message: errorMessage,
+                type: errorType,
                 recoverable: true
               });
             } catch (sendErr) {
@@ -309,11 +314,13 @@ export async function GET(
           try {
             console.log(`[TikTok Live] 🔄 Retry: Connecting with EulerStream API key...`);
             await fallbackConnection.connect();
-          } catch (retryErr: any) {
+          } catch (retryErr) {
             console.error(`[TikTok Live] ❌ Failed to connect even with API key:`, retryErr);
+            const retryErrorMessage = retryErr instanceof Error ? retryErr.message : 'Failed to connect to stream even with API key';
+            const retryErrorType = retryErr instanceof Error ? retryErr.name : 'Error';
             sendEvent('connectionError', {
-              message: retryErr.message || 'Failed to connect to stream even with API key',
-              type: retryErr.name,
+              message: retryErrorMessage,
+              type: retryErrorType,
             });
             streamClosed = true;
             try {
@@ -334,10 +341,11 @@ export async function GET(
 
         } else {
           // Not a rate limit error - send error to client
-          const errorMessage = err.message || 'Failed to connect to stream';
+          const finalErrorMessage = err instanceof Error ? err.message : 'Failed to connect to stream';
+          const finalErrorType = err instanceof Error ? err.name : 'Error';
           sendEvent('connectionError', {
-            message: errorMessage,
-            type: err.name,
+            message: finalErrorMessage,
+            type: finalErrorType,
           });
           streamClosed = true;
           try {

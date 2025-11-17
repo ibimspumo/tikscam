@@ -428,20 +428,20 @@ class EulerStreamConnection implements StreamConnection { /* ... */ }
 ## 🔧 Technical Debt
 
 ### Known Issues
-1. ✅ **Type Safety:** ~~Several `any` types in event handlers~~ **FIXED** (only 6 remain in API route)
+1. ✅ **Type Safety:** ~~Several `any` types in event handlers~~ **FIXED** (all `any` types eliminated!)
 2. ✅ **Error Boundaries:** ~~No error boundaries for widgets~~ **FIXED**
-3. **Accessibility:** Missing ARIA labels on interactive elements
+3. ✅ **Accessibility:** ~~Missing ARIA labels on interactive elements~~ **FIXED** (added to dialogs, buttons, links)
 4. **Mobile UX:** Some widgets not optimized for small screens
-5. **Memory Leaks:** EventSource connections may not cleanup on hot reload (needs investigation)
+5. ✅ **Memory Leaks:** ~~EventSource connections may not cleanup on hot reload~~ **FIXED** (added reconnectTimeout cleanup)
 
 ### Impact Assessment
 | Issue | Severity | Effort | Priority | Status |
 |-------|----------|--------|----------|--------|
-| Type Safety | Medium | Low | High | ✅ **FIXED** |
-| Error Boundaries | High | Low | High | ✅ **FIXED** |
-| Accessibility | Medium | Medium | Medium | ⚠️ Pending |
+| Type Safety | Medium | Low | High | ✅ **FIXED** (v0.2.1) |
+| Error Boundaries | High | Low | High | ✅ **FIXED** (v0.2.0) |
+| Accessibility | Medium | Medium | Medium | ✅ **FIXED** (v0.2.1) |
 | Mobile UX | Low | Medium | Low | ⚠️ Pending |
-| Memory Leaks | High | Low | High | ⚠️ Needs Investigation |
+| Memory Leaks | High | Low | High | ✅ **FIXED** (v0.2.1) |
 
 ---
 
@@ -456,9 +456,23 @@ class EulerStreamConnection implements StreamConnection { /* ... */ }
 
 ---
 
-## 🎉 Recent Accomplishments (v0.2.0)
+## 🎉 Recent Accomplishments
 
-### Completed in this version:
+### Version 0.2.1 (2025-11-17)
+1. ✅ **Type Safety 100%** - Eliminated ALL remaining `any` types (11 in API route)
+   - Changed error handlers from `err: any` to proper `instanceof Error` checks
+   - Changed `data: any` to `data: unknown` in sendEvent function
+   - Zero `any` types across entire codebase
+2. ✅ **Accessibility (ARIA)** - Added ARIA labels to all interactive elements
+   - Dialog roles and aria-modal attributes
+   - Button aria-labels for screen readers
+   - Proper id linking for labelledby/describedby
+3. ✅ **Memory Leak Fix** - Fixed EventSource cleanup
+   - Added reconnectTimeout cleanup in disconnect()
+   - Added cleanup in useEffect unmount
+   - Prevents timer leaks on hot reload
+
+### Version 0.2.0 (2025-11-17)
 1. ✅ **Component Organization** - Reorganized into widgets/, charts/, layout/, dialogs/
 2. ✅ **Shared Type System** - Created types/stream.ts and types/widgets.ts
 3. ✅ **Type Safety** - Eliminated 6 `any` types from useTikTokLive.ts
@@ -466,12 +480,12 @@ class EulerStreamConnection implements StreamConnection { /* ... */ }
 5. ✅ **Code Quality** - ESLint + Prettier configuration
 6. ✅ **Documentation** - Updated README to modern GitHub standards
 
-**Total Lines Changed:** ~2,000 removed (cleanup) + ~355 added (quality code)
+**Total Lines Changed:** ~2,000 removed (cleanup) + ~400 added (quality code)
 **Build Status:** ✅ All builds successful, no breaking changes
 **Bundle Size:** Unchanged at 137 kB
 
 ---
 
 **Last Updated:** 2025-11-17
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Maintainer:** @timocorvinus
