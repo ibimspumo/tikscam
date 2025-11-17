@@ -59,6 +59,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
     needsUserApiKey,
     setUserApiKey,
     userApiKey,
+    connectionStatus,
   } = useTikTokLive();
 
   // Auto-connect when component mounts
@@ -119,9 +120,16 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
               </p>
             </div>
           ) : isConnecting ? (
-            <div className="flex items-center justify-center gap-3 py-2">
-              <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <span className="font-semibold">{t('streamMonitor.connectingTo')} @{username}...</span>
+            <div className="flex flex-col items-center justify-center gap-2 py-2">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span className="font-semibold">{t('streamMonitor.connectingTo')} @{username}...</span>
+              </div>
+              {connectionStatus && (
+                <div className="text-sm text-muted-foreground">
+                  {connectionStatus}
+                </div>
+              )}
             </div>
           ) : isConnected ? (
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

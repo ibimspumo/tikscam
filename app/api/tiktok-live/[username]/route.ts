@@ -9,7 +9,7 @@
  * 2. If rate limited -> fallback to EulerStream API key
  */
 
-import { WebcastPushConnection, SignConfig } from 'tiktok-live-connector';
+import { WebcastPushConnection } from 'tiktok-live-connector';
 import { NextRequest } from 'next/server';
 
 // EulerStream API Key - used as fallback when rate limited
@@ -33,9 +33,10 @@ export async function GET(
 
   // Check if user provided their own API key
   const userApiKey = request.nextUrl.searchParams.get('apiKey');
-  if (userApiKey) {
-    console.log('[TikTok Live] Using user-provided API key');
-    SignConfig.apiKey = userApiKey;
+  const hasUserApiKey = !!userApiKey;
+
+  if (hasUserApiKey) {
+    console.log('[TikTok Live] Using user-provided API key (per-connection)');
   }
 
   // Setup Server-Sent Events
@@ -45,8 +46,10 @@ export async function GET(
       console.warn(`[TikTok Live] Connecting to @${username}...`);
 
       // Create TikTok connection
+      // Use signApiKey per-connection option (NOT global SignConfig)
       // processInitialData: false helps avoid protobuf parsing errors
       const tiktokConnection = new WebcastPushConnection(username, {
+        signApiKey: userApiKey || undefined, // Per-connection API key (if provided)
         processInitialData: false,
         enableExtendedGiftInfo: true,
         enableWebsocketUpgrade: true,
@@ -221,6 +224,17 @@ export async function GET(
       for (let attempt = 1; attempt <= maxRetries && !connectionSuccess; attempt++) {
         try {
           console.log(`[TikTok Live] 🔄 Attempting connection (attempt ${attempt}/${maxRetries})...`);
+
+          // Send status update to client
+          sendEvent('connectionStatus', {
+            step: 'connecting',
+            attempt,
+            maxAttempts: maxRetries,
+            message: hasUserApiKey
+              ? `Connecting with your API key (${attempt}/${maxRetries})...`
+              : `Connecting to @${username} (${attempt}/${maxRetries})...`,
+          });
+
           await tiktokConnection.connect();
           connectionSuccess = true;
           console.log(`[TikTok Live] ✅ Connection successful on attempt ${attempt}`);
@@ -274,6 +288,15 @@ export async function GET(
           if (isTemporaryError && attempt < maxRetries) {
             console.warn(`[TikTok Live] ⚠️ Temporary error on attempt ${attempt}, retrying in 2s...`);
             console.warn(`[TikTok Live] Error details:`, errorMessage);
+
+            // Send retry status
+            sendEvent('connectionStatus', {
+              step: 'retrying',
+              attempt,
+              maxAttempts: maxRetries,
+              message: `Connection failed, retrying in 2 seconds... (${attempt + 1}/${maxRetries})`,
+            });
+
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retry
             continue;
           }
@@ -324,6 +347,12 @@ export async function GET(
             usingApiKey: true
           });
 
+          // Send detailed status
+          sendEvent('connectionStatus', {
+            step: 'fallback',
+            message: '⚡ Rate limit reached! Switching to EulerStream API key...',
+          });
+
           // IMPORTANT: Disconnect and cleanup old connection first
           try {
             tiktokConnection.disconnect();
@@ -335,11 +364,11 @@ export async function GET(
           // Activate EulerStream API key for fallback
           // Use user-provided key if available, otherwise use server key
           const apiKeyToUse = userApiKey || EULERSTREAM_API_KEY;
-          SignConfig.apiKey = apiKeyToUse;
           console.log(`[TikTok Live] Using ${userApiKey ? 'user-provided' : 'server'} API key for fallback`);
 
-          // Create new connection with API key
+          // Create new connection with API key (per-connection, NOT global)
           const fallbackConnection = new WebcastPushConnection(username, {
+            signApiKey: apiKeyToUse, // Per-connection API key
             processInitialData: false,
             enableExtendedGiftInfo: true,
             enableWebsocketUpgrade: true,
@@ -414,6 +443,15 @@ export async function GET(
           for (let fallbackAttempt = 1; fallbackAttempt <= fallbackMaxRetries && !fallbackSuccess; fallbackAttempt++) {
             try {
               console.log(`[TikTok Live] 🔄 Retry with API key (attempt ${fallbackAttempt}/${fallbackMaxRetries})...`);
+
+              // Send status
+              sendEvent('connectionStatus', {
+                step: 'fallback_connecting',
+                attempt: fallbackAttempt,
+                maxAttempts: fallbackMaxRetries,
+                message: `Connecting with EulerStream API (${fallbackAttempt}/${fallbackMaxRetries})...`,
+              });
+
               await fallbackConnection.connect();
               fallbackSuccess = true;
               console.log(`[TikTok Live] ✅ Connected with API key on attempt ${fallbackAttempt}`);

@@ -195,4 +195,5 @@ export interface UseTikTokLiveReturn {
   needsUserApiKey: boolean; // Flag to show API key dialog
   setUserApiKey: (key: string) => void; // Function to set user's API key
   userApiKey: string; // Current user API key value
+  connectionStatus: string; // Current connection status message
 }

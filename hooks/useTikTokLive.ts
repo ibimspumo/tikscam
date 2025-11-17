@@ -55,6 +55,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
   const [retryingWithApiKey, setRetryingWithApiKey] = useState<boolean>(false);
   const [needsUserApiKey, setNeedsUserApiKey] = useState<boolean>(false);
   const [userApiKey, setUserApiKey] = useState<string>('');
+  const [connectionStatus, setConnectionStatus] = useState<string>('');
 
   const [stats, setStats] = useState<StreamStats>({
     viewerCount: 0,
@@ -487,6 +488,18 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         setIsConnecting(false);
       } catch (err) {
         console.warn('[TikTok Live] Failed to parse needsApiKey event');
+      }
+    });
+
+    // Handle connectionStatus event (detailed connection progress)
+    eventSource.addEventListener('connectionStatus', (e: Event) => {
+      try {
+        const messageEvent = e as MessageEvent;
+        const data = JSON.parse(messageEvent.data);
+        console.log('[TikTok Live] Status update:', data.message);
+        setConnectionStatus(data.message || '');
+      } catch (err) {
+        console.warn('[TikTok Live] Failed to parse connectionStatus event');
       }
     });
 
@@ -1000,5 +1013,6 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     needsUserApiKey,
     setUserApiKey,
     userApiKey,
+    connectionStatus,
   };
 }
