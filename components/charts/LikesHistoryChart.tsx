@@ -90,19 +90,16 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
 
     console.log('📈 Recent data points:', recentData.length, 'latest:', recentData.slice(-3));
 
-    // If we have no data, create empty array
-    if (recentData.length === 0) {
-      const emptyData = Array.from({ length: 60 }, (_, i) => ({
-        interval: Math.floor(now / 15000) - (59 - i),
-        likesPerSecond: 0,
-        timestamp: now - ((59 - i) * 15000),
-      }));
-      console.log('⚠️ No data available, showing empty chart');
-      return { last15Minutes: emptyData };
-    }
+    // Use the actual data we have, or empty array if none
+    const last15Minutes = recentData.length > 0 ? recentData : Array.from({ length: 60 }, (_, i) => ({
+      interval: Math.floor(now / 15000) - (59 - i),
+      likesPerSecond: 0,
+      timestamp: now - ((59 - i) * 15000),
+    }));
 
-    // Use the actual data we have
-    const last15Minutes = recentData;
+    if (recentData.length === 0) {
+      console.log('⚠️ No data available, showing empty chart');
+    }
 
     // Prepare data for Recharts with additional fields
     const rechartsData = last15Minutes.map((stat, index) => {
@@ -150,7 +147,7 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
 
   const { rechartsData, average, currentValue, dataRangeMinutes } = chartData;
 
-  console.log('🎨 Rendering chart with', rechartsData.length, 'data points');
+  console.log('🎨 Rendering chart with', rechartsData?.length || 0, 'data points');
 
   return (
     <Card>
