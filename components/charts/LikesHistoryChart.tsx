@@ -69,12 +69,20 @@ const CustomTooltip = ({ active, payload }: any) => {
 export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistoryChartProps) => {
   const { t } = useTranslation();
 
+  console.log('📊 LikesHistoryChart render:', {
+    minuteHistoryLength: minuteHistory.length,
+    latestData: minuteHistory.slice(-5),
+  });
+
   // Memoize expensive calculations
+  // IMPORTANT: Dependencies include minuteHistory to re-calculate when new data arrives
   const chartData = useMemo(() => {
     // Fill in missing 15-second intervals for the last 15 minutes
     const now = Date.now();
     const currentInterval = Math.floor(now / 15000);
     const totalIntervals = 60; // 15 minutes / 15 seconds = 60 intervals
+
+    console.log('🔄 useMemo recalculating chart data, minuteHistory:', minuteHistory.length, 'items');
 
     const last15Minutes: MinuteStats[] = [];
     for (let i = totalIntervals - 1; i >= 0; i--) {
