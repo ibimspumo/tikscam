@@ -7,8 +7,9 @@ const nextConfig: NextConfig = {
   // Electron-specific configuration
   output: isElectron ? 'standalone' : undefined,
 
-  // Externalize tiktok-live-connector for Electron to prevent bundling issues
-  serverExternalPackages: isElectron ? ['tiktok-live-connector'] : [],
+  // Externalize tiktok-live-connector to prevent bundling issues (needed for both Electron and Vercel)
+  // This library uses native Node.js Buffer APIs and WebSocket implementations that break when bundled
+  serverExternalPackages: ['tiktok-live-connector'],
 
   eslint: {
     // Disable ESLint during production builds (Vercel)
