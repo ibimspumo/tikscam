@@ -28,6 +28,8 @@ interface LikesHistoryChartProps {
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
+    // Get the actual value from payload (Recharts provides it here)
+    const value = payload[0].value;
     const data = payload[0].payload;
 
     // Calculate time ago in real-time
@@ -41,7 +43,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
     return (
       <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
-        <div className="font-bold text-base">{data.likesPerSecond.toFixed(1)} L/s</div>
+        <div className="font-bold text-base">{value.toFixed(1)} L/s</div>
         <div className="text-muted-foreground text-[10px] mt-1">
           {timeAgoText}
         </div>
