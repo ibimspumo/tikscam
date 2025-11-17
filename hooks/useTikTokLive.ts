@@ -583,6 +583,19 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       setIsConnected(false);
     });
 
+    // Handle retry notification (e.g., when switching to API key fallback)
+    eventSource.addEventListener('retrying', (e: any) => {
+      try {
+        const data = JSON.parse(e.data);
+        console.log('[TikTok Live] ⏳ Backend is retrying connection...', data.message);
+        setRetryingWithApiKey(data.usingApiKey || false);
+        setError(data.message || '⏳ Retrying connection...');
+        // Keep isConnecting true
+      } catch (err) {
+        console.warn('[TikTok Live] Failed to parse retrying event');
+      }
+    });
+
     // Handle fatal connection errors (sent as custom event from backend)
     eventSource.addEventListener('connectionError', (e: any) => {
       let data = {};
@@ -594,7 +607,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         // Silently handle parse errors
       }
 
-      console.log('[TikTok Live] Fatal connection error detected');
+      console.log('[TikTok Live] Connection error detected');
 
       // Check if this is a rate limit error - trigger automatic retry with API key
       let errorMessage = (data as any).message || 'Connection lost';
@@ -603,19 +616,21 @@ export function useTikTokLive(): UseTikTokLiveReturn {
                                errorMessage.includes('rate_limit');
 
       if (isRateLimitError) {
-        console.log('[TikTok Live] ⚠️ Rate Limit detected in SSE error! Backend should handle fallback automatically.');
+        console.log('[TikTok Live] ⚠️ Rate Limit detected! Backend is retrying with API key...');
         // The backend will handle the fallback, we just show a transitional message
         setRetryingWithApiKey(true);
         setError('⏰ Rate limit reached - Switching to EulerStream API...');
-      } else if (errorMessage.includes('Failed to connect')) {
+        // Keep isConnecting true so user sees "Connecting..." state
+      } else if (errorMessage.includes('Failed to connect even with API key')) {
+        // This is a final failure after retry
         errorMessage = '❌ Connection failed\n\nPossible reasons:\n• Stream is offline\n• Username is incorrect\n• Network problem';
         setError(errorMessage);
         setIsConnected(false);
         setIsConnecting(false);
       } else {
-        setError(errorMessage);
-        setIsConnected(false);
-        setIsConnecting(false);
+        // Unknown error - keep trying (don't stop connecting state immediately)
+        setError(`⏳ Connection issue - Retrying...\n\n${errorMessage}`);
+        // Don't set isConnecting to false yet - give backend a chance to retry
       }
     });
 

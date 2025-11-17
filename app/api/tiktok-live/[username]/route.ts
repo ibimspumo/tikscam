@@ -221,6 +221,12 @@ export async function GET(
         if (isRateLimitError) {
           console.log(`[TikTok Live] ⚠️ Rate limit detected! Activating EulerStream API key...`);
 
+          // Inform client we're retrying with API key (optional, for better UX)
+          sendEvent('retrying', {
+            message: 'Rate limit reached - Switching to EulerStream API...',
+            usingApiKey: true
+          });
+
           // IMPORTANT: Disconnect and cleanup old connection first
           try {
             tiktokConnection.disconnect();
