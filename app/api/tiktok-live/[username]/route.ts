@@ -206,17 +206,45 @@ export async function GET(
       // Register event handlers for initial connection
       registerEventHandlers(tiktokConnection);
 
-      // Connect with smart fallback strategy
-      try {
-        console.log(`[TikTok Live] 🔄 Attempting connection (without API key)...`);
-        await tiktokConnection.connect();
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error(`[TikTok Live] ❌ Initial connection failed:`, errorMessage);
+      // Connect with smart fallback strategy (with retry for WebSocket errors)
+      let connectionSuccess = false;
+      let lastError: Error | null = null;
+      const maxRetries = 3;
+
+      for (let attempt = 1; attempt <= maxRetries && !connectionSuccess; attempt++) {
+        try {
+          console.log(`[TikTok Live] 🔄 Attempting connection (attempt ${attempt}/${maxRetries})...`);
+          await tiktokConnection.connect();
+          connectionSuccess = true;
+          console.log(`[TikTok Live] ✅ Connection successful on attempt ${attempt}`);
+        } catch (err) {
+          lastError = err as Error;
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
+          // Check if it's a temporary WebSocket error (worth retrying)
+          const isTemporaryError =
+            errorMessage?.includes('Websocket connection failed') ||
+            errorMessage?.includes('Unexpected server response');
+
+          if (isTemporaryError && attempt < maxRetries) {
+            console.warn(`[TikTok Live] ⚠️ Temporary error on attempt ${attempt}, retrying in 2s...`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retry
+            continue;
+          }
+
+          // If not a temporary error or we've exhausted retries, log and break
+          console.error(`[TikTok Live] ❌ Connection failed on attempt ${attempt}:`, errorMessage);
+          break;
+        }
+      }
+
+      // If connection failed after all retries, handle the error
+      if (!connectionSuccess && lastError) {
+        const errorMessage = lastError instanceof Error ? lastError.message : 'Unknown error';
 
         // Check if it's a rate limit error
         const isRateLimitError =
-          (err as Error).name === 'SignatureRateLimitError' ||
+          (lastError as Error).name === 'SignatureRateLimitError' ||
           errorMessage?.includes('Rate Limited') ||
           errorMessage?.includes('rate limit') ||
           errorMessage?.includes('rate_limit');
@@ -341,8 +369,8 @@ export async function GET(
 
         } else {
           // Not a rate limit error - send error to client
-          const finalErrorMessage = err instanceof Error ? err.message : 'Failed to connect to stream';
-          const finalErrorType = err instanceof Error ? err.name : 'Error';
+          const finalErrorMessage = lastError instanceof Error ? lastError.message : 'Failed to connect to stream';
+          const finalErrorType = lastError instanceof Error ? lastError.name : 'Error';
           sendEvent('connectionError', {
             message: finalErrorMessage,
             type: finalErrorType,
