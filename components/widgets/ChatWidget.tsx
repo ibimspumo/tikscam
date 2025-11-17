@@ -28,22 +28,22 @@ export const ChatWidget= React.memo(({ messages, className }: ChatWidgetProps) =
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-[500px] overflow-y-auto">
+        <div className="space-y-2 sm:space-y-3 max-h-[400px] sm:max-h-[500px] overflow-y-auto">
           {sortedMessages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No chat messages yet
             </p>
           ) : (
             sortedMessages.map((msg, idx) => (
-              <div key={`${msg.timestamp}-${idx}`} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <div key={`${msg.timestamp}-${idx}`} className="flex items-start gap-2 sm:gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 {msg.avatar ? (
                   <img
                     src={msg.avatar}
                     alt={msg.user}
-                    className="w-8 h-8 rounded-full flex-shrink-0"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-bold text-primary">
                       {msg.user.charAt(0).toUpperCase()}
                     </span>

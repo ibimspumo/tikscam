@@ -51,7 +51,7 @@ export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
       <CardContent>
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-2"
+          className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-1 px-1"
           style={{ scrollbarWidth: 'thin' }}
         >
           {gifts.slice().reverse().slice(0, 50).map((gift, index) => {
@@ -72,7 +72,7 @@ export const GiftsFeedWidget = React.memo(({ gifts }: GiftsFeedProps) => {
             return (
               <div
                 key={`${gift.timestamp}-${index}`}
-                className="flex-shrink-0 w-[200px] border-border border rounded-lg p-3 bg-card hover:bg-muted/50 transition-colors"
+                className="flex-shrink-0 w-[160px] sm:w-[200px] border-border border rounded-lg p-2 sm:p-3 bg-card hover:bg-muted/50 transition-colors"
               >
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-2">

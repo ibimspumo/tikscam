@@ -62,7 +62,7 @@ export const TopUsersWidget= React.memo(({ userStats, className }: TopUsersWidge
         {users.map((user, idx) => (
           <div
             key={user.userId}
-            className="flex items-center gap-3 p-3 rounded-lg border-border border bg-card hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-border border bg-card hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex-shrink-0">
               {idx + 1}
@@ -124,16 +124,18 @@ export const TopUsersWidget= React.memo(({ userStats, className }: TopUsersWidge
       <CardContent>
         <Tabs defaultValue="gifters" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="gifters" className="text-xs">
-              <Trophy className="h-3 w-3 mr-1" />
-              Gifters
+            <TabsTrigger value="gifters" className="text-xs sm:text-sm">
+              <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <span className="hidden sm:inline">Gifters</span>
+              <span className="sm:hidden">Gifts</span>
             </TabsTrigger>
-            <TabsTrigger value="chatters" className="text-xs">
-              <MessageSquare className="h-3 w-3 mr-1" />
-              Chatters
+            <TabsTrigger value="chatters" className="text-xs sm:text-sm">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <span className="hidden sm:inline">Chatters</span>
+              <span className="sm:hidden">Chat</span>
             </TabsTrigger>
-            <TabsTrigger value="active" className="text-xs">
-              <Zap className="h-3 w-3 mr-1" />
+            <TabsTrigger value="active" className="text-xs sm:text-sm">
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
               Active
             </TabsTrigger>
           </TabsList>
