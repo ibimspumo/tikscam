@@ -121,13 +121,12 @@ Run TikScam as a **standalone desktop application** (Windows, macOS, Linux).
 
 ### 📥 Download
 
-Pre-built executables are available in [Releases](https://github.com/ibimspumo/tikscam/releases).
+**Windows:** Pre-built executable available in [Releases](https://github.com/ibimspumo/tikscam/releases)
+- Download `TikScam-0.1.0.exe` (portable, no installation required)
 
-| Platform | Status | Instructions |
-|----------|--------|--------------|
-| **Windows** | ✅ **Available** | Download `TikScam-0.3.0.exe` (portable, no installation) |
-| **macOS** | 🛠️ Build from source | See [build instructions](#build-for-your-platform) |
-| **Linux** | 🛠️ Build from source | See [build instructions](#build-for-your-platform) |
+**macOS & Linux:** Build from source (see instructions below)
+
+> **Note:** Only Windows builds are currently available for download. macOS and Linux users need to build the desktop app themselves. The pre-built Windows version is at **v0.1.0**, while the latest codebase is at **v0.3.0**. Build from source to get the newest features.
 
 ### ✨ Desktop Features
 
@@ -150,9 +149,11 @@ npm run build:linux    # Linux .AppImage
 ```
 
 **Build outputs:**
-- Windows: `dist/TikScam 0.3.0.exe` (~150 MB)
-- macOS: `dist/TikScam-0.3.0.dmg` (~120 MB)
-- Linux: `dist/TikScam-0.3.0.AppImage` (~130 MB)
+- Windows: `dist/TikScam 0.1.0.exe` (~150 MB)
+- macOS: `dist/TikScam-0.1.0.dmg` (~120 MB)
+- Linux: `dist/TikScam-0.1.0.AppImage` (~130 MB)
+
+> **Note:** The version number in the build output is controlled by `package.json`. Current desktop builds use v0.1.0.
 
 ### 🛠️ Development Mode (Desktop)
 
@@ -539,9 +540,11 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 ## 📊 Project Status
 
-| Version | Status | Maintained |
-|---------|--------|------------|
-| **0.3.0** | ✅ Production Ready | ✅ Active |
+| Component | Version | Status |
+|-----------|---------|--------|
+| **Web App** | 0.3.0 | ✅ Production Ready |
+| **Desktop App** | 0.1.0 | ✅ Production Ready |
+| **Maintained** | - | ✅ Active |
 
 **Recent Improvements (v0.3.0):**
 - ✅ **100% Type Safety** – Zero `any` types across entire codebase
