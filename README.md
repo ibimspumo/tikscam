@@ -125,7 +125,7 @@ Pre-built executables are available in [Releases](https://github.com/ibimspumo/t
 
 | Platform | Status | Instructions |
 |----------|--------|--------------|
-| **Windows** | ✅ **Available** | Download `TikScam-0.1.0.exe` (portable, no installation) |
+| **Windows** | ✅ **Available** | Download `TikScam-0.2.0.exe` (portable, no installation) |
 | **macOS** | 🛠️ Build from source | See [build instructions](#build-for-your-platform) |
 | **Linux** | 🛠️ Build from source | See [build instructions](#build-for-your-platform) |
 
@@ -150,9 +150,9 @@ npm run build:linux    # Linux .AppImage
 ```
 
 **Build outputs:**
-- Windows: `dist/TikScam 0.1.0.exe` (~150 MB)
-- macOS: `dist/TikScam-0.1.0.dmg` (~120 MB)
-- Linux: `dist/TikScam-0.1.0.AppImage` (~130 MB)
+- Windows: `dist/TikScam 0.2.0.exe` (~150 MB)
+- macOS: `dist/TikScam-0.2.0.dmg` (~120 MB)
+- Linux: `dist/TikScam-0.2.0.AppImage` (~130 MB)
 
 ### 🛠️ Development Mode (Desktop)
 
@@ -541,15 +541,17 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 | Version | Status | Maintained |
 |---------|--------|------------|
-| **0.1.0** | ✅ Production Ready | ✅ Active |
+| **0.2.0** | ✅ Production Ready | ✅ Active |
 
-**Recent Improvements:**
-- ✅ Shared type system (zero `any` types)
-- ✅ Error boundaries for widget crashes
-- ✅ ESLint + Prettier configuration
-- ✅ Organized component structure
-- ✅ Improved connection retry UX
-- ✅ Vercel deployment fixes
+**Recent Improvements (v0.2.0):**
+- ✅ **Component Reorganization** – widgets/, charts/, layout/, dialogs/ structure
+- ✅ **Shared Type System** – Created types/stream.ts and types/widgets.ts
+- ✅ **Type Safety** – Eliminated 6 `any` types from useTikTokLive.ts
+- ✅ **Error Boundaries** – Added WidgetErrorBoundary for critical widgets
+- ✅ **Code Quality** – ESLint + Prettier configuration
+- ✅ **Modern README** – Updated to current GitHub standards
+- ✅ **Connection Retry UX** – Improved error messaging
+- ✅ **Vercel Deployment** – Fixed tiktok-live-connector bundling issue
 
 **Upcoming Features:** See [IMPROVEMENTS.md](IMPROVEMENTS.md)
 

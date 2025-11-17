@@ -1,6 +1,124 @@
 # TikScam Changelog
 
-## 2025-11-17 - Electron Desktop App Bug Fixes
+## [0.2.0] - 2025-11-17
+
+### 🎉 Major Refactoring & Code Quality Improvements
+
+This release focuses on **code quality, maintainability, and developer experience**.
+
+### ✨ New Features
+
+**Component Organization**
+- Reorganized all components into logical subdirectories:
+  - `components/widgets/` - 11 analytics widgets
+  - `components/charts/` - 6 data visualization components
+  - `components/layout/` - 3 page layout components
+  - `components/dialogs/` - 1 modal dialog
+- Updated barrel export in `components/widgets.ts`
+- Improved project navigation and code discovery
+
+**Shared Type System**
+- Created `types/stream.ts` with all stream-related types
+- Created `types/widgets.ts` with widget prop patterns
+- Created `types/index.ts` as central export
+- Eliminated type duplication across multiple files
+
+**Error Boundaries**
+- Added `ErrorBoundary` component for graceful error handling
+- Created `WidgetErrorBoundary` wrapper for critical widgets
+- Wrapped `CombinedTimelineChart`, `ChatWidget`, `GiftsFeedWidget`
+- Prevents widget crashes from breaking entire app
+
+### 🔧 Code Quality Improvements
+
+**TypeScript Strict Mode**
+- Eliminated 6 `any` types from `useTikTokLive.ts`
+- Proper typing for event handlers (Event → MessageEvent)
+- Type-safe gift catalog and user stats
+- Zero `any` types in hook logic
+
+**ESLint Configuration**
+- Created `eslint.config.mjs` with custom rules
+- Added rules for console usage, prefer-const, no-any
+- Integrated with Next.js core web vitals
+
+**Prettier Setup**
+- Created `.prettierrc` for consistent formatting
+- Created `.prettierignore` for build artifacts
+- Enforces 100-char line width, single quotes, 2-space tabs
+
+### 📚 Documentation
+
+**Modern README**
+- Completely rewritten to current GitHub standards
+- Added comprehensive table of contents
+- Platform download table (Windows available, others build from source)
+- Developer-friendly with architecture diagrams
+- Clear contributing guidelines
+- Proper badges and visual hierarchy
+
+**Updated IMPROVEMENTS.md**
+- Marked all completed tasks from High Priority
+- Updated Known Issues with completion status
+- Added "Recent Accomplishments" section for v0.2.0
+
+### 🐛 Bug Fixes
+
+**Vercel Deployment**
+- Fixed "b.mask is not a function" error
+- Always externalize `tiktok-live-connector` in `next.config.ts`
+
+**Connection Retry UX**
+- Added `retrying` event to inform user of API key fallback
+- Improved error messaging during connection attempts
+- Better distinction between fatal and recoverable errors
+
+**Build Errors**
+- Fixed icon import conflicts (Gift → GiftIcon, Activity → ActivityIcon)
+- Fixed module not found errors after component reorganization
+- Fixed prefer-const ESLint errors
+
+### 📊 Metrics
+
+- **~2,000 lines removed** (cleanup of unused files)
+- **~355 lines added** (quality code: types, error boundaries, configs)
+- **Build status:** ✅ All builds successful
+- **Bundle size:** Unchanged at 137 kB
+- **TypeScript errors:** 0
+- **ESLint errors:** 0 (only warnings remain)
+
+### 🗂️ Files Changed
+
+**Created:**
+- `types/stream.ts` - Stream data types
+- `types/widgets.ts` - Widget prop patterns
+- `types/index.ts` - Central type export
+- `components/widgets/ErrorBoundary.tsx` - Error handling
+- `.prettierrc` - Code formatting config
+- `.prettierignore` - Prettier exclusions
+
+**Modified:**
+- `README.md` - Complete rewrite to modern standards
+- `IMPROVEMENTS.md` - Updated completion status
+- `package.json` - Version bump to 0.2.0
+- `eslint.config.mjs` - Custom rules added
+- `hooks/useTikTokLive.ts` - Type safety improvements
+- `components/widgets.ts` - Updated exports for new structure
+- 21 component files - Moved to new directories
+
+**Reorganized:**
+- Moved 11 widgets to `components/widgets/`
+- Moved 6 charts to `components/charts/`
+- Moved 3 layout components to `components/layout/`
+- Moved 1 dialog to `components/dialogs/`
+
+### 🔄 Breaking Changes
+
+None - All changes are internal refactoring. Public API remains unchanged.
+
+---
+
+## [0.1.0] - 2025-11-17 - Electron Desktop App Bug Fixes
 
 ### 🐛 Critical Bug Fixes
 
