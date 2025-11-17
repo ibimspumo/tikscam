@@ -314,8 +314,9 @@ export async function GET(
           errorMessage?.includes('rate limit') ||
           errorMessage?.includes('rate_limit');
 
-        if (isRateLimitError) {
-          console.log(`[TikTok Live] ⚠️ Rate limit detected! Activating EulerStream API key...`);
+        if (isRateLimitError && !userApiKey) {
+          // Only try server API key fallback if user didn't provide their own key
+          console.log(`[TikTok Live] ⚠️ Rate limit detected! Activating server EulerStream API key...`);
 
           // Inform client we're retrying with API key (optional, for better UX)
           sendEvent('retrying', {
@@ -332,7 +333,10 @@ export async function GET(
           }
 
           // Activate EulerStream API key for fallback
-          SignConfig.apiKey = EULERSTREAM_API_KEY;
+          // Use user-provided key if available, otherwise use server key
+          const apiKeyToUse = userApiKey || EULERSTREAM_API_KEY;
+          SignConfig.apiKey = apiKeyToUse;
+          console.log(`[TikTok Live] Using ${userApiKey ? 'user-provided' : 'server'} API key for fallback`);
 
           // Create new connection with API key
           const fallbackConnection = new WebcastPushConnection(username, {
@@ -480,13 +484,25 @@ export async function GET(
           });
 
         } else {
-          // Not a rate limit error - send error to client
-          // Use the errorMessage already extracted above
-          const finalErrorType = (lastError as { name?: string }).name || 'Error';
-          sendEvent('connectionError', {
-            message: errorMessage,
-            type: finalErrorType,
-          });
+          // Not a rate limit error, OR rate limit WITH user API key
+          // (if user provided API key and still got rate limited, don't try server key)
+
+          if (isRateLimitError && userApiKey) {
+            // User's API key hit rate limit
+            console.error('[TikTok Live] User-provided API key is rate limited');
+            sendEvent('connectionError', {
+              message: 'Your API key is rate limited. Please try again later or check your EulerStream quota.',
+              type: 'RateLimitError',
+            });
+          } else {
+            // Other error - send error to client
+            const finalErrorType = (lastError as { name?: string }).name || 'Error';
+            sendEvent('connectionError', {
+              message: errorMessage,
+              type: finalErrorType,
+            });
+          }
+
           streamClosed = true;
           try {
             controller.close();
