@@ -67,7 +67,8 @@
       }
     ],
     "asarUnpack": [
-      "**/*.node"
+      "**/*.node",
+      "**/node_modules/tiktok-live-connector/**/*"
     ],
     "win": {
       "target": [

@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   // Electron-specific configuration
   output: isElectron ? 'standalone' : undefined,
 
+  // Externalize tiktok-live-connector for Electron to prevent bundling issues
+  serverExternalPackages: isElectron ? ['tiktok-live-connector'] : [],
+
   eslint: {
     // Disable ESLint during production builds (Vercel)
     ignoreDuringBuilds: true,
