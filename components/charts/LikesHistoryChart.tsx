@@ -77,22 +77,36 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
   // Memoize expensive calculations
   // IMPORTANT: Dependencies include minuteHistory to re-calculate when new data arrives
   const chartData = useMemo(() => {
-    // Fill in missing 15-second intervals for the last 15 minutes
     const now = Date.now();
-    const currentInterval = Math.floor(now / 15000);
     const totalIntervals = 60; // 15 minutes / 15 seconds = 60 intervals
+    const cutoffTime = now - (15 * 60 * 1000); // 15 minutes ago
 
     console.log('🔄 useMemo recalculating chart data, minuteHistory:', minuteHistory.length, 'items');
 
+    // Filter and sort data by timestamp (newest first)
+    const recentData = minuteHistory
+      .filter(m => m.timestamp >= cutoffTime)
+      .sort((a, b) => a.timestamp - b.timestamp); // oldest to newest
+
+    console.log('📈 Recent data points:', recentData.length, 'latest:', recentData.slice(-3));
+
+    // Create array with actual data, filling gaps with zeros
     const last15Minutes: MinuteStats[] = [];
+    const currentInterval = Math.floor(now / 15000);
+
     for (let i = totalIntervals - 1; i >= 0; i--) {
       const interval = currentInterval - i;
-      const existing = minuteHistory.find(m => m.interval === interval);
+      const targetTimestamp = now - (i * 15000);
+
+      // Find data point closest to this timestamp (within 15 seconds)
+      const existing = recentData.find(m =>
+        Math.abs(m.timestamp - targetTimestamp) < 15000
+      );
 
       last15Minutes.push(existing || {
         interval,
         likesPerSecond: 0,
-        timestamp: now - (i * 15000),
+        timestamp: targetTimestamp,
       });
     }
 
