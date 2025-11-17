@@ -125,35 +125,22 @@ async function findAvailablePort(startPort: number, maxAttempts: number = 10): P
 }
 
 /**
- * Wait for the Next.js server to be ready by checking if it responds to HTTP requests
+ * Wait for the Next.js server to be ready by checking if port is in use
  */
-async function waitForServer(port: number, maxRetries = 60): Promise<void> {
+async function waitForServer(port: number, maxRetries = 30): Promise<void> {
   for (let i = 0; i < maxRetries; i++) {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const req = http.get(`http://localhost:${port}`, (res: any) => {
-          // Server responded, it's ready!
-          log('✅ Next.js server is ready! Status:', res.statusCode);
-          resolve();
-        });
+    // Check if port is in use (server is running)
+    const portInUse = !(await isPortAvailable(port));
 
-        req.on('error', () => {
-          // Server not ready yet
-          reject();
-        });
-
-        req.setTimeout(1000, () => {
-          req.destroy();
-          reject();
-        });
-      });
-
-      // If we get here, server is ready
+    if (portInUse) {
+      log('✅ Next.js server is ready! Port', port, 'is in use');
+      // Give it a bit more time to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
       return;
-    } catch (error) {
-      log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
+
+    log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   throw new Error('❌ Server failed to start within timeout period');
@@ -278,115 +265,224 @@ async function createWindow(): Promise<void> {
     return { action: 'allow' };
   });
 
-  // Show loading screen first
-  const loadingHTML = `
+  // Show progress screen
+  const progressHTML = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
       <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          margin: 0;
-          padding: 0;
           background: #000;
           color: #fff;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           display: flex;
-          flex-direction: column;
           justify-content: center;
           align-items: center;
           height: 100vh;
+          padding: 20px;
+        }
+        .container {
+          max-width: 600px;
+          width: 100%;
+        }
+        h1 {
+          font-size: 32px;
+          margin-bottom: 10px;
+          text-align: center;
+        }
+        .subtitle {
+          text-align: center;
+          color: #888;
+          margin-bottom: 40px;
+          font-size: 14px;
+        }
+        .progress-list {
+          list-style: none;
+        }
+        .progress-item {
+          display: flex;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid #222;
+        }
+        .progress-item:last-child {
+          border-bottom: none;
+        }
+        .icon {
+          width: 24px;
+          height: 24px;
+          margin-right: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
         }
         .spinner {
-          width: 50px;
-          height: 50px;
-          border: 3px solid #333;
-          border-top: 3px solid #fff;
+          width: 16px;
+          height: 16px;
+          border: 2px solid #333;
+          border-top: 2px solid #4a9eff;
           border-radius: 50%;
-          animation: spin 1s linear infinite;
+          animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        h1 { margin: 20px 0 10px 0; font-size: 24px; }
-        p { margin: 0; color: #888; font-size: 14px; }
-        #status { margin-top: 20px; font-size: 12px; color: #666; }
+        .label {
+          flex: 1;
+          font-size: 15px;
+        }
+        .pending { color: #666; }
+        .active { color: #4a9eff; }
+        .complete { color: #4ade80; }
+        .error { color: #f87171; }
+        .port-info {
+          text-align: center;
+          margin-top: 30px;
+          padding: 15px;
+          background: #111;
+          border-radius: 8px;
+          border: 1px solid #222;
+        }
+        .port-info strong {
+          color: #4a9eff;
+          font-size: 18px;
+        }
       </style>
       <script>
-        let dots = 0;
-        setInterval(() => {
-          dots = (dots + 1) % 4;
-          document.getElementById('status').textContent =
-            'Waiting for server' + '.'.repeat(dots);
-        }, 500);
+        window.addEventListener('message', (event) => {
+          const { step, status, port } = event.data;
 
-        // Log to console
-        log('Loading screen rendered');
-        log('Waiting for Next.js server on port ${PORT}');
+          if (step) {
+            const item = document.getElementById('step-' + step);
+            if (item) {
+              item.className = 'progress-item ' + status;
+              const icon = item.querySelector('.icon');
+
+              if (status === 'active') {
+                icon.innerHTML = '<div class="spinner"></div>';
+              } else if (status === 'complete') {
+                icon.innerHTML = '✓';
+              } else if (status === 'error') {
+                icon.innerHTML = '✗';
+              }
+            }
+          }
+
+          if (port) {
+            document.getElementById('port-display').textContent = port;
+          }
+        });
       </script>
     </head>
     <body>
-      <div class="spinner"></div>
-      <h1>TikScam</h1>
-      <p>Starting application...</p>
-      <p id="status">Waiting for server</p>
+      <div class="container">
+        <h1>🎭 TikScam</h1>
+        <p class="subtitle">Starting desktop application...</p>
+
+        <ul class="progress-list">
+          <li id="step-1" class="progress-item pending">
+            <span class="icon">○</span>
+            <span class="label">Initializing Electron</span>
+          </li>
+          <li id="step-2" class="progress-item pending">
+            <span class="icon">○</span>
+            <span class="label">Finding available port</span>
+          </li>
+          <li id="step-3" class="progress-item pending">
+            <span class="icon">○</span>
+            <span class="label">Starting Next.js server</span>
+          </li>
+          <li id="step-4" class="progress-item pending">
+            <span class="icon">○</span>
+            <span class="label">Waiting for server ready</span>
+          </li>
+          <li id="step-5" class="progress-item pending">
+            <span class="icon">○</span>
+            <span class="label">Loading application</span>
+          </li>
+        </ul>
+
+        <div class="port-info">
+          Server running on port: <strong id="port-display">-</strong>
+        </div>
+      </div>
     </body>
     </html>
   `;
 
-  // Load loading screen
-  await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(loadingHTML)}`);
+  // Load progress screen and show window immediately
+  await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(progressHTML)}`);
   mainWindow.show();
-  log('✅ Loading screen shown');
-  log('📍 Window should be visible now with loading spinner');
+  log('✅ Progress screen shown');
 
-  // Now load the actual Next.js app
-  const url = `http://localhost:${PORT}`;
-  log('🌐 Loading URL:', url);
+  // Helper function to update progress
+  const updateProgress = (step: number, status: 'pending' | 'active' | 'complete' | 'error', port?: number) => {
+    mainWindow?.webContents.send('message', { step, status, port });
+    mainWindow?.webContents.executeJavaScript(`
+      window.postMessage({ step: ${step}, status: '${status}'${port ? `, port: ${port}` : ''} }, '*');
+    `);
+  };
 
-  try {
-    await mainWindow.loadURL(url);
-    log('✅ Window loaded successfully');
-  } catch (error) {
-    log('❌ Failed to load window:', error);
-    // Show error in window
-    const errorHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="UTF-8"><style>
-        body { margin: 0; padding: 40px; background: #000; color: #fff;
-               font-family: monospace; font-size: 14px; }
-        h1 { color: #f00; }
-        pre { background: #111; padding: 20px; border-radius: 5px;
-              overflow: auto; color: #ff6b6b; }
-        .log-path { background: #1a1a1a; padding: 15px; margin: 20px 0;
-                    border-left: 3px solid #4a9eff; }
-        .tip { color: #888; margin-top: 20px; }
-      </style></head>
-      <body>
-        <h1>❌ Failed to start TikScam</h1>
-        <p>Error loading application:</p>
-        <pre>${error}</pre>
+  // Step 1: Initialized (already done)
+  updateProgress(1, 'complete');
+  await new Promise(resolve => setTimeout(resolve, 200));
 
-        <div class="log-path">
-          <strong>📄 Debug log file:</strong><br>
-          <code>${logFile.replace(/\\/g, '\\\\')}</code>
-        </div>
+  // Store updateProgress function on mainWindow for use in app.on('ready')
+  (mainWindow as any).updateProgress = updateProgress;
+  (mainWindow as any).loadApp = async (port: number) => {
+    const url = `http://localhost:${port}`;
+    log('🌐 Loading URL:', url);
 
-        <div class="tip">
-          <strong>💡 How to fix:</strong>
-          <ul>
-            <li>Make sure port ${PORT} is not in use</li>
-            <li>Check the log file above for detailed error messages</li>
-            <li>Try restarting the application</li>
-          </ul>
-        </div>
-      </body>
-      </html>
-    `;
-    await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(errorHTML)}`);
-  }
+    try {
+      await mainWindow!.loadURL(url);
+      log('✅ Window loaded successfully');
+      updateProgress(5, 'complete');
+    } catch (error) {
+      log('❌ Failed to load window:', error);
+      updateProgress(5, 'error');
+
+      // Show error in window
+      const errorHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><style>
+          body { margin: 0; padding: 40px; background: #000; color: #fff;
+                 font-family: monospace; font-size: 14px; }
+          h1 { color: #f00; }
+          pre { background: #111; padding: 20px; border-radius: 5px;
+                overflow: auto; color: #ff6b6b; }
+          .log-path { background: #1a1a1a; padding: 15px; margin: 20px 0;
+                      border-left: 3px solid #4a9eff; }
+          .tip { color: #888; margin-top: 20px; }
+        </style></head>
+        <body>
+          <h1>❌ Failed to start TikScam</h1>
+          <p>Error loading application:</p>
+          <pre>${error}</pre>
+
+          <div class="log-path">
+            <strong>📄 Debug log file:</strong><br>
+            <code>${logFile.replace(/\\/g, '\\\\')}</code>
+          </div>
+
+          <div class="tip">
+            <strong>💡 How to fix:</strong>
+            <ul>
+              <li>Make sure port ${port} is not in use</li>
+              <li>Check the log file above for detailed error messages</li>
+              <li>Try restarting the application</li>
+            </ul>
+          </div>
+        </body>
+        </html>
+      `;
+      await mainWindow!.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(errorHTML)}`);
+    }
+  };
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -404,25 +500,46 @@ app.on('ready', async () => {
     // Load environment variables from .env.local (if exists)
     loadEnvFile();
 
+    // Create window first to show progress
+    await createWindow();
+
     // Start Next.js server (production only)
     if (!isDev) {
-      // Find available port before starting server
+      // Step 2: Find available port
+      const updateProgress = (mainWindow as any).updateProgress;
+      updateProgress(2, 'active');
       log('🔍 Looking for available port...');
       PORT = await findAvailablePort(PORT);
       log('🔌 Using port:', PORT);
+      updateProgress(2, 'complete', PORT);
+      await new Promise(resolve => setTimeout(resolve, 200));
 
+      // Step 3: Start server
+      updateProgress(3, 'active');
       startNextServer();
-      log('⏳ Waiting for Next.js server to be ready...');
+      updateProgress(3, 'complete');
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Step 4: Wait for server
+      updateProgress(4, 'active');
       await waitForServer(PORT);
+      updateProgress(4, 'complete');
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Step 5: Load app
+      updateProgress(5, 'active');
+      const loadApp = (mainWindow as any).loadApp;
+      await loadApp(PORT);
     } else {
       // In dev mode, assume external dev server is running on port 3000
       log('🔌 Port:', PORT);
       log('⏳ Waiting for external dev server...');
       await new Promise(resolve => setTimeout(resolve, 2000));
-    }
 
-    // Create window
-    await createWindow();
+      // Load dev server
+      const loadApp = (mainWindow as any).loadApp;
+      await loadApp(PORT);
+    }
 
     log('🎉 TikScam Electron ready!');
   } catch (error) {
