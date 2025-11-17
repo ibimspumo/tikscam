@@ -146,10 +146,17 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
       ? Math.ceil((actualData.length * 15) / 60)
       : 0;
 
+    console.log('📊 Final recharts data (last 5):', rechartsData.slice(-5).map(d => ({
+      likesPerSecond: d.likesPerSecond,
+      timestamp: new Date(d.timestamp).toLocaleTimeString(),
+    })));
+
     return { rechartsData, average, currentValue, dataRangeMinutes };
   }, [minuteHistory]);
 
   const { rechartsData, average, currentValue, dataRangeMinutes } = chartData;
+
+  console.log('🎨 Rendering chart with', rechartsData.length, 'data points');
 
   return (
     <Card>
