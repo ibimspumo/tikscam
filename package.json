@@ -5,11 +5,11 @@
   "main": "electron/dist/main.js",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "dev:electron": "concurrently \"cross-env BROWSER=none next dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "build:electron": "cross-env BUILD_TARGET=electron next build && tsc -p tsconfig.electron.json",
+    "build:electron": "cross-env BUILD_TARGET=electron next build && node scripts/copy-standalone-files.js && tsc -p tsconfig.electron.json",
     "build:win": "npm run build:electron && electron-builder --win",
     "build:mac": "npm run build:electron && electron-builder --mac",
     "build:linux": "npm run build:electron && electron-builder --linux",
@@ -54,31 +54,23 @@
       "output": "dist"
     },
     "files": [
-      ".next/standalone/**/*",
-      ".next/static/**/*",
-      "public/**/*",
       "electron/dist/**/*",
-      "package.json",
-      "node_modules/**/*"
+      "package.json"
     ],
     "extraResources": [
       {
         "from": ".next/standalone",
-        "to": "app/.next/standalone"
-      },
-      {
-        "from": ".next/static",
-        "to": "app/.next/static"
-      },
-      {
-        "from": "public",
-        "to": "app/public"
+        "to": "app",
+        "filter": ["**/*"]
       }
+    ],
+    "asarUnpack": [
+      "**/*.node"
     ],
     "win": {
       "target": [
         {
-          "target": "nsis",
+          "target": "portable",
           "arch": ["x64"]
         }
       ],

@@ -2,10 +2,33 @@ import { app, BrowserWindow, shell } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import net from 'net';
+import http from 'http';
 import fs from 'fs';
 
 const isDev = process.env.NODE_ENV !== 'production';
-const PORT = process.env.PORT || 3000;
+let PORT = parseInt(process.env.PORT || '3000', 10);
+
+// Setup logging to file for debugging
+const logFile = path.join(app.getPath('userData'), 'tikscam-debug.log');
+const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+
+function log(...args: any[]) {
+  const message = args.map(arg =>
+    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+  ).join(' ');
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+
+  // Use original console methods to avoid infinite recursion
+  process.stdout.write(logMessage);
+  logStream.write(logMessage);
+}
+
+log('=== TikScam Electron Starting ===');
+log('Log file location:', logFile);
+log('App path:', app.getAppPath());
+log('Resources path:', process.resourcesPath);
+log('User data path:', app.getPath('userData'));
 
 /**
  * Load .env.local file if it exists
@@ -25,7 +48,7 @@ function loadEnvFile(): void {
 
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
-      console.log('📄 Loading .env.local from:', envPath);
+      log('📄 Loading .env.local from:', envPath);
 
       try {
         const envContent = fs.readFileSync(envPath, 'utf-8');
@@ -45,19 +68,19 @@ function loadEnvFile(): void {
 
           if (key && value) {
             process.env[key.trim()] = value;
-            console.log(`✅ Loaded env variable: ${key.trim()}`);
+            log(`✅ Loaded env variable: ${key.trim()}`);
           }
         }
 
-        console.log('✅ Environment variables loaded successfully');
+        log('✅ Environment variables loaded successfully');
         return;
       } catch (error) {
-        console.error('❌ Error loading .env.local:', error);
+        log('❌ Error loading .env.local:', error);
       }
     }
   }
 
-  console.log('ℹ️  No .env.local file found - app will run without API key (limited to ~10-20 streams/day)');
+  log('ℹ️  No .env.local file found - app will run without API key (limited to ~10-20 streams/day)');
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -84,22 +107,50 @@ function isPortAvailable(port: number): Promise<boolean> {
 }
 
 /**
- * Wait for the Next.js server to be ready
+ * Find an available port starting from the given port
+ */
+async function findAvailablePort(startPort: number, maxAttempts: number = 10): Promise<number> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const testPort = startPort + i;
+    const available = await isPortAvailable(testPort);
+    if (available) {
+      log(`✅ Found available port: ${testPort}`);
+      return testPort;
+    }
+    log(`⚠️  Port ${testPort} is already in use, trying next...`);
+  }
+  throw new Error(`No available port found between ${startPort} and ${startPort + maxAttempts - 1}`);
+}
+
+/**
+ * Wait for the Next.js server to be ready by checking if it responds to HTTP requests
  */
 async function waitForServer(port: number, maxRetries = 60): Promise<void> {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const available = await isPortAvailable(port);
+      await new Promise<void>((resolve, reject) => {
+        const req = http.get(`http://localhost:${port}`, (res: any) => {
+          // Server responded, it's ready!
+          log('✅ Next.js server is ready! Status:', res.statusCode);
+          resolve();
+        });
 
-      if (!available) {
-        console.log('✅ Next.js server is ready!');
-        return;
-      }
+        req.on('error', () => {
+          // Server not ready yet
+          reject();
+        });
 
-      console.log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+        req.setTimeout(1000, () => {
+          req.destroy();
+          reject();
+        });
+      });
+
+      // If we get here, server is ready
+      return;
     } catch (error) {
-      console.error('Error checking port:', error);
+      log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
@@ -111,20 +162,38 @@ async function waitForServer(port: number, maxRetries = 60): Promise<void> {
  */
 function startNextServer(): void {
   if (isDev) {
-    console.log('🔧 Development mode: using external next dev server');
+    log('🔧 Development mode: using external next dev server');
     return;
   }
 
-  const serverPath = path.join(
-    process.resourcesPath,
-    'app',
-    '.next',
-    'standalone',
-    'server.js'
-  );
+  // Try multiple possible paths for the server
+  const possiblePaths = [
+    path.join(process.resourcesPath, 'app', 'server.js'),
+    path.join(process.resourcesPath, 'app', '.next', 'standalone', 'server.js'),
+    path.join(app.getAppPath(), '.next', 'standalone', 'server.js'),
+    path.join(path.dirname(app.getPath('exe')), 'resources', 'app', 'server.js'),
+  ];
 
-  console.log('🚀 Starting Next.js server from:', serverPath);
-  console.log('📂 Resources path:', process.resourcesPath);
+  let serverPath: string | null = null;
+  for (const testPath of possiblePaths) {
+    log('🔍 Checking path:', testPath);
+    if (fs.existsSync(testPath)) {
+      serverPath = testPath;
+      log('✅ Found server at:', serverPath);
+      break;
+    }
+  }
+
+  if (!serverPath) {
+    log('❌ Could not find server.js in any of these locations:');
+    possiblePaths.forEach(p => log('  -', p));
+    throw new Error('server.js not found');
+  }
+
+  const serverDir = path.dirname(serverPath);
+  log('🚀 Starting Next.js server from:', serverPath);
+  log('📂 Working directory:', serverDir);
+  log('📂 Resources path:', process.resourcesPath);
 
   serverProcess = spawn('node', [serverPath], {
     env: {
@@ -133,16 +202,25 @@ function startNextServer(): void {
       HOSTNAME: '0.0.0.0',
       NODE_ENV: 'production',
     },
-    stdio: 'inherit',
-    cwd: path.join(process.resourcesPath, 'app', '.next', 'standalone'),
+    stdio: 'pipe', // Changed from 'inherit' to capture logs
+    cwd: serverDir,
+  });
+
+  // Log server output
+  serverProcess.stdout?.on('data', (data) => {
+    log('[Next.js]:', data.toString().trim());
+  });
+
+  serverProcess.stderr?.on('data', (data) => {
+    log('[Next.js Error]:', data.toString().trim());
   });
 
   serverProcess.on('error', (err) => {
-    console.error('❌ Failed to start Next.js server:', err);
+    log('❌ Failed to start Next.js server:', err);
   });
 
   serverProcess.on('exit', (code, signal) => {
-    console.log(`⚠️ Next.js server process exited with code ${code} and signal ${signal}`);
+    log(`⚠️ Next.js server process exited with code ${code} and signal ${signal}`);
     serverProcess = null;
   });
 }
@@ -167,13 +245,26 @@ async function createWindow(): Promise<void> {
     icon: path.join(__dirname, '..', 'resources', 'icon.png'),
   });
 
-  // Show window when ready
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+  // Always open DevTools for debugging
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow?.webContents.openDevTools();
+  });
 
-    if (isDev) {
-      mainWindow?.webContents.openDevTools();
-    }
+  // Log all navigation events
+  mainWindow.webContents.on('did-start-loading', () => {
+    log('🔄 Started loading...');
+  });
+
+  mainWindow.webContents.on('did-stop-loading', () => {
+    log('✅ Stopped loading');
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    log('❌ Failed to load:', errorCode, errorDescription, validatedURL);
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    log('✅ Finished loading page');
   });
 
   // Open external links in browser
@@ -185,15 +276,114 @@ async function createWindow(): Promise<void> {
     return { action: 'allow' };
   });
 
-  // Load the Next.js app
+  // Show loading screen first
+  const loadingHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          background: #000;
+          color: #fff;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+        .spinner {
+          width: 50px;
+          height: 50px;
+          border: 3px solid #333;
+          border-top: 3px solid #fff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        h1 { margin: 20px 0 10px 0; font-size: 24px; }
+        p { margin: 0; color: #888; font-size: 14px; }
+        #status { margin-top: 20px; font-size: 12px; color: #666; }
+      </style>
+      <script>
+        let dots = 0;
+        setInterval(() => {
+          dots = (dots + 1) % 4;
+          document.getElementById('status').textContent =
+            'Waiting for server' + '.'.repeat(dots);
+        }, 500);
+
+        // Log to console
+        log('Loading screen rendered');
+        log('Waiting for Next.js server on port ${PORT}');
+      </script>
+    </head>
+    <body>
+      <div class="spinner"></div>
+      <h1>TikScam</h1>
+      <p>Starting application...</p>
+      <p id="status">Waiting for server</p>
+    </body>
+    </html>
+  `;
+
+  // Load loading screen
+  await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(loadingHTML)}`);
+  mainWindow.show();
+  log('✅ Loading screen shown');
+  log('📍 Window should be visible now with loading spinner');
+
+  // Now load the actual Next.js app
   const url = `http://localhost:${PORT}`;
-  console.log('🌐 Loading URL:', url);
+  log('🌐 Loading URL:', url);
 
   try {
     await mainWindow.loadURL(url);
-    console.log('✅ Window loaded successfully');
+    log('✅ Window loaded successfully');
   } catch (error) {
-    console.error('❌ Failed to load window:', error);
+    log('❌ Failed to load window:', error);
+    // Show error in window
+    const errorHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="UTF-8"><style>
+        body { margin: 0; padding: 40px; background: #000; color: #fff;
+               font-family: monospace; font-size: 14px; }
+        h1 { color: #f00; }
+        pre { background: #111; padding: 20px; border-radius: 5px;
+              overflow: auto; color: #ff6b6b; }
+        .log-path { background: #1a1a1a; padding: 15px; margin: 20px 0;
+                    border-left: 3px solid #4a9eff; }
+        .tip { color: #888; margin-top: 20px; }
+      </style></head>
+      <body>
+        <h1>❌ Failed to start TikScam</h1>
+        <p>Error loading application:</p>
+        <pre>${error}</pre>
+
+        <div class="log-path">
+          <strong>📄 Debug log file:</strong><br>
+          <code>${logFile.replace(/\\/g, '\\\\')}</code>
+        </div>
+
+        <div class="tip">
+          <strong>💡 How to fix:</strong>
+          <ul>
+            <li>Make sure port ${PORT} is not in use</li>
+            <li>Check the log file above for detailed error messages</li>
+            <li>Try restarting the application</li>
+          </ul>
+        </div>
+      </body>
+      </html>
+    `;
+    await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(errorHTML)}`);
   }
 
   mainWindow.on('closed', () => {
@@ -206,30 +396,36 @@ async function createWindow(): Promise<void> {
  */
 app.on('ready', async () => {
   try {
-    console.log('🎬 TikScam Electron starting...');
-    console.log('📍 Mode:', isDev ? 'Development' : 'Production');
-    console.log('🔌 Port:', PORT);
+    log('🎬 TikScam Electron starting...');
+    log('📍 Mode:', isDev ? 'Development' : 'Production');
 
     // Load environment variables from .env.local (if exists)
     loadEnvFile();
 
     // Start Next.js server (production only)
     if (!isDev) {
+      // Find available port before starting server
+      log('🔍 Looking for available port...');
+      PORT = await findAvailablePort(PORT);
+      log('🔌 Using port:', PORT);
+
       startNextServer();
-      console.log('⏳ Waiting for Next.js server to be ready...');
-      await waitForServer(Number(PORT));
+      log('⏳ Waiting for Next.js server to be ready...');
+      await waitForServer(PORT);
     } else {
-      // In dev mode, wait a bit for the external dev server
-      console.log('⏳ Waiting for external dev server...');
+      // In dev mode, use port 3000 (assumes external dev server is running)
+      PORT = 3000;
+      log('🔌 Port:', PORT);
+      log('⏳ Waiting for external dev server...');
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     // Create window
     await createWindow();
 
-    console.log('🎉 TikScam Electron ready!');
+    log('🎉 TikScam Electron ready!');
   } catch (error) {
-    console.error('❌ Failed to start application:', error);
+    log('❌ Failed to start application:', error);
     app.quit();
   }
 });
@@ -239,7 +435,7 @@ app.on('ready', async () => {
  */
 app.on('window-all-closed', () => {
   if (serverProcess) {
-    console.log('🛑 Stopping Next.js server...');
+    log('🛑 Stopping Next.js server...');
     serverProcess.kill();
     serverProcess = null;
   }
@@ -263,7 +459,7 @@ app.on('activate', () => {
  */
 app.on('before-quit', () => {
   if (serverProcess) {
-    console.log('🛑 Cleaning up server process...');
+    log('🛑 Cleaning up server process...');
     serverProcess.kill();
     serverProcess = null;
   }
@@ -273,9 +469,9 @@ app.on('before-quit', () => {
  * Handle uncaught errors
  */
 process.on('uncaughtException', (error) => {
-  console.error('💥 Uncaught exception:', error);
+  log('💥 Uncaught exception:', error);
 });
 
 process.on('unhandledRejection', (error) => {
-  console.error('💥 Unhandled rejection:', error);
+  log('💥 Unhandled rejection:', error);
 });
