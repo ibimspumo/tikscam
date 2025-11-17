@@ -1,6 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Zap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface LikesPerSecondWidgetProps {
   likesPerSecond: {
@@ -12,7 +16,8 @@ interface LikesPerSecondWidgetProps {
   };
 }
 
-export function LikesPerSecondWidget({ likesPerSecond }: LikesPerSecondWidgetProps) {
+export const LikesPerSecondWidget= React.memo(({ likesPerSecond }: LikesPerSecondWidgetProps) => {
+  const { t } = useTranslation();
   const currentRate = likesPerSecond.last10s;
   const [peakRate, setPeakRate] = useState(0);
   const [trend, setTrend] = useState<'up' | 'down' | 'stable'>('stable');
@@ -20,7 +25,6 @@ export function LikesPerSecondWidget({ likesPerSecond }: LikesPerSecondWidgetPro
   const startTimeRef = useRef(Date.now());
   const [isInitialPhase, setIsInitialPhase] = useState(true);
 
-  // Track peak rate (only after 30 seconds)
   useEffect(() => {
     const elapsedSeconds = (Date.now() - startTimeRef.current) / 1000;
 
@@ -36,10 +40,9 @@ export function LikesPerSecondWidget({ likesPerSecond }: LikesPerSecondWidgetPro
     }
   }, [currentRate, peakRate]);
 
-  // Calculate trend
   useEffect(() => {
     const diff = currentRate - previousRateRef.current;
-    const threshold = 0.5; // Minimum change to consider as trend
+    const threshold = 0.5;
 
     if (diff > threshold) {
       setTrend('up');
@@ -52,61 +55,69 @@ export function LikesPerSecondWidget({ likesPerSecond }: LikesPerSecondWidgetPro
     previousRateRef.current = currentRate;
   }, [currentRate]);
 
-  // Determine color based on rate intensity
-  const getTextColor = (rate: number) => {
-    if (rate >= 100) return 'text-red-400';
-    if (rate >= 50) return 'text-orange-400';
-    if (rate >= 20) return 'text-yellow-400';
-    if (rate >= 5) return 'text-green-400';
-    return 'text-blue-400';
+  const getColorClass = (rate: number) => {
+    if (rate >= 100) return 'text-red-500';
+    if (rate >= 50) return 'text-orange-500';
+    if (rate >= 20) return 'text-yellow-500';
+    if (rate >= 5) return 'text-green-500';
+    return 'text-blue-500';
   };
 
   const getTrendIcon = () => {
-    if (trend === 'up') return '📈';
-    if (trend === 'down') return '📉';
-    return '➡️';
+    if (trend === 'up') return TrendingUp;
+    if (trend === 'down') return TrendingDown;
+    return Minus;
   };
 
+  const TrendIcon = getTrendIcon();
   const percentage = peakRate > 0 ? (currentRate / peakRate) * 100 : 0;
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-gray-700 transition-all p-3 sm:p-4">
-      <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-1 flex items-center justify-between">
-        <span>⚡ Like-Rate</span>
-        <span>{getTrendIcon()}</span>
-      </div>
-      <div className={`text-2xl sm:text-3xl font-bold ${getTextColor(currentRate)} mb-1`}>
-        {currentRate.toFixed(1)}
-      </div>
-      <div className="text-[10px] text-gray-500 mb-2">
-        Likes/Sekunde (10s)
-      </div>
-
-      {/* Compact progress bar */}
-      {!isInitialPhase && peakRate > 0 && (
-        <>
-          <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden mb-1">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                percentage >= 80 ? 'bg-green-500' :
-                percentage >= 50 ? 'bg-yellow-500' :
-                'bg-blue-500'
-              }`}
-              style={{ width: `${Math.max(percentage, 2)}%` }}
-            />
+    <Card className="transition-all hover:shadow-lg">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Zap className="h-3 w-3" />
+            {t('likesPerSecond.title').toUpperCase()}
           </div>
-          <div className="text-[9px] text-gray-600">
-            Peak: {peakRate.toFixed(1)} L/s
-          </div>
-        </>
-      )}
-
-      {isInitialPhase && (
-        <div className="text-[9px] text-gray-600 flex items-center gap-1">
-          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-          Kalibrierung...
+          <TrendIcon className="h-3 w-3 text-muted-foreground" />
         </div>
-      )}
-    </div>
+
+        <div className={`text-2xl font-bold ${getColorClass(currentRate)} mb-1`}>
+          {currentRate.toFixed(1)}
+        </div>
+
+        <p className="text-xs text-muted-foreground mb-2">
+          {t('likesPerSecond.last10s')}
+        </p>
+
+        {!isInitialPhase && peakRate > 0 && (
+          <>
+            <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden mb-1">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  percentage >= 80 ? 'bg-green-500' :
+                  percentage >= 50 ? 'bg-yellow-500' :
+                  'bg-blue-500'
+                }`}
+                style={{ width: `${Math.max(percentage, 2)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Peak: {peakRate.toFixed(1)} L/s
+            </p>
+          </>
+        )}
+
+        {isInitialPhase && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+            Kalibrierung...
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+});
+
+LikesPerSecondWidget.displayName = 'LikesPerSecondWidget';

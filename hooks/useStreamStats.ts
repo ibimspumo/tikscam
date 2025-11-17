@@ -61,7 +61,7 @@ export function useStreamStats(events: StreamEvent[]) {
         // Gifts
         if (type === 'WebcastGiftMessage' || data.giftName || data.gift) {
           const user = data.uniqueId || data.user?.uniqueId || data.nickname || 'Anonymous';
-          const giftName = data.giftName || data.gift?.name || 'Geschenk';
+          const giftName = data.giftName || data.gift?.name || 'Gift';
           const count = data.repeatCount || data.count || 1;
           const diamonds = (data.gift?.diamondCount || 0) * count;
           const avatar = data.user?.avatarThumb || data.user?.profilePictureUrl || data.profilePictureUrl || null;

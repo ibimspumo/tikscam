@@ -42,7 +42,7 @@ export function useEulerStream(): UseEulerStreamReturn {
 
     const apiKey = process.env.NEXT_PUBLIC_EULERSTREAM_API_KEY;
     if (!apiKey) {
-      setError('API Key nicht gefunden. Bitte .env.local überprüfen.');
+      setError('API Key not found. Please check .env.local file.');
       return;
     }
 
@@ -110,17 +110,17 @@ export function useEulerStream(): UseEulerStreamReturn {
 
       // Handle specific close codes and errors
       if (event.reason && event.reason.includes('504')) {
-        setError('❌ Stream ist aktuell nicht live oder nicht erreichbar. Bitte überprüfen Sie:\n• Ist der Stream wirklich live?\n• Ist der Username korrekt geschrieben?');
+        setError('❌ Stream is currently not live or not accessible. Please check:\n• Is the stream actually live?\n• Is the username spelled correctly?');
       } else if (event.reason && event.reason.includes('500')) {
-        setError('❌ TikTok-Server nicht erreichbar. Der Stream könnte offline sein oder TikTok blockiert temporär den Zugriff.');
+        setError('❌ TikTok server not reachable. The stream might be offline or TikTok is temporarily blocking access.');
       } else if (event.code === 1008) {
-        setError('❌ Stream nicht gefunden oder nicht live');
+        setError('❌ Stream not found or not live');
       } else if (event.code === 1003) {
-        setError('❌ Ungültige Parameter');
+        setError('❌ Invalid parameters');
       } else if (event.reason) {
         setError(`❌ ${event.reason}`);
       } else if (event.code !== 1000) {
-        setError(`❌ Verbindung geschlossen (Code: ${event.code})`);
+        setError(`❌ Connection closed (Code: ${event.code})`);
       }
     };
 

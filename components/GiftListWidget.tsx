@@ -1,4 +1,11 @@
-import { useState, useMemo } from 'react';
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Gift, Gem, ChevronDown, ChevronRight, ArrowUp, ArrowDown, BarChart2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface GiftType {
   id: number;
@@ -13,11 +20,12 @@ interface GiftListWidgetProps {
   giftCatalog: Map<number, GiftType>;
 }
 
-export function GiftListWidget({ giftCatalog }: GiftListWidgetProps) {
+export const GiftListWidget= React.memo(({ giftCatalog }: GiftListWidgetProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'diamonds' | 'count'>('count');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useTranslation();
 
   const filteredAndSortedGifts = useMemo(() => {
     let giftArray = Array.from(giftCatalog.values());
@@ -59,80 +67,95 @@ export function GiftListWidget({ giftCatalog }: GiftListWidgetProps) {
   const totalGiftsReceived = Array.from(giftCatalog.values()).reduce((sum, gift) => sum + gift.timesReceived, 0);
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-purple-800/50 p-4">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between text-left"
-      >
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xl sm:text-2xl">🎁</span>
-          <h2 className="text-base sm:text-lg font-bold text-white">
-            Geschenke Katalog
-          </h2>
-          {giftCatalog.size > 0 && (
-            <div className="flex gap-2">
-              <span className="text-[10px] sm:text-xs bg-purple-600 text-white px-2 py-0.5 rounded">
-                {giftCatalog.size} Typen
-              </span>
-              <span className="text-[10px] sm:text-xs bg-blue-600 text-white px-2 py-0.5 rounded">
-                {totalGiftsReceived} erhalten
-              </span>
-            </div>
+    <Card className="border-purple-500/50">
+      <CardHeader className="pb-3">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity"
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Gift className="h-4 w-4 text-purple-500" />
+              Gift Catalog
+            </CardTitle>
+            {giftCatalog.size > 0 && (
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {giftCatalog.size} Types
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {totalGiftsReceived} Received
+                </Badge>
+              </div>
+            )}
+          </div>
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           )}
-        </div>
-        <span className="text-gray-500 text-sm">{isExpanded ? '▼' : '▶'}</span>
-      </button>
+        </button>
+      </CardHeader>
 
       {isExpanded && (
-        <div className="mt-3 space-y-3">
+        <CardContent className="space-y-3">
           {giftCatalog.size === 0 ? (
-            <div className="text-center py-6 text-gray-500 text-sm">
-              Noch keine Geschenke empfangen
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              No gifts received yet
             </div>
           ) : (
             <>
               {/* Search and Sort Controls */}
               <div className="space-y-2">
                 {/* Search */}
-                <input
+                <Input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Geschenk suchen..."
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-700 bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Search gifts..."
+                  className="w-full"
                 />
 
                 {/* Sort Buttons */}
                 <div className="flex gap-2">
                   <button
                     onClick={() => toggleSort('name')}
-                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                       sortBy === 'name'
                         ? 'bg-purple-600 text-white'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
                   >
-                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Name
+                    {sortBy === 'name' && (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
                   </button>
                   <button
                     onClick={() => toggleSort('diamonds')}
-                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                       sortBy === 'diamonds'
                         ? 'bg-purple-600 text-white'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
                   >
-                    💎 {sortBy === 'diamonds' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    <Gem className="h-3 w-3" />
+                    {sortBy === 'diamonds' && (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
                   </button>
                   <button
                     onClick={() => toggleSort('count')}
-                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                       sortBy === 'count'
                         ? 'bg-purple-600 text-white'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
                   >
-                    # {sortBy === 'count' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    <BarChart2 className="h-3 w-3" />
+                    {sortBy === 'count' && (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -148,7 +171,7 @@ export function GiftListWidget({ giftCatalog }: GiftListWidgetProps) {
                       className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-lg p-2 border border-purple-800/50 hover:border-purple-600/70 transition-all"
                     >
                       {/* Gift Image */}
-                      <div className="aspect-square bg-gray-800/50 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden">
+                      <div className="aspect-square bg-muted rounded-lg mb-1.5 flex items-center justify-center overflow-hidden">
                         {imageUrl ? (
                           <img
                             src={imageUrl}
@@ -159,26 +182,26 @@ export function GiftListWidget({ giftCatalog }: GiftListWidgetProps) {
                             }}
                           />
                         ) : (
-                          <span className="text-2xl sm:text-3xl">🎁</span>
+                          <Gift className="h-8 w-8 text-muted-foreground" />
                         )}
                       </div>
 
                       {/* Gift Name */}
-                      <div className="text-[10px] sm:text-xs font-bold text-white truncate text-center mb-1">
+                      <div className="text-[10px] sm:text-xs font-bold truncate text-center mb-1">
                         {gift.name}
                       </div>
 
                       {/* Diamond Value */}
                       <div className="flex items-center justify-center gap-1 bg-purple-900/30 rounded px-1.5 py-0.5 mb-1">
-                        <span className="text-[10px]">💎</span>
+                        <Gem className="h-3 w-3 text-purple-400" />
                         <span className="text-[10px] sm:text-xs font-bold text-purple-400">
-                          {gift.diamondCount?.toLocaleString('de-DE') || 0}
+                          {gift.diamondCount?.toLocaleString('en-US') || 0}
                         </span>
                       </div>
 
                       {/* Times Received */}
                       <div className="flex items-center justify-center gap-1 bg-blue-900/30 rounded px-1.5 py-0.5">
-                        <span className="text-[10px]">📊</span>
+                        <BarChart2 className="h-3 w-3 text-blue-400" />
                         <span className="text-[10px] sm:text-xs font-bold text-blue-400">
                           {gift.timesReceived}x
                         </span>
@@ -189,14 +212,16 @@ export function GiftListWidget({ giftCatalog }: GiftListWidgetProps) {
               </div>
 
               {filteredAndSortedGifts.length === 0 && searchTerm && (
-                <div className="text-center py-8 text-gray-400">
-                  Keine Geschenke gefunden für "{searchTerm}"
+                <div className="text-center py-8 text-muted-foreground">
+                  {t('search.noResultsFor')} "{searchTerm}"
                 </div>
               )}
             </>
           )}
-        </div>
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
-}
+});
+
+GiftListWidget.displayName = 'GiftListWidget';

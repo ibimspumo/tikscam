@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **TikScam** is a transparency tool for TikTok Live streams that helps viewers detect scam streams and timer manipulation in real-time. The application monitors TikTok live streams and provides detailed analytics on gifts, viewer counts, likes, chat activity, and more.
 
+### UI Design
+
+The project uses **ShadCN UI** for all components:
+
+- Route: `/` (Homepage)
+- Locations:
+  - Main components: `components/*.tsx`
+  - Widgets: `components/widgets/index.tsx` (central export)
+  - V2 sources: `components/v2/*.tsx` (original ShadCN implementations)
+- Style: ShadCN UI + Radix Primitives + Lucide Icons
+- Features: Accessibility, clean design, semantic color system, component variants
+
 ## Commands
 
 ### Development
@@ -338,3 +350,7 @@ Optimized for **Vercel** deployment:
 - Automatic builds on git push
 - Supports serverless functions for API routes
 - See `DEPLOYMENT.md` for detailed instructions
+
+## Important
+
+Dont run Build unless told otherwise

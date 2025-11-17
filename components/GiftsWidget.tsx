@@ -1,6 +1,12 @@
-import { memo, useMemo } from 'react';
+'use client';
 
-interface Gift {
+import React, { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Gift, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface GiftItem {
   user: string;
   gift: string;
   count: number;
@@ -12,140 +18,87 @@ interface Gift {
 }
 
 interface GiftsWidgetProps {
-  gifts: Gift[];
+  gifts: GiftItem[];
+  totalDiamonds: number;
+  className?: string;
 }
 
-export const GiftsWidget = memo(function GiftsWidget({ gifts }: GiftsWidgetProps) {
-  // Memoize expensive calculations
-  const topGiftersList = useMemo(() => {
-    const topGifters = gifts.reduce((acc, gift) => {
-      const key = gift.user;
-      if (!acc[key]) {
-        acc[key] = { user: gift.user, total: 0 };
-      }
-      acc[key].total += gift.count;
-      return acc;
-    }, {} as Record<string, { user: string; total: number }>);
-
-    return Object.values(topGifters)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+export const GiftsWidget= React.memo(({ gifts, totalDiamonds, className }: GiftsWidgetProps) => {
+  const recentGifts = useMemo(() => {
+    return [...gifts].sort((a, b) => b.timestamp - a.timestamp).slice(0, 20);
   }, [gifts]);
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-4">
-      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-800">
-        <span className="text-xl sm:text-2xl">🎁</span>
-        <h2 className="text-base sm:text-lg font-bold text-white">Geschenke</h2>
-      </div>
-
-      {/* Top Gifters */}
-      {topGiftersList.length > 0 && (
-        <div className="mb-3">
-          <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-            Top Schenker
-          </h3>
-          <div className="space-y-1.5">
-            {topGiftersList.map((gifter, index) => (
-              <div
-                key={gifter.user}
-                className="flex items-center gap-2 p-2 bg-gray-800/50 rounded-lg"
-              >
-                <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-purple-600 text-white rounded-full text-[10px] sm:text-xs font-bold">
-                  {index + 1}
-                </div>
-                <span className="font-semibold text-purple-400 flex-1 text-xs sm:text-sm truncate">
-                  {gifter.user}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {gifter.total} 🎁
-                </span>
-              </div>
-            ))}
+    <Card className={cn("h-full", className)}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Gift className="h-5 w-5" />
+            Gifts
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="gap-1">
+              <TrendingUp className="h-3 w-3" />
+              {totalDiamonds.toLocaleString('en-US')}💎
+            </Badge>
+            <Badge>{gifts.length}</Badge>
           </div>
         </div>
-      )}
-
-      {/* Recent Gifts */}
-      <div>
-        <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-          Letzte Geschenke
-        </h3>
-        <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
-          {gifts.length === 0 ? (
-            <div className="text-center py-6 text-gray-500 text-sm">
-              Noch keine Geschenke...
-            </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {recentGifts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No gifts received yet
+            </p>
           ) : (
-            gifts.slice().reverse().slice(0, 10).map((gift, index) => {
-              const giftImageUrl = gift.giftIcon || gift.giftImage;
-              const totalDiamonds = (gift.diamondCount || 0) * gift.count;
+            recentGifts.map((gift, idx) => (
+              <div
+                key={`${gift.timestamp}-${idx}`}
+                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+              >
+                {gift.giftImage ? (
+                  <img
+                    src={gift.giftImage}
+                    alt={gift.gift}
+                    className="w-10 h-10 object-contain flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Gift className="h-5 w-5 text-primary" />
+                  </div>
+                )}
 
-              return (
-                <div
-                  key={`${gift.timestamp}-${index}`}
-                  className="flex gap-2 p-2 bg-gray-800/50 rounded-lg border border-gray-700/50"
-                >
-                  {/* User Avatar */}
-                  {gift.avatar ? (
-                    <img
-                      src={gift.avatar}
-                      alt={gift.user}
-                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0 text-sm">
-                      {gift.user.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-
-                  {/* Gift Icon */}
-                  <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                    {giftImageUrl ? (
-                      <img
-                        src={giftImageUrl}
-                        alt={gift.gift}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-lg">🎁</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm truncate">
+                      {gift.user}
+                    </span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(gift.timestamp).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-foreground/80">
+                      {gift.gift} x{gift.count}
+                    </span>
+                    {gift.diamondCount !== undefined && (
+                      <Badge variant="outline" className="text-xs">
+                        {gift.diamondCount}💎
+                      </Badge>
                     )}
                   </div>
-
-                  {/* Gift Info */}
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-purple-400 text-xs truncate">
-                        {gift.user}
-                      </span>
-                      <span className="text-[10px] text-gray-600 flex-shrink-0 ml-2">
-                        {new Date(gift.timestamp).toLocaleTimeString('de-DE', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <p className="text-gray-300 text-[10px] sm:text-xs truncate">
-                        {gift.count > 1 ? `${gift.count}x ` : ''}
-                        {gift.gift}
-                      </p>
-                      {totalDiamonds > 0 && (
-                        <span className="text-[10px] font-bold text-cyan-400 flex items-center gap-0.5 flex-shrink-0">
-                          💎 {totalDiamonds.toLocaleString('de-DE')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 </div>
-              );
-            })
+              </div>
+            ))
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 });
+
+GiftsWidget.displayName = 'GiftsWidget';

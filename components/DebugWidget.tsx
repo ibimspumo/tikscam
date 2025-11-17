@@ -1,10 +1,15 @@
-import { useState } from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Bug, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface DebugWidgetProps {
   roomInfo: any;
 }
 
-export function DebugWidget({ roomInfo }: DebugWidgetProps) {
+export const DebugWidget= React.memo(({ roomInfo }: DebugWidgetProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!roomInfo) {
@@ -12,25 +17,33 @@ export function DebugWidget({ roomInfo }: DebugWidgetProps) {
   }
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-yellow-800/50 p-4">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between text-left"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-xl sm:text-2xl">🔍</span>
-          <h2 className="text-base sm:text-lg font-bold text-white">Debug: Room Info</h2>
-        </div>
-        <span className="text-gray-500 text-sm">{isExpanded ? '▼' : '▶'}</span>
-      </button>
+    <Card className="border-yellow-500/50">
+      <CardHeader className="pb-3">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity"
+        >
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bug className="h-4 w-4 text-yellow-500" />
+            Debug: Room Info
+          </CardTitle>
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+      </CardHeader>
 
       {isExpanded && (
-        <div className="mt-3">
-          <pre className="text-[10px] sm:text-xs bg-black text-green-400 p-3 sm:p-4 rounded overflow-auto max-h-64 sm:max-h-96">
+        <CardContent>
+          <pre className="text-[10px] sm:text-xs bg-black text-green-400 p-3 sm:p-4 rounded-lg overflow-auto max-h-64 sm:max-h-96 border border-green-500/20">
             {JSON.stringify(roomInfo, null, 2)}
           </pre>
-        </div>
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
-}
+});
+
+DebugWidget.displayName = 'DebugWidget';

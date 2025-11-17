@@ -1,62 +1,71 @@
-import { memo, useMemo } from 'react';
+'use client';
+
+import React, { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Activity, UserPlus, Users } from 'lucide-react';
 
 interface ActivityWidgetProps {
   joins: Array<{ user: string; timestamp: number }>;
   follows: Array<{ user: string; timestamp: number }>;
 }
 
-export const ActivityWidget = memo(function ActivityWidget({ joins, follows }: ActivityWidgetProps) {
-  // Memoize expensive calculations
+export const ActivityWidget= React.memo(({ joins, follows }: ActivityWidgetProps) => {
   const activities = useMemo(() => {
     return [
-      ...joins.map(j => ({ ...j, type: 'join' as const, icon: '👋', color: 'green' })),
-      ...follows.map(f => ({ ...f, type: 'follow' as const, icon: '➕', color: 'orange' })),
+      ...joins.map(j => ({ ...j, type: 'join' as const })),
+      ...follows.map(f => ({ ...f, type: 'follow' as const })),
     ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 15);
   }, [joins, follows]);
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-4">
-      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-800">
-        <span className="text-xl sm:text-2xl">📊</span>
-        <h2 className="text-base sm:text-lg font-bold text-white">Aktivitäten</h2>
-      </div>
-
-      <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
-        {activities.length === 0 ? (
-          <div className="text-center py-6 sm:py-8 text-gray-500 text-sm">
-            Keine Aktivität...
-          </div>
-        ) : (
-          activities.map((activity, index) => {
-            const textColor = activity.type === 'follow'
-              ? 'text-orange-400'
-              : 'text-green-400';
-
-            return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Activity className="h-4 w-4" />
+          Activity
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {activities.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No activity yet...
+            </p>
+          ) : (
+            activities.map((activity, index) => (
               <div
                 key={`${activity.timestamp}-${index}`}
-                className="p-2 rounded-lg bg-gray-800/50 border border-gray-700/50 flex items-center gap-2"
+                className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
               >
-                <span className="text-base sm:text-lg">{activity.icon}</span>
+                {activity.type === 'follow' ? (
+                  <UserPlus className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                ) : (
+                  <Users className="h-4 w-4 text-green-500 flex-shrink-0" />
+                )}
                 <div className="flex-1 min-w-0">
-                  <span className={`font-semibold ${textColor} text-xs sm:text-sm`}>
+                  <span className={`font-semibold text-sm ${
+                    activity.type === 'follow' ? 'text-orange-500' : 'text-green-500'
+                  }`}>
                     {activity.user}
                   </span>
-                  <span className="text-gray-400 text-[10px] sm:text-xs ml-1">
-                    {activity.type === 'follow' ? 'folgt' : 'beigetreten'}
+                  <span className="text-xs text-muted-foreground ml-1">
+                    {activity.type === 'follow' ? 'followed' : 'joined'}
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-600 flex-shrink-0">
-                  {new Date(activity.timestamp).toLocaleTimeString('de-DE', {
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  {new Date(activity.timestamp).toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
                 </span>
               </div>
-            );
-          })
-        )}
-      </div>
-    </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 });
+
+ActivityWidget.displayName = 'ActivityWidget';

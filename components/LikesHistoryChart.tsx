@@ -1,6 +1,10 @@
 'use client';
 
-import { memo, useMemo } from 'react';
+import React, { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { BarChart2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface MinuteStats {
   interval: number;
@@ -12,7 +16,8 @@ interface LikesHistoryChartProps {
   minuteHistory: MinuteStats[];
 }
 
-export const LikesHistoryChart = memo(function LikesHistoryChart({ minuteHistory = [] }: LikesHistoryChartProps) {
+export const LikesHistoryChart= React.memo(({ minuteHistory = [] }: LikesHistoryChartProps) => {
+  const { t } = useTranslation();
   // Memoize expensive calculations
   const chartData = useMemo(() => {
     // Fill in missing 15-second intervals for the last 60 minutes
@@ -55,90 +60,96 @@ export const LikesHistoryChart = memo(function LikesHistoryChart({ minuteHistory
   const { last15Minutes, maxValue, average, currentValue, dataRangeMinutes } = chartData;
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-800">
-        <div className="flex items-center gap-2">
-          <span className="text-xl sm:text-2xl">📊</span>
-          <h2 className="text-base sm:text-lg font-bold text-white">Likes/Sekunde - 15 Min</h2>
-        </div>
-        <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
-          <div className="text-left sm:text-right">
-            <div className="text-gray-500">Aktuell</div>
-            <div className="text-sm sm:text-base font-bold text-blue-400">
-              {currentValue.toFixed(1)} L/s
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart2 className="h-4 w-4" />
+            {t('charts.likesHistoryTitle')}
+          </CardTitle>
+          <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
+            <div className="text-left sm:text-right">
+              <div className="text-muted-foreground">{t('common.current')}</div>
+              <div className="text-sm sm:text-base font-bold text-blue-500">
+                {currentValue.toFixed(1)} L/s
+              </div>
+            </div>
+            <div className="text-left sm:text-right">
+              <div className="text-muted-foreground">Ø ({dataRangeMinutes}min)</div>
+              <div className="text-sm sm:text-base font-bold text-green-500">
+                {average.toFixed(1)} L/s
+              </div>
             </div>
           </div>
-          <div className="text-left sm:text-right">
-            <div className="text-gray-500">Ø ({dataRangeMinutes}min)</div>
-            <div className="text-sm sm:text-base font-bold text-green-400">
-              {average.toFixed(1)} L/s
-            </div>
-          </div>
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Chart */}
-      <div className="relative h-48 sm:h-64 flex items-end gap-[0.5px] bg-gray-950/50 rounded-lg p-3 sm:p-4">
-        {last15Minutes.map((stat, index) => {
-          const heightPercent = maxValue > 0 ? (stat.likesPerSecond / maxValue) * 100 : 0;
-          const isRecent = index >= 40; // Last 10 minutes (40 intervals)
+      <CardContent>
+        {/* Chart */}
+        <div className="relative h-48 sm:h-64 flex items-end gap-[0.5px] bg-muted/50 rounded-lg p-3 sm:p-4">
+          {last15Minutes.map((stat, index) => {
+            const heightPercent = maxValue > 0 ? (stat.likesPerSecond / maxValue) * 100 : 0;
+            const isRecent = index >= 40; // Last 10 minutes (40 intervals)
 
-          // Calculate time ago in minutes and seconds
-          const secondsAgo = (last15Minutes.length - 1 - index) * 15;
-          const minutesAgo = Math.floor(secondsAgo / 60);
-          const remainingSeconds = secondsAgo % 60;
-          const timeAgoText = minutesAgo > 0
-            ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-            : `vor ${remainingSeconds}s`;
+            // Calculate time ago in minutes and seconds
+            const secondsAgo = (last15Minutes.length - 1 - index) * 15;
+            const minutesAgo = Math.floor(secondsAgo / 60);
+            const remainingSeconds = secondsAgo % 60;
+            const timeAgoText = minutesAgo > 0
+              ? `vor ${minutesAgo} Min ${remainingSeconds}s`
+              : `vor ${remainingSeconds}s`;
 
-          return (
-            <div
-              key={stat.interval}
-              className="relative flex-1 group"
-              style={{ height: '100%' }}
-            >
-              {/* Bar */}
+            return (
               <div
-                className={`absolute bottom-0 w-full rounded-t transition-all duration-300 ${
-                  isRecent
-                    ? 'bg-gradient-to-t from-purple-500 to-pink-500'
-                    : 'bg-gradient-to-t from-blue-500 to-cyan-500'
-                }`}
-                style={{ height: `${heightPercent}%` }}
-              />
+                key={stat.interval}
+                className="relative flex-1 group"
+                style={{ height: '100%' }}
+              >
+                {/* Bar */}
+                <div
+                  className={`absolute bottom-0 w-full rounded-t transition-all duration-300 ${
+                    isRecent
+                      ? 'bg-gradient-to-t from-purple-500 to-pink-500'
+                      : 'bg-gradient-to-t from-blue-500 to-cyan-500'
+                  }`}
+                  style={{ height: `${heightPercent}%` }}
+                />
 
-              {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                <div className="bg-gray-800 border border-gray-700 text-white text-xs rounded py-1 px-2 whitespace-nowrap shadow-xl">
-                  <div className="font-bold">{stat.likesPerSecond.toFixed(1)} L/s</div>
-                  <div className="text-gray-400 text-[10px]">
-                    {timeAgoText}
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                  <div className="bg-popover border text-popover-foreground text-xs rounded py-1 px-2 whitespace-nowrap shadow-xl">
+                    <div className="font-bold">{stat.likesPerSecond.toFixed(1)} L/s</div>
+                    <div className="text-muted-foreground text-[10px]">
+                      {timeAgoText}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Time labels */}
-      <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-gray-500">
-        <span>-15 Min</span>
-        <span>-7.5 Min</span>
-        <span>Jetzt</span>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-3 sm:mt-4 pt-3 border-t border-gray-800 flex flex-wrap justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-          <span className="text-gray-400">Älter 10 Min</span>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-gradient-to-r from-purple-500 to-pink-500"></div>
-          <span className="text-gray-400">Letzte 10 Min</span>
+
+        {/* Time labels */}
+        <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-muted-foreground">
+          <span>-15 Min</span>
+          <span>-7.5 Min</span>
+          <span>{t('common.now')}</span>
         </div>
-      </div>
-    </div>
+
+        {/* Legend */}
+        <div className="mt-3 sm:mt-4 pt-3 border-t flex flex-wrap justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+            <span className="text-muted-foreground">{t('charts.olderThan10Min')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-gradient-to-r from-purple-500 to-pink-500"></div>
+            <span className="text-muted-foreground">{t('charts.last10Min')}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 });
+
+LikesHistoryChart.displayName = 'LikesHistoryChart';

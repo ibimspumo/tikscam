@@ -594,7 +594,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       console.log('[TikTok Live] Connection error detected');
 
       // Check if this is a rate limit error - trigger automatic retry with API key
-      let errorMessage = (data as any).message || 'Verbindung verloren';
+      let errorMessage = (data as any).message || 'Connection lost';
       const isRateLimitError = errorMessage.includes('Rate Limited') ||
                                errorMessage.includes('rate limit') ||
                                errorMessage.includes('rate_limit');
@@ -603,9 +603,9 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         console.log('[TikTok Live] ⚠️ Rate Limit detected in SSE error! Backend should handle fallback automatically.');
         // The backend will handle the fallback, we just show a transitional message
         setRetryingWithApiKey(true);
-        setError('⏰ Rate Limit erreicht - Wechsle zu EulerStream API...');
+        setError('⏰ Rate limit reached - Switching to EulerStream API...');
       } else if (errorMessage.includes('Failed to connect')) {
-        errorMessage = '❌ Verbindung fehlgeschlagen\n\nMögliche Gründe:\n• Stream ist offline\n• Username ist falsch\n• Netzwerkproblem';
+        errorMessage = '❌ Connection failed\n\nPossible reasons:\n• Stream is offline\n• Username is incorrect\n• Network problem';
         setError(errorMessage);
         setIsConnected(false);
         setIsConnecting(false);
@@ -953,7 +953,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         // Set a helpful error message if we don't have one yet
         setError((prevError) => {
           if (prevError) return prevError; // Keep existing error message
-          return '⏰ Verbindung fehlgeschlagen\n\nMögliche Gründe:\n• Tageslimit erreicht - Warte bis morgen\n• Stream ist offline\n• Netzwerkproblem\n\nFür mehr Verbindungen: eulerstream.com/pricing';
+          return '⏰ Connection failed\n\nPossible reasons:\n• Daily limit reached - Try again tomorrow\n• Stream is offline\n• Network problem\n\nFor more connections: eulerstream.com/pricing';
         });
       }
     };
