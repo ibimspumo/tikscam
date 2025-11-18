@@ -13,6 +13,7 @@
 
 import { WebcastPushConnection } from 'tiktok-live-connector';
 import { NextRequest } from 'next/server';
+import { INTERVALS } from '@/lib/constants';
 
 // Store active connections
 const activeConnections = new Map<string, WebcastPushConnection>();
@@ -53,14 +54,14 @@ export async function GET(
         }
       };
 
-      // Keep-Alive: Send heartbeat every 30 seconds
+      // Keep-Alive: Send heartbeat to prevent SSE timeout
       const keepAliveInterval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(': keep-alive\n\n'));
         } catch {
           clearInterval(keepAliveInterval);
         }
-      }, 30000);
+      }, INTERVALS.KEEPALIVE);
 
       // Helper to extract and format error message
       const extractErrorMessage = (err: unknown): string => {
@@ -159,7 +160,7 @@ export async function GET(
           processInitialData: false,
           enableExtendedGiftInfo: true,
           requestOptions: {
-            timeout: 10000,
+            timeout: INTERVALS.CONNECTION_TIMEOUT,
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             },
