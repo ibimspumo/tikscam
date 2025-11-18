@@ -157,6 +157,7 @@ export interface UserProfile {
   uniqueId?: string;
   nickname?: string;
   displayName?: string;
+  profilePictureUrl?: string;  // Direct URL from server
   profilePicture?: {
     url?: string[];
   };

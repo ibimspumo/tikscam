@@ -131,11 +131,13 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       setError(null);
 
       // Initialize stats with room data
+      // Note: streamTotalLikes is NOT available at connection time (always 0)
+      // Real total likes come from the first 'like' event with totalLikes field
       setStats(prev => ({
         ...prev,
         viewerCount: data.roomInfo.viewerCount || 0,
-        streamTotalLikes: data.roomInfo.likeCount || 0,
         totalFollowers: data.roomInfo.owner?.followerCount || 0,
+        // Don't set streamTotalLikes here - it will be set by first like event
       }));
     }) as EventListener);
 
@@ -276,12 +278,16 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       lastLikeUpdateRef.current = now;
 
       setStats(prev => {
+        // Increment from like events for tracking session likes
         const newTotalLikes = prev.totalLikes + (likeData.count || 1);
 
-        // Add snapshot for rate calculation
+        // Use totalLikes from event (this is the STREAM total from TikTok)
+        const streamTotal = likeData.totalLikes || prev.streamTotalLikes;
+
+        // Add snapshot for rate calculation using stream total
         const snapshots = [...likeSnapshotsRef.current, {
           timestamp: now,
-          totalLikes: newTotalLikes,
+          totalLikes: streamTotal,  // Use actual stream total for accurate L/s
         }];
 
         // Keep only last 60 seconds of snapshots
@@ -296,7 +302,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           if (oldSnapshots.length === 0) return 0;
 
           const oldestSnapshot = oldSnapshots[oldSnapshots.length - 1];
-          const likesDiff = newTotalLikes - oldestSnapshot.totalLikes;
+          const likesDiff = streamTotal - oldestSnapshot.totalLikes;
           const timeDiff = (now - oldestSnapshot.timestamp) / 1000;
 
           return timeDiff > 0 ? likesDiff / timeDiff : 0;
@@ -318,6 +324,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         return {
           ...prev,
           totalLikes: newTotalLikes,
+          streamTotalLikes: streamTotal,  // Update with actual stream total from TikTok
           likesPerSecond,
           peakLikesPerSecond,
         };

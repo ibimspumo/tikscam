@@ -175,7 +175,10 @@ export const en = {
 
   // Stats Card
   stats: {
+    viewers: 'Viewers',
     totalLikes: 'Total Likes',
+    gifts: 'Gifts',
+    diamonds: 'Diamonds',
     currentViewers: 'Current Viewers',
     peakViewers: 'Peak Viewers',
     totalFollowers: 'Total Followers',

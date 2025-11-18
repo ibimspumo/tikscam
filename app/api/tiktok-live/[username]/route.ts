@@ -190,13 +190,21 @@ export async function GET(
 
         // Setup event handlers
         tiktokConnection.on('connected', (roomData: TikTokRoomData) => {
+          // Data is nested in roomInfo.data
+          const data = (roomData as any).roomInfo?.data || roomData;
+
           sendEvent('connected', {
             roomInfo: {
-              id: roomData.id,
-              title: roomData.title,
-              owner: roomData.owner,
-              viewerCount: roomData.viewerCount,
-              likeCount: roomData.likeCount,
+              id: roomData.roomId || roomData.id,
+              title: data.title || '',
+              owner: {
+                userId: data.owner?.id_str || data.owner?.userId || '',
+                uniqueId: data.owner?.display_id || data.owner?.uniqueId || '',
+                nickname: data.owner?.nickname || '',
+                profilePictureUrl: data.owner?.avatar_large?.url_list?.[0] || data.owner?.profilePictureUrl || '',
+              },
+              viewerCount: data.user_count || data.stats?.total_user || 0,
+              likeCount: data.like_count || data.stats?.like_count || 0,
             },
           });
         });

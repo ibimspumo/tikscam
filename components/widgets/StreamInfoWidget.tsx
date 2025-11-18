@@ -37,9 +37,12 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
   const streamerName = roomInfo.owner?.displayName || roomInfo.owner?.nickname || username || 'Unknown';
   const followerCount = totalFollowers || roomInfo.owner?.followerCount || 0;
   const totalUsers = roomInfo.viewerCount || 0;
-  const streamTotalLikes = roomInfo.likeCount || 0;
+  // Use stats.streamTotalLikes for accurate stream total
+  // Note: Initial connection has likeCount=0, real total comes from like events
+  const streamTotalLikes = stats?.streamTotalLikes || 0;
 
   const streamerAvatar =
+    roomInfo.owner?.profilePictureUrl ||
     roomInfo.owner?.profilePicture?.url?.[0] ||
     roomInfo.owner?.avatarThumb ||
     roomInfo.owner?.avatarMedium ||

@@ -257,7 +257,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
             <StatsCard
               icon={<Heart className="h-4 w-4 text-pink-500" />}
               label={t('stats.totalLikes')}
-              value={stats.totalLikes.toLocaleString('en-US')}
+              value={stats.streamTotalLikes.toLocaleString('en-US')}
               color="pink"
             />
             <StatsCard

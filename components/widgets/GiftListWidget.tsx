@@ -81,14 +81,16 @@ export const GiftListWidget= React.memo(({ giftCatalog, availableGifts }: GiftLi
               <Gift className="h-4 w-4 text-purple-500" />
               Gift Catalog
             </CardTitle>
-            {(giftCatalog?.size || 0) > 0 && (
+            {gifts.size > 0 && (
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {giftCatalog?.size || 0} Types
+                  {gifts.size} Types
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {totalGiftsReceived} Received
-                </Badge>
+                {totalGiftsReceived > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {totalGiftsReceived} Received
+                  </Badge>
+                )}
               </div>
             )}
           </div>
@@ -102,9 +104,9 @@ export const GiftListWidget= React.memo(({ giftCatalog, availableGifts }: GiftLi
 
       {isExpanded && (
         <CardContent className="space-y-3">
-          {(giftCatalog?.size || 0) === 0 ? (
+          {gifts.size === 0 ? (
             <div className="text-center py-6 text-muted-foreground text-sm">
-              No gifts received yet
+              No gifts available
             </div>
           ) : (
             <>
