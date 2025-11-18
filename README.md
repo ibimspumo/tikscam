@@ -4,7 +4,7 @@
 
 **Real-Time Transparency Tool for TikTok Live Timer Streams**
 
-Expose streamers who manipulate like/follow values to keep timers running forever.
+Expose streamers who manipulate invisible like/follow values to keep timers running forever.
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
@@ -20,88 +20,165 @@ Expose streamers who manipulate like/follow values to keep timers running foreve
 
 ## 🚨 The Problem
 
-### The Classic TikTok Timer Scam
+### The TikTok Timer Scam Explained
 
-You've seen it everywhere on TikTok Live:
+You've seen these streams everywhere on TikTok Live:
 
 ```
-Streamer: "Every LIKE = 1 point, every FOLLOW = 10 points!"
-Streamer: "We need 5,000 points to reach the goal!"
-Timer: 05:00 → 04:59 → 04:58...
+Timer: 00:15 → 00:14 → 00:13...
+Streamer: "Okay guys, we're just chilling now. DON'T like, DON'T follow!"
+Streamer: "I'm going offline soon anyway, so just relax..."
+Timer: 00:08 → 00:12 → 00:09 → 00:11...
 ```
+
+### 🎭 The Psychology Trick
+
+**What streamers say (Reverse Psychology):**
+- "Don't help me, I'm going offline anyway!"
+- "Stop liking, I need a break!"
+- "No follows please, just chill!"
+- "Don't throw coins, save your money!"
 
 **What viewers think:**
-- Clear rules: 1 like = 1 point, 1 follow = 10 points
-- Goal is reachable if everyone helps
-- Timer will end when goal is reached
+- "Let's troll the streamer and keep them online! 😂"
+- "I'll like/follow just to annoy them!"
+- "This is fun, they're trying to leave but we won't let them!"
 
-**What actually happens:**
+**What's actually happening:**
+- Streamer is MANIPULATING you with reverse psychology
+- They WANT you to like/follow (that's how they make money)
+- Timer is rigged to stay at 5-20 seconds forever
 
-### 🎭 The Manipulation
+---
 
-**Minute 4:30** (Timer almost over)
+## ⏱️ How the Timer Really Works
+
+### The Hidden Mechanic
+
+**Timer = Time until stream MUST end**
+- Timer at 00:00 = Streamer goes offline
+- Every LIKE adds a few seconds (e.g., 1 like = +0.01 seconds)
+- Every FOLLOW adds more seconds (e.g., 1 follow = +2 seconds)
+
+**The Catch:**
+- **Streamers NEVER tell you the exact values**
+- Values are INVISIBLE and can be changed at any time
+- No way to verify if they're being honest
+
+---
+
+## 🎯 The Scam Mechanic
+
+### How Manipulation Works
+
+**Start of Stream (Timer: 02:00)**
 ```
-Viewers sent: 2,500 likes + 150 follows = 4,000 points
-Streamer claims: "Only 3,200 points! Keep going!"
+1 Like = +0.01 seconds
+1 Follow = +2 seconds
+
+Timer is easy to extend, starts dropping normally
 ```
 
-**Minute 0:30** (Last seconds)
+**Middle of Stream (Timer: 00:45)**
 ```
-Viewers sent: 5,000 likes + 300 follows = 8,000 points total
-Streamer secretly changes rules: "Actually, 1 follow = 50 points now!"
-Timer magically needs 15,000 points instead of 5,000
-```
-
-**Minute 0:00** (Timer "ends")
-```
-Streamer: "So close! Just 500 more points! Restarting timer!"
-*Timer resets to 5:00*
-Cycle repeats endlessly...
+Viewers send: 500 likes + 20 follows
+Expected: +5 sec (likes) + 40 sec (follows) = +45 seconds
+Timer goes to: 00:50 ✅ (seems fair)
 ```
 
-### 💰 Why They Do This
+**The Trap Begins (Timer: 00:15)**
+```
+Streamer secretly changes values:
+1 Like = +0.002 seconds (5x LESS than before)
+1 Follow = +0.4 seconds (5x LESS than before)
 
-- **Maximize engagement** – More likes = higher TikTok algorithm ranking
-- **Keep viewers hooked** – "We're so close!" creates false urgency
-- **More gifts** – Frustrated viewers send expensive gifts to "help"
-- **No accountability** – Point values are invisible, can't be verified
+Viewers send: 1,000 likes + 50 follows
+Expected (old values): +10 sec + 100 sec = +110 seconds
+Actual (new values): +2 sec + 20 sec = +22 seconds
+Timer goes to: 00:22 (viewers think they helped a lot)
+```
 
-### 🔍 How to Spot the Scam
+**The Endless Loop (Timer stuck at 00:08)**
+```
+Streamer: "Guys, STOP! I want to go offline! Don't like!"
+Viewers: *Like and follow like crazy to "troll"*
 
-❌ **Red Flags:**
-- Timer keeps resetting "just one more time"
-- Point values change mid-stream ("Oh I meant 20 points per follow!")
-- Streamer can't show exact numbers ("Trust me, we're at 3,200!")
-- Same stream goal repeats every day
-- Chat asks "how many likes?" but streamer ignores
+Reality:
+- 2,000 likes per minute = only +4 seconds
+- Timer stays between 00:05 and 00:15 forever
+- Streamer waits for someone to send expensive gifts
+```
+
+---
+
+## 💰 Why They Do This
+
+### The Business Model
+
+**Goal: Keep timer at 5-20 seconds as long as possible**
+
+**Reasons:**
+1. **Maximum Tension** – "Only 8 seconds left! HELP!" creates urgency
+2. **Reverse Psychology** – "Don't help me!" makes viewers want to help MORE
+3. **Whale Hunting** – Wait for rich viewers who throw expensive gifts (💎 10,000+)
+4. **Algorithm Boost** – More likes/follows = higher TikTok ranking
+5. **Longer Stream** – More time online = more money opportunities
+
+**The Perfect Trap:**
+- Timer NEVER hits 0:00 (secret value manipulation)
+- Viewers feel like "heroes" keeping streamer online
+- Streamer makes money from gifts while pretending to "suffer"
+- Cycle repeats for 2-6 hours straight
+
+---
+
+## 🔍 Red Flags to Spot the Scam
+
+❌ **Classic Warning Signs:**
+
+1. **"Don't help me!" while timer is low** – Reverse psychology
+2. **Timer stuck at 5-20 seconds** – Despite hundreds of likes/follows
+3. **Streamer ignores exact numbers** – Never says "1 like = X seconds"
+4. **Same timer routine every day** – It's a scripted show
+5. **Dramatic reactions to small changes** – "OMG 2 more seconds! Stop!"
+6. **Vague statements** – "You guys are crazy!" instead of showing real data
 
 ---
 
 ## ✅ The Solution
 
-**TikScam shows you the REAL numbers in real-time** – exactly what the streamer sees but won't tell you.
+**TikScam shows you the REAL numbers** – Calculate if the timer math adds up.
 
 ### What You Can Track
 
 | Metric | What It Shows | How It Exposes Scams |
 |--------|---------------|----------------------|
-| **👍 Likes per Second** | Exact like rate (10s, 20s, 30s, 60s averages) | Calculate real points vs. streamer claims |
-| **👥 New Followers** | Exact follower count per 15-second interval | Verify if goal was actually reached |
-| **📊 15-Min History** | Visual timeline of all likes and follows | Screenshot proof of manipulation |
-| **📈 Total Likes** | Running total from stream start | Compare against streamer's "point count" |
+| **👍 Likes per Second** | Exact like rate (10s/20s/30s/45s/60s averages) | Compare against timer increases |
+| **👥 New Followers** | Exact follower count per 15-second interval | Calculate expected vs. actual timer change |
+| **📊 15-Min History** | Visual timeline of all likes and follows | See if timer should have increased more |
+| **📈 Total Likes** | Running total from stream start | Compare total engagement vs. timer duration |
 | **⏱️ Engagement Rate** | Likes per viewer ratio | Detect if streamer uses bot likes |
 
-### The Key Insight
+### The Math Detective
 
 ```
-Streamer says: "We need 5,000 points (1 like = 1 point, 1 follow = 10 points)"
+Stream at Timer: 00:10 (10 seconds left)
 
-TikScam shows you:
-✅ Total likes received: 4,732
-✅ New followers: 284
-✅ Real points (if rules were honest): 4,732 + (284 × 10) = 7,572 points
+In the next 30 seconds, viewers send:
+✅ 800 likes
+✅ 40 new follows
 
-Result: Goal was reached 12 minutes ago. Streamer is lying.
+Streamer claims: "1 like = +0.01 sec, 1 follow = +2 sec"
+Expected timer increase: 8 sec (likes) + 80 sec (follows) = +88 seconds
+Timer should be at: 01:38
+
+Reality:
+Timer is now at: 00:18 (only +8 seconds)
+
+Proof of Manipulation:
+- Missing 80 seconds
+- Streamer secretly changed values
+- Real values: 1 like = +0.001 sec, 1 follow = +0.1 sec (90% reduction!)
 ```
 
 **No TikTok login required.** Reads only publicly available stream data.
@@ -119,13 +196,13 @@ Result: Goal was reached 12 minutes ago. Streamer is lying.
 - ✅ **Viewer Count** – Track viewer trends over time
 
 **Historical Proof:**
-- 📊 **Likes History Chart** – Visual timeline showing like spikes
+- 📊 **Likes History Chart** – Visual timeline showing like patterns
 - 📊 **Follower History Chart** – Track new followers in real-time
 - 📊 **Combined Timeline** – All metrics in one chart for screenshots
 - 📊 **Engagement Rate** – Detect fake likes and bot activity
 
 **Bonus Features:**
-- 🎁 **Gift Transparency** – See every gift with diamond values (if applicable)
+- 🎁 **Gift Transparency** – See every gift with diamond values
 - 💎 **Earnings Calculator** – Track streamer's real income
 - 👑 **Top Gifters** – Leaderboard of biggest spenders
 - 💬 **Chat Feed** – Live chat messages with user avatars
@@ -178,114 +255,164 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 **Important:** Stream must be **LIVE** for connection to work.
 
-### Step 2: Calculate Real Points
+### Step 2: Watch Timer vs. Engagement
 
-**Streamer's Claim:**
-```
-"Every LIKE = 1 point"
-"Every FOLLOW = 10 points"
-"We need 5,000 points to win!"
-```
+**What to observe:**
 
-**TikScam Shows You:**
-```
-✅ Total Likes: 4,732
-✅ New Followers: 284
-✅ Real Points: 4,732 + (284 × 10) = 7,572 points
+Monitor these metrics simultaneously:
+1. **Stream Timer** (on TikTok) – Is it stuck at 5-20 seconds?
+2. **Likes per Second** (on TikScam) – How many likes are coming in?
+3. **New Followers** (on TikScam) – How many follows in last 15 seconds?
 
-Math: Goal was reached! Streamer is lying.
+**Example Analysis:**
+
+```
+TikTok Stream:
+Timer: 00:12 → 00:14 → 00:11 → 00:13 (stuck in loop)
+
+TikScam Shows:
+Likes/second: 25 L/s (1,500 likes per minute)
+New followers: 30 followers in last 15 seconds
+
+Math:
+If 1 like = +0.01 sec and 1 follow = +2 sec:
+- 1,500 likes/min = +15 seconds per minute
+- 120 follows/min = +240 seconds per minute
+- Total: +255 seconds per minute (4+ minutes added)
+
+Reality:
+Timer is stuck at ~12 seconds
+
+Conclusion: Secret value manipulation!
 ```
 
 ### Step 3: Document the Scam
 
 **Screenshot Evidence:**
 
-Take screenshots of TikScam showing:
-1. **Total likes count** from the stats widget
-2. **Follower history chart** showing 284 new followers
-3. **Timestamp** proving when the goal was actually reached
-4. **Streamer's claim** (record/screenshot from TikTok)
+Take screenshots showing:
+1. **TikTok stream** with timer visible
+2. **TikScam dashboard** with exact like/follow counts
+3. **Timestamp** showing time period
+4. **Comparison** between expected vs. actual timer change
 
-**Compare:**
-- Streamer says: "Only 3,200 points!"
-- Reality (TikScam): 7,572 points
+**Create a comparison post:**
+```
+Streamer Timer: Stuck at 00:08 for 2 minutes
 
-### Step 4: Expose or Exit
+TikScam Data (same 2 minutes):
+- 3,000 likes sent
+- 80 new followers
+
+If streamer's claims were honest:
+Expected timer: +30 sec (likes) + 160 sec (follows) = +190 seconds
+Actual timer: Stayed at ~00:08
+
+Missing time: 182 seconds = SCAM
+```
+
+### Step 4: Make an Informed Decision
 
 **Options:**
-1. **Stop engaging** – Save your likes/follows/gifts
-2. **Share proof** – Post screenshot comparisons
-3. **Warn others** – Comment with facts (politely)
-4. **Report** – Use TikTok's official reporting tools
+
+1. **Stop Engaging** – Save your likes/follows for honest streamers
+2. **Share Proof** – Post screenshot comparisons (be respectful)
+3. **Educate Others** – Show friends how timer scams work
+4. **Report** – Use TikTok's reporting tools if manipulation is severe
+
+**Don't:**
+- Spam the chat with accusations
+- Harass the streamer
+- Send gifts hoping to "expose" them
 
 ---
 
 ## 🎯 Real-World Examples
 
-### Example 1: The Moving Goalpost
+### Example 1: The Stuck Timer
 
-**Stream Rules:**
+**Stream Setup:**
 ```
-Streamer: "1 like = 1 point, 1 follow = 10 points, need 5,000 points!"
-Timer: 5:00 minutes
+Timer starts at: 05:00
+Streamer says: "Don't like! Let me go offline! Please stop!"
 ```
 
 **What TikScam Shows:**
 
-| Time | Likes | Follows | Real Points | Streamer Claims |
-|------|-------|---------|-------------|-----------------|
-| 5:00 | 0 | 0 | 0 | "0 points, let's go!" |
-| 3:00 | 2,100 | 150 | 3,600 | "Only 2,000 points!" ❌ |
-| 1:00 | 4,200 | 280 | 7,000 | "4,500 points, so close!" ❌ |
-| 0:00 | 5,500 | 320 | 8,700 | "Not enough! Timer reset!" ❌ |
+| Time | Timer | Likes/Min | New Follows/Min | Expected Increase* | Actual |
+|------|-------|-----------|-----------------|-------------------|--------|
+| 0:00 | 05:00 | 500 | 20 | +45 sec | Timer drops to 04:00 |
+| 2:00 | 04:00 | 800 | 35 | +78 sec | Timer drops to 02:30 |
+| 5:00 | 00:45 | 1,200 | 50 | +112 sec | Timer at 00:15 |
+| 8:00 | 00:12 | 2,000 | 80 | +180 sec | Timer STUCK at 00:08-00:15 |
+| 12:00 | 00:09 | 2,500 | 100 | +225 sec | Timer STILL at 00:05-00:12 |
+
+**\*Expected increase** if streamer's initial values were consistent
 
 **Proof of Scam:**
-- Goal (5,000 points) was reached at **2:15 remaining**
-- Streamer lied about point totals 3 times
-- Timer reset despite exceeding goal by 174%
+- After minute 5, timer should have exploded to 3+ minutes
+- Timer stayed between 0:05 and 0:15 for 7 straight minutes
+- Streamer secretly reduced values by 95%+
+- Perfect for "whale hunting" and reverse psychology
 
 ---
 
-### Example 2: Secret Rule Changes
+### Example 2: The Value Switch
 
-**Original Rules:**
-```
-"1 follow = 10 points"
-```
+**Streamer's (Unspoken) Values:**
 
-**What Happens:**
-
-| Time | New Followers | Streamer Claims | Real Value Needed |
-|------|---------------|-----------------|-------------------|
-| 5:00 | 50 | "500 points!" ✅ | 10 points/follow |
-| 3:00 | 150 | "1,200 points!" ❌ | Should be 1,500 |
-| 1:00 | 280 | "2,100 points!" ❌ | Should be 2,800 |
-| 0:00 | 320 | "Not enough!" ❌ | Secretly changed to 50 points/follow |
+| Time Period | Like Value | Follow Value | Evidence |
+|-------------|-----------|--------------|----------|
+| 00:00-10:00 | +0.01 sec | +2 sec | Timer increases predictably |
+| 10:00-20:00 | +0.005 sec | +1 sec | Timer starts slowing down |
+| 20:00-30:00 | +0.001 sec | +0.2 sec | Timer stuck at 10-20 seconds |
+| 30:00+ | +0.0005 sec | +0.1 sec | Timer locked at 5-15 seconds |
 
 **TikScam Proof:**
-- 320 followers × 10 points = **3,200 points**
-- Streamer claims: "Only 2,100 points"
-- **Missing 1,100 points** = Secret rule change
+
+Calculate actual values by comparing engagement vs. timer change:
+
+```
+Minute 5 (Timer: 02:30):
+1,000 likes sent → Timer +10 sec → 1 like = +0.01 sec ✅
+
+Minute 25 (Timer: 00:12):
+1,000 likes sent → Timer +1 sec → 1 like = +0.001 sec ❌
+
+Value was reduced by 90% in 20 minutes!
+```
 
 ---
 
-### Example 3: Bot Detection
+### Example 3: The Reverse Psychology Master
 
-**Suspicious Stream:**
+**Chat Log:**
 ```
-8,500 viewers shown
-Likes/second: 0.4 L/s
-Chat messages: 3 in last 5 minutes
+Streamer: "GUYS STOP! I need to sleep!"
+Streamer: "Don't you DARE like this stream!"
+Streamer: "I'm BEGGING you, no follows!"
+Streamer: "Keep your coins! I don't want them!"
 ```
 
-**TikScam Analysis:**
+**What TikScam Shows:**
 ```
-✅ Engagement rate: 0.00005 (extremely low)
-✅ Expected likes/s for 8,500 viewers: ~15-30 L/s
-✅ Actual likes/s: 0.4 L/s
+Likes per second: 35 L/s (constant)
+Chat activity: Viewers saying "Let's keep them online! 😂"
+New followers: 200+ in 5 minutes
+Gifts received: 15,000 diamonds in last 10 minutes
 
-Result: 99% likely using viewer bots
+Reality:
+- Reverse psychology is working perfectly
+- Viewers think they're "trolling" the streamer
+- Streamer is earning money while pretending to suffer
+- Timer manipulation keeps tension high
 ```
+
+**Psychology Breakdown:**
+- Viewers feel powerful ("We decide if you stay!")
+- Creates community bonding ("We're trolling together!")
+- Streamer appears relatable ("They're tired like us!")
+- Perfect cover for timer manipulation
 
 ---
 
@@ -370,33 +497,6 @@ TikScam automatically tries multiple connection methods with clear visual feedba
 **Phase 5: Final Error (🛑)**
 - Clear error message explaining failure
 - Manual "Reconnect" button (no endless loops)
-
-### Visual Feedback
-
-The connection status displays:
-- ✅ Current phase (1-5) with color-coded icons
-- ✅ Progress bar showing attempt X/5
-- ✅ Detailed status message for each attempt
-- ✅ Last error message clearly visible
-- ✅ All errors logged in browser console
-
-**Example Connection Flow:**
-
-```
-📡 Phase 1: Direct Connection
-├─ Attempt 1/5... ❌ Rate Limited
-└─ Stopping Phase 1
-
-🔑 Phase 2: Server API Key
-├─ Attempt 1/5... ❌ Not Available
-└─ Skipping Phase 2
-
-💬 Phase 3: User API Key Dialog
-└─ Please enter your API key...
-
-👤 Phase 4: Your API Key
-├─ Attempt 1/5... ✅ Connected!
-```
 
 ### Setup (Server API Key)
 
@@ -487,30 +587,9 @@ tikscam/
 │
 ├── components/
 │   ├── widgets/      # Analytics widgets (11 files)
-│   │   ├── StatsWidget.tsx
-│   │   ├── LikesPerSecondWidget.tsx
-│   │   ├── GiftsWidget.tsx
-│   │   ├── ChatWidget.tsx
-│   │   ├── ActivityWidget.tsx
-│   │   └── ...
-│   │
 │   ├── charts/       # Data visualization (6 files)
-│   │   ├── LikesHistoryChart.tsx
-│   │   ├── ViewerHistoryChart.tsx
-│   │   ├── FollowerHistoryChart.tsx
-│   │   ├── DiamondHistoryChart.tsx
-│   │   ├── EngagementRateChart.tsx
-│   │   └── CombinedTimelineChart.tsx
-│   │
 │   ├── layout/       # Page layout (3 files)
-│   │   ├── StreamMonitor.tsx        # Main dashboard ⭐
-│   │   ├── StreamTabs.tsx           # Multi-stream tabs
-│   │   └── StatsCard.tsx
-│   │
-│   ├── dialogs/      # Modal dialogs
-│   │   ├── AddStreamDialog.tsx
-│   │   └── ApiKeyDialog.tsx
-│   │
+│   ├── dialogs/      # Modal dialogs (2 files)
 │   └── ui/           # ShadCN base components
 │
 ├── types/            # Shared TypeScript types ⭐
@@ -553,51 +632,6 @@ npm run build:mac         # Build macOS .dmg
 npm run build:linux       # Build Linux .AppImage
 ```
 
-### Code Quality
-
-- ✅ **TypeScript strict mode** – Zero `any` types
-- ✅ **ESLint** – Code quality enforcement
-- ✅ **Prettier** – Consistent formatting
-- ✅ **Error Boundaries** – Graceful error handling
-- ✅ **Organized Structure** – Components grouped by function
-
-### Adding a New Widget
-
-1. **Create component** in `components/widgets/YourWidget.tsx`:
-
-```typescript
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-export const YourWidget = React.memo(({ data }: Props) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Widget</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Your content */}
-      </CardContent>
-    </Card>
-  );
-});
-```
-
-2. **Export** in `components/widgets.ts`:
-
-```typescript
-export { YourWidget } from './widgets/YourWidget';
-```
-
-3. **Import** in `components/layout/StreamMonitor.tsx`:
-
-```typescript
-import { YourWidget } from '@/components/widgets';
-
-// Add to JSX
-<YourWidget data={stats.yourData} />
-```
-
 ---
 
 ## 📚 Documentation
@@ -632,20 +666,6 @@ Contributions are welcome! Please follow these guidelines:
 - ✅ **Use Prettier** – Automatic formatting
 - ✅ **Error boundaries** – Wrap critical widgets
 - ✅ **Translation files** – Use i18n for all text
-- ✅ **Component organization:**
-  - `components/widgets/` – Analytics widgets
-  - `components/charts/` – Data visualization
-  - `components/layout/` – Page layout
-  - `components/dialogs/` – Modal dialogs
-
-### Reporting Issues
-
-Found a bug or have a feature request? [Open an issue](https://github.com/ibimspumo/tikscam/issues) with:
-
-- Clear description
-- Steps to reproduce (for bugs)
-- Expected vs actual behavior
-- Screenshots (if applicable)
 
 ---
 
@@ -653,30 +673,34 @@ Found a bug or have a feature request? [Open an issue](https://github.com/ibimsp
 
 ### ✅ Legitimate Use
 
-- Verifying streamer's like/follow point calculations
-- Documenting fraudulent timer manipulation
-- Protecting yourself from endless timer loops
-- Exposing rule changes with screenshot evidence
-- Helping others avoid scam streams
+- Detecting timer manipulation with mathematical proof
+- Calculating actual like/follow values vs. timer changes
+- Protecting yourself from reverse psychology tactics
+- Educating others about timer scam mechanics
+- Making informed decisions about which streams to support
 
 ### ❌ Unethical Use
 
-- Harassment of honest streamers
+- Harassment of streamers (even scam streamers)
 - Doxxing or personal attacks
 - Spamming chat with accusations
-- Defamation without clear proof
+- Defamation without clear mathematical proof
 - Using data to extort streamers
 
 ### 💡 If You Suspect a Scam
 
-1. **Document** – Screenshot TikScam data + streamer's claims side-by-side
-2. **Calculate** – Verify the math (likes + follows × point values)
-3. **Verify** – Could it be an honest mistake? Give benefit of doubt first
-4. **Communicate** – Try politely asking streamer about discrepancy
-5. **If fraud is clear** – Stop engaging, share proof, warn others
-6. **Report** – Use TikTok's official reporting tools for serious cases
+1. **Collect Data** – Monitor for 10+ minutes to gather enough evidence
+2. **Do the Math** – Calculate expected timer change vs. actual
+3. **Screenshot Everything** – TikScam data + TikTok timer side-by-side
+4. **Verify First** – Could there be another explanation?
+5. **If Scam is Clear** – Stop engaging, share proof respectfully, warn others
+6. **Report (Optional)** – Use TikTok's reporting tools for severe manipulation
 
-**Remember:** Most streamers are honest! TikScam is meant to protect viewers from the manipulative ones who abuse timer mechanics for profit and engagement.
+**Remember:**
+- Not all timer streams are scams (some streamers are honest)
+- TikScam gives you data to make informed decisions
+- Be respectful even when exposing manipulation
+- Focus on protecting viewers, not attacking streamers
 
 ---
 
@@ -714,13 +738,6 @@ npm run dev -- -p 3001
 npm run build
 npm start
 ```
-
-### Connection Phases Not Progressing
-
-- Check browser console for errors (F12 → Console)
-- Verify `.env.local` API key is correct
-- Try clearing browser cache
-- Check if stream is actually live on TikTok
 
 ---
 
@@ -790,7 +807,7 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 **Made with ❤️ (and 🤖 Claude AI) for transparency and fair streams**
 
-*Expose timer manipulation. Calculate real points. Protect viewers.*
+*Expose timer manipulation. Calculate real values. Protect viewers.*
 
 [⬆ Back to top](#-tikscam)
 
