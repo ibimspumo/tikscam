@@ -25,34 +25,10 @@ interface LikesHistoryChartProps {
   minuteHistory: MinuteStats[];
 }
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const value = data.likesPerSecond || 0;
+// Tooltip removed due to Recharts + React 19 caching bug
+// The values are already shown in the header (Current / Average)
 
-    // Calculate time ago from timestamp
-    const now = Date.now();
-    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    const remainingSeconds = secondsAgo % 60;
-    const timeAgoText = minutesAgo > 0
-      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-      : `vor ${remainingSeconds}s`;
-
-    return (
-      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
-        <div className="font-bold text-base">{value.toFixed(1)} L/s</div>
-        <div className="text-muted-foreground text-[10px] mt-1">
-          {timeAgoText}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
-export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistoryChartProps) => {
+export const LikesHistoryChart = ({ minuteHistory = [] }: LikesHistoryChartProps) => {
   const { t } = useTranslation();
 
   // Memoize expensive calculations
@@ -76,10 +52,12 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
       // Find matching data point by interval number (exact match)
       const existing = minuteHistory.find(m => m.interval === interval);
 
+      // Use existing data OR create empty interval
+      // IMPORTANT: For empty intervals, use the interval number to calculate timestamp later
       last15Minutes.push(existing || {
         interval,
         likesPerSecond: 0,
-        timestamp: Date.now() - (i * 15000),
+        timestamp: interval * 15000, // Store interval as timestamp base
       });
     }
 
@@ -94,7 +72,7 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
 
       const isRecent = index >= 40; // Last 10 minutes (40 intervals)
 
-      return {
+      const dataPoint = {
         interval: stat.interval,
         likesPerSecond: stat.likesPerSecond,
         timestamp: stat.timestamp,
@@ -103,6 +81,9 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
         // For X-axis: show only every 15th point (every ~4 minutes)
         label: index % 15 === 0 ? `-${Math.floor(secondsAgo / 60)}m` : '',
       };
+
+
+      return dataPoint;
     });
 
     // Calculate average only from actual data (not empty intervals)
@@ -169,12 +150,11 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
               tickLine={false}
               tickFormatter={(value) => `${value}`}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
             <Bar
               dataKey="likesPerSecond"
               radius={[4, 4, 0, 0]}
               fill="url(#colorGradient)"
-              animationDuration={500}
+              isAnimationActive={false}
             />
             <defs>
               <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
@@ -195,6 +175,7 @@ export const LikesHistoryChart = React.memo(({ minuteHistory = [] }: LikesHistor
       </CardContent>
     </Card>
   );
-});
+};
 
-LikesHistoryChart.displayName = 'LikesHistoryChart';
+// Removed React.memo - causing tooltip issues
+// LikesHistoryChart.displayName = 'LikesHistoryChart';

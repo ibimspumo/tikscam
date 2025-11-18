@@ -56,56 +56,7 @@ interface CombinedTimelineChartProps {
   chatActivityHistory: ChatActivityStats[];
 }
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-
-    // Calculate time ago from timestamp
-    const now = Date.now();
-    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    const remainingSeconds = secondsAgo % 60;
-    const timeAgoText = minutesAgo > 0
-      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-      : `vor ${remainingSeconds}s`;
-
-    return (
-      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl max-w-xs">
-        <div className="font-bold text-muted-foreground mb-2">{timeAgoText}</div>
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-blue-400">👥 Viewers:</span>
-            <span className="font-semibold">{data.viewers.toLocaleString('en-US')}</span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-pink-400">❤️ Likes/s:</span>
-            <span className="font-semibold">{data.likesPerSecond.toFixed(1)}</span>
-          </div>
-          {data.newFollowers > 0 && (
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-orange-400">➕ Followers:</span>
-              <span className="font-semibold">+{data.newFollowers}</span>
-            </div>
-          )}
-          {data.diamonds > 0 && (
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-cyan-400">💎 Diamonds:</span>
-              <span className="font-semibold">{data.diamonds}</span>
-            </div>
-          )}
-          {data.chatMessages > 0 && (
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-gray-400">💬 Messages:</span>
-              <span className="font-semibold">{data.chatMessages}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
+// Tooltip removed due to Recharts + React 19 caching bug
 
 export const CombinedTimelineChart = React.memo(({
   viewerHistory = [],
@@ -218,7 +169,6 @@ export const CombinedTimelineChart = React.memo(({
               fontSize={10}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} />
 
             {/* Bars (background layer) */}
             <Bar

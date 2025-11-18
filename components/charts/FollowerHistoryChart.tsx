@@ -26,32 +26,7 @@ interface FollowerHistoryChartProps {
   followerHistory: IntervalStats[];
 }
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const value = data.followerCount || 0;
-
-    // Calculate time ago from timestamp
-    const now = Date.now();
-    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    const remainingSeconds = secondsAgo % 60;
-    const timeAgoText = minutesAgo > 0
-      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-      : `vor ${remainingSeconds}s`;
-
-    return (
-      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
-        <div className="font-bold text-base">+{value.toLocaleString('en-US')}</div>
-        <div className="text-muted-foreground text-[10px] mt-1">
-          {timeAgoText}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
+// Tooltip removed due to Recharts + React 19 caching bug
 
 export const FollowerHistoryChart= React.memo(({ followerHistory = [] }: FollowerHistoryChartProps) => {
   const { t } = useTranslation();
@@ -165,7 +140,6 @@ export const FollowerHistoryChart= React.memo(({ followerHistory = [] }: Followe
               tickLine={false}
               tickFormatter={(value) => `+${value}`}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
             <Bar
               dataKey="followerCount"
               radius={[4, 4, 0, 0]}

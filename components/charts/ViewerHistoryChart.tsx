@@ -26,32 +26,7 @@ interface ViewerHistoryChartProps {
   viewerHistory: IntervalStats[];
 }
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const value = data.viewerCount || 0;
-
-    // Calculate time ago from timestamp
-    const now = Date.now();
-    const secondsAgo = Math.floor((now - data.timestamp) / 1000);
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    const remainingSeconds = secondsAgo % 60;
-    const timeAgoText = minutesAgo > 0
-      ? `vor ${minutesAgo} Min ${remainingSeconds}s`
-      : `vor ${remainingSeconds}s`;
-
-    return (
-      <div className="bg-popover border text-popover-foreground text-xs rounded py-2 px-3 shadow-xl">
-        <div className="font-bold text-base">{value.toLocaleString('en-US')}</div>
-        <div className="text-muted-foreground text-[10px] mt-1">
-          {timeAgoText}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
+// Tooltip removed due to Recharts + React 19 caching bug
 
 export const ViewerHistoryChart = React.memo(({ viewerHistory = [] }: ViewerHistoryChartProps) => {
   const { t } = useTranslation();
@@ -160,7 +135,6 @@ export const ViewerHistoryChart = React.memo(({ viewerHistory = [] }: ViewerHist
               fontSize={10}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
               dataKey="viewerCount"
