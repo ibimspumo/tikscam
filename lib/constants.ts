@@ -46,6 +46,9 @@ export const LIMITS = {
  * Chart interval settings
  */
 export const CHART_INTERVALS = {
+  /** 15 minutes of history (60 data points @ 15s intervals) */
+  FIFTEEN_MIN: 60,
+
   /** 60 minutes of history (240 data points @ 15s intervals) */
   SIXTY_MIN: 240,
 } as const;
