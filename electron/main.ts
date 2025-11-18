@@ -347,12 +347,18 @@ function startNextServer(): void {
   log('📂 Working directory:', serverDir);
   log('📂 Resources path:', process.resourcesPath);
 
-  serverProcess = spawn('node', [serverPath], {
+  // Use Electron's bundled Node.js instead of system Node
+  // process.execPath points to the Electron executable which includes Node
+  const nodePath = process.execPath;
+  log('🔧 Using Node.js from:', nodePath);
+
+  serverProcess = spawn(nodePath, [serverPath], {
     env: {
       ...process.env,
       PORT: String(PORT),
       HOSTNAME: '0.0.0.0',
       NODE_ENV: 'production',
+      ELECTRON_RUN_AS_NODE: '1', // Run Electron as Node.js
     },
     stdio: 'pipe', // Changed from 'inherit' to capture logs
     cwd: serverDir,
