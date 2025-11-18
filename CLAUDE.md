@@ -2,6 +2,57 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Workflow & Commit Policy
+
+### Commit Frequency
+**IMPORTANT:** Create a git commit after **EVERY meaningful change**. Do not batch multiple unrelated changes into one commit.
+
+**When to commit:**
+- After fixing a bug
+- After adding a new feature
+- After refactoring code
+- After updating documentation
+- After changing configuration
+- After any logical unit of work is complete
+
+**Commit message format:**
+```
+<type>: <short description>
+
+<detailed explanation if needed>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Commit types:** Fix, Add, Update, Docs, Refactor, Style, Perf, Test, Build, CI
+
+### README.md Maintenance
+**IMPORTANT:** Automatically update README.md when making significant changes:
+
+**When to update README:**
+- Adding new major features (new widgets, charts, analytics)
+- Changing architecture or data flow
+- Adding/removing dependencies
+- Changing build process or commands
+- Adding new documentation files
+- Fixing critical bugs that affect usage
+- Updating version numbers
+
+**What to update in README:**
+- Feature lists and descriptions
+- Tech stack table
+- Project structure (if files moved/added)
+- Installation/setup instructions
+- Troubleshooting section (for common bugs)
+- Project status and version number
+
+**Process:**
+1. Make code changes
+2. Update README.md if applicable
+3. Commit both together with descriptive message
+
 ## Project Overview
 
 **TikScam** is a transparency tool for TikTok Live streams that helps viewers detect scam streams and timer manipulation in real-time. The application monitors TikTok live streams and provides detailed analytics on gifts, viewer counts, likes, chat activity, and more.
