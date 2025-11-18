@@ -21,6 +21,7 @@ export type {
   StreamStats,
   UserProfile,
   RoomInfo,
+  ConnectionMode,
   UseTikTokLiveReturn,
 } from './stream';
 
@@ -30,3 +31,20 @@ export type {
   DataWidgetProps,
   ChartWidgetProps,
 } from './widgets';
+
+// TikTok Live event types
+export type {
+  TikTokUserProfile,
+  TikTokRoomData,
+  TikTokConnectionOptions,
+  TikTokChatEvent,
+  TikTokGiftEvent,
+  TikTokLikeEvent,
+  TikTokMemberEvent,
+  TikTokSocialEvent,
+  TikTokRoomUserEvent,
+  TikTokAvailableGift,
+  TikTokAvailableGiftsEvent,
+  TikTokStreamEndEvent,
+  TikTokErrorEvent,
+} from './tiktok-events';

@@ -287,8 +287,9 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
               <StreamInfoWidget roomInfo={roomInfo} username={username} stats={stats} />
               <LikesPerSecondWidget likesPerSecond={stats.likesPerSecond} />
               <ViewerTrendWidget
-                viewerCount={stats.viewerCount}
+                viewerHistory={stats.viewerHistory}
                 peakViewers={stats.peakViewers}
+                currentViewers={stats.viewerCount}
               />
               <ActivityWidget
                 joins={stats.joins}
@@ -327,12 +328,11 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
             <WidgetErrorBoundary>
               <GiftsFeedWidget
                 gifts={stats.gifts}
-                availableGifts={stats.availableGifts}
               />
             </WidgetErrorBoundary>
 
             <WidgetErrorBoundary>
-              <ChatWidget chatMessages={stats.chatMessages} />
+              <ChatWidget messages={stats.chatMessages} />
             </WidgetErrorBoundary>
           </div>
 
@@ -344,9 +344,7 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
 
           {/* Debug Widget (collapsed by default) */}
           <DebugWidget
-            stats={stats}
             roomInfo={roomInfo}
-            isConnected={isConnected}
           />
         </>
       )}

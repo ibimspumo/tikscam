@@ -14,6 +14,16 @@
 import { WebcastPushConnection } from 'tiktok-live-connector';
 import { NextRequest } from 'next/server';
 import { INTERVALS } from '@/lib/constants';
+import type {
+  TikTokConnectionOptions,
+  TikTokRoomData,
+  TikTokChatEvent,
+  TikTokGiftEvent,
+  TikTokLikeEvent,
+  TikTokMemberEvent,
+  TikTokSocialEvent,
+  TikTokRoomUserEvent,
+} from '@/types';
 
 // Store active connections
 const activeConnections = new Map<string, WebcastPushConnection>();
@@ -156,7 +166,7 @@ export async function GET(
         });
 
         // Configure connection
-        const connectionOptions: any = {
+        const connectionOptions: TikTokConnectionOptions = {
           processInitialData: false,
           enableExtendedGiftInfo: true,
           requestOptions: {
@@ -179,7 +189,7 @@ export async function GET(
         activeConnections.set(username, tiktokConnection);
 
         // Setup event handlers
-        tiktokConnection.on('connected', (roomData: any) => {
+        tiktokConnection.on('connected', (roomData: TikTokRoomData) => {
           sendEvent('connected', {
             roomInfo: {
               id: roomData.id,
@@ -206,7 +216,7 @@ export async function GET(
         });
 
         // Chat events
-        tiktokConnection.on('chat', (data: any) => {
+        tiktokConnection.on('chat', (data: TikTokChatEvent) => {
           sendEvent('chat', {
             user: data.uniqueId,
             message: data.comment,
@@ -216,7 +226,7 @@ export async function GET(
         });
 
         // Gift events
-        tiktokConnection.on('gift', (data: any) => {
+        tiktokConnection.on('gift', (data: TikTokGiftEvent) => {
           sendEvent('gift', {
             user: data.uniqueId,
             gift: data.giftName,
@@ -230,7 +240,7 @@ export async function GET(
         });
 
         // Like events
-        tiktokConnection.on('like', (data: any) => {
+        tiktokConnection.on('like', (data: TikTokLikeEvent) => {
           sendEvent('like', {
             user: data.uniqueId,
             count: data.likeCount || 1,
@@ -240,7 +250,7 @@ export async function GET(
         });
 
         // Member (join) events
-        tiktokConnection.on('member', (data: any) => {
+        tiktokConnection.on('member', (data: TikTokMemberEvent) => {
           sendEvent('member', {
             user: data.uniqueId,
             timestamp: Date.now(),
@@ -249,7 +259,7 @@ export async function GET(
         });
 
         // Social (follow/share) events
-        tiktokConnection.on('social', (data: any) => {
+        tiktokConnection.on('social', (data: TikTokSocialEvent) => {
           sendEvent('social', {
             user: data.uniqueId,
             type: data.displayType,
@@ -259,7 +269,7 @@ export async function GET(
         });
 
         // Room user update
-        tiktokConnection.on('roomUser', (data: any) => {
+        tiktokConnection.on('roomUser', (data: TikTokRoomUserEvent) => {
           sendEvent('roomUser', {
             viewerCount: data.viewerCount || 0,
           });
@@ -268,7 +278,7 @@ export async function GET(
         // Available gifts catalog
         tiktokConnection.on('websocketConnected', async () => {
           try {
-            const availableGifts = await tiktokConnection!.getAvailableGifts();
+            const availableGifts = tiktokConnection!.availableGifts;
             sendEvent('availableGifts', { gifts: availableGifts });
           } catch (err) {
             // Ignore gift catalog errors
@@ -276,7 +286,7 @@ export async function GET(
         });
 
         // Error handling
-        tiktokConnection.on('error', (err: any) => {
+        tiktokConnection.on('error', (err: unknown) => {
           const errorMessage = extractErrorMessage(err);
           console.error('[TikTok Live] Stream error:', errorMessage);
 

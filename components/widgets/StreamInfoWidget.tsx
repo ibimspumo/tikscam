@@ -4,12 +4,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Info, Heart, Users as UsersIcon, Eye } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import type { RoomInfo, StreamStats } from '@/types';
 
 interface StreamInfoWidgetProps {
-  roomInfo: any;
+  roomInfo: RoomInfo | null;
   username?: string;
   totalFollowers?: number;
-  stats?: any;
+  stats?: StreamStats;
 }
 
 export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers = 0, stats }: StreamInfoWidgetProps) => {
@@ -34,21 +35,15 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
 
   const streamTitle = roomInfo.title || t('streamInfo.noTitle');
   const streamerName = roomInfo.owner?.displayName || roomInfo.owner?.nickname || username || 'Unknown';
-  const followerCount = totalFollowers || roomInfo.owner?.followerCount || roomInfo.owner?.stats?.followerCount || 0;
-  const totalUsers = roomInfo.viewerCount || roomInfo.totalViewers || roomInfo.totalUserCount || roomInfo.userCount || roomInfo.currentViewers || 0;
-  const streamTotalLikes =
-    roomInfo.likeCount ||
-    roomInfo.liveRoomStats?.totalLikeCount ||
-    roomInfo.stats?.totalLikeCount ||
-    roomInfo.totalLikeCount ||
-    0;
+  const followerCount = totalFollowers || roomInfo.owner?.followerCount || 0;
+  const totalUsers = roomInfo.viewerCount || 0;
+  const streamTotalLikes = roomInfo.likeCount || 0;
 
   const streamerAvatar =
     roomInfo.owner?.profilePicture?.url?.[0] ||
     roomInfo.owner?.avatarThumb ||
     roomInfo.owner?.avatarMedium ||
     roomInfo.owner?.avatarLarge ||
-    roomInfo.owner?.avatar ||
     null;
 
   return (
