@@ -53,6 +53,19 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 2. Update README.md if applicable
 3. Commit both together with descriptive message
 
+## Current Version
+
+**v0.5.0** - Latest stable release
+
+Recent updates (v0.5.0):
+- Fixed critical data transmission bugs (streamTotalLikes, gift catalog)
+- Added Electron splash screen with version display
+- Electron app now uses bundled Node.js (truly standalone)
+- Added missing translation keys
+- Complete README rewrite with detailed technical context
+
+See `RELEASE_NOTES_v0.5.0.md` for full changelog.
+
 ## Project Overview
 
 **TikScam** is a transparency tool for TikTok Live streams that helps viewers detect scam streams and timer manipulation in real-time. The application monitors TikTok live streams and provides detailed analytics on gifts, viewer counts, likes, chat activity, and more.
@@ -88,12 +101,17 @@ npm run lint
 
 ### Testing Stream Connection
 ```bash
-# Test API endpoint to get stream URL (replace username)
-curl "http://localhost:3001/api/tiktok-stream-url?uniqueId=dom.anyart"
+# Test SSE endpoint (replace username)
+curl "http://localhost:3000/api/tiktok-live/dom.anyart"
 
-# Test with silent output
-curl -s "http://localhost:3001/api/tiktok-stream-url?uniqueId=dom.anyart"
+# Test user profile API
+curl "http://localhost:3000/api/tiktok-user"
+
+# Test with grep to see specific events
+curl -s "http://localhost:3000/api/tiktok-live/username" | grep "event: connected"
 ```
+
+**Note:** Development server runs on port **3000**, not 3001.
 
 ## Architecture
 
@@ -123,7 +141,8 @@ The application uses **two methods** for connecting to TikTok streams, with auto
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │ StreamMonitor.tsx (Main Dashboard)                   │  │
 │  │ - Uses useTikTokLive() hook                          │  │
-│  │ - Renders 21 analytics widgets                       │  │
+│  │ - Renders 20 analytics components                    │  │
+│  │   (10 widgets + 6 charts + 3 layout + 1 dialog)     │  │
 │  └──────────────────────────────────────────────────────┘  │
 │                         ↓                                    │
 │  ┌──────────────────────────────────────────────────────┐  │
@@ -163,7 +182,7 @@ The application uses **two methods** for connecting to TikTok streams, with auto
 
 **Critical performance features** (implemented to prevent crashes):
 
-1. **React.memo on all 21 components** - Only re-render on prop changes
+1. **React.memo on all 20 components** - Only re-render on prop changes
 2. **Event throttling** - Like events throttled to 500ms (reduces 50+ updates/sec to ~2/sec)
 3. **useMemo for expensive calculations** - Chart data aggregations are cached
 4. **15-minute rolling window** - Reduced from 60min (75% fewer data points)
@@ -171,34 +190,42 @@ The application uses **two methods** for connecting to TikTok streams, with auto
 
 **Result:** 96% fewer re-renders, ~70% less CPU usage, ~50% less RAM
 
-### Widget Architecture
+### Component Architecture
 
-All **21 analytics widgets** are React components using `React.memo()`:
+**Total: 20 components** organized by file structure using `React.memo()` for performance:
 
-**Real-time Stats (6 widgets):**
-- `StatsWidget.tsx` - Viewer count, total likes
-- `LikesPerSecondWidget.tsx` - L/s rates (10s, 20s, 30s, 45s, 60s averages)
-- `GiftsWidget.tsx` - Gift count and total diamonds
-- `StreamInfoWidget.tsx` - Stream metadata
-- `ViewerTrendWidget.tsx` - Viewer trends
-- `ActivityWidget.tsx` - Join/follow feed
+**Widgets (10 files in `components/widgets/`):**
+- `StreamInfoWidget.tsx` - Stream metadata, profile, likes
+- `LikesPerSecondWidget.tsx` - Like rate calculator (10s/20s/30s/45s/60s)
+- `ViewerTrendWidget.tsx` - Current/peak/average viewers with trend
+- `ActivityWidget.tsx` - Join/follow activity feed
+- `GiftsFeedWidget.tsx` - Horizontal scrollable gift feed
+- `GiftListWidget.tsx` - Complete TikTok gift catalog browser (~100+ gifts)
+- `ChatWidget.tsx` - Live chat messages (last 50 with avatars)
+- `TopUsersWidget.tsx` - Rankings (top gifters, chatters, active users)
+- `DebugWidget.tsx` - Raw technical data viewer
+- `ErrorBoundary.tsx` - Error handling wrapper
 
-**Historical Charts (7 widgets):**
-- `LikesHistoryChart.tsx` - Likes over time
-- `ViewerHistoryChart.tsx` - Viewer count timeline
-- `FollowerHistoryChart.tsx` - New followers timeline
-- `DiamondHistoryChart.tsx` - Diamond earnings timeline
-- `EngagementRateChart.tsx` - Engagement metrics
-- `CombinedTimelineChart.tsx` - All metrics combined
-- Component charts use 15-second snapshots for efficiency
+**Charts (6 files in `components/charts/`):**
+- `LikesHistoryChart.tsx` - Like rate timeline (15-min)
+- `ViewerHistoryChart.tsx` - Viewer count timeline (15-min)
+- `FollowerHistoryChart.tsx` - New followers timeline (15-min)
+- `DiamondHistoryChart.tsx` - Diamond earnings timeline (15-min)
+- `EngagementRateChart.tsx` - Engagement metrics (likes per viewer)
+- `CombinedTimelineChart.tsx` - All metrics in one chart
 
-**Live Feeds (8 widgets):**
-- `ChatWidget.tsx` - Last 50 messages with avatars
-- `GiftsFeedWidget.tsx` - Horizontal scrollable gift display
-- `GiftListWidget.tsx` - All TikTok gift catalog
-- `TopUsersWidget.tsx` - Top gifters, chatters, active users
-- `DebugWidget.tsx` - Raw technical data
-- Feed components limit data (e.g., last 50 chat messages) for performance
+**Layout (3 files in `components/layout/`):**
+- `StreamMonitor.tsx` - Main dashboard orchestrator
+- `StreamTabs.tsx` - Multi-stream tab manager
+- `StatsCard.tsx` - Reusable stat display card
+
+**Dialogs (1 file in `components/dialogs/`):**
+- `AddStreamDialog.tsx` - Modal for adding new stream
+
+**Performance features:**
+- All components use React.memo() to prevent unnecessary re-renders
+- Charts use 15-second interval snapshots for efficiency
+- Feed components limit data (50 chat messages, 100 gifts, 50 activities)
 
 ## API Endpoints
 
@@ -220,6 +247,46 @@ EULERSTREAM_API_KEY=your_api_key_here
 ```
 
 **Get free API key:** https://www.eulerstream.com/pricing
+
+## Constants Library
+
+**Location:** `lib/constants/`
+
+All magic numbers have been replaced with named constants for maintainability:
+
+**`lib/constants/intervals.ts`** - Time-based constants:
+```typescript
+KEEP_ALIVE_INTERVAL = 30000  // SSE keep-alive heartbeat
+CONNECTION_TIMEOUT = 120000   // Max wait for server connection
+RETRY_DELAY = 10000          // Reconnection delay
+LIKE_THROTTLE_MS = 500       // Like event throttling
+SNAPSHOT_INTERVAL = 15000    // Data snapshot frequency
+
+CHART_INTERVALS = {
+  FIFTEEN_MIN: 15 * 60 * 1000,  // 60 data points @ 15s intervals
+  SIXTY_MIN: 60 * 60 * 1000     // 240 data points @ 15s intervals
+}
+
+LIKES_WINDOWS = {
+  LAST_10S: 10, LAST_20S: 20, LAST_30S: 30,
+  LAST_45S: 45, LAST_60S: 60
+}
+```
+
+**`lib/constants/limits.ts`** - Data retention limits:
+```typescript
+MAX_CHAT_MESSAGES = 50
+MAX_GIFTS_DISPLAY = 100
+MAX_ACTIVITIES = 50
+TOP_USERS = 10
+GIFT_FEED_DISPLAY = 50
+LIKE_SNAPSHOTS = 120
+```
+
+**Usage:** Import from `lib/constants` instead of using raw numbers:
+```typescript
+import { CHART_INTERVALS, LIMITS } from '@/lib/constants';
+```
 
 ## Key Technical Patterns
 
@@ -460,17 +527,54 @@ npm run build:linux       # Build Linux .AppImage
 3. Compiles TypeScript (electron/main.ts → electron/dist/main.js)
 4. electron-builder packages everything into .exe
 
+### Splash Screen (v0.5.0)
+
+**Location:** `electron/main.ts` - `createSplashScreen()` function
+
+The app shows an animated splash screen while loading:
+- **Gradient background** (purple → pink)
+- **Version display** (shows current version: v0.5.0)
+- **Loading animation** - Spinner with status messages
+- **Auto-hides** when main window loads
+
+Status messages cycle:
+- "Initializing Electron..."
+- "Starting Next.js server..."
+- "Loading application..."
+- "Almost ready..."
+
+### Bundled Node.js (v0.5.0)
+
+**Critical fix:** App now uses Electron's bundled Node.js instead of system Node.
+
+**Implementation in `electron/main.ts`:**
+```typescript
+// OLD (required system Node.js):
+spawn('node', [serverPath], { ... })  // ❌
+
+// NEW (uses Electron's Node.js):
+spawn(process.execPath, [serverPath], {
+  env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
+})  // ✅
+```
+
+**Result:** Desktop app is now **truly standalone** - no Node.js installation required on user's system.
+
 ### Known Issues & Solutions
 
+**"spawn node ENOENT" error:**
+- **Cause:** System doesn't have Node.js installed
+- **Fix:** Now uses `process.execPath` with `ELECTRON_RUN_AS_NODE=1` (fixed in v0.5.0)
+
 **"b.mask is not a function" error:**
-- Cause: tiktok-live-connector was bundled by Next.js
-- Fix: Use `serverExternalPackages` to externalize it
-- Fix: Add library to `asarUnpack` in electron-builder config
+- **Cause:** tiktok-live-connector was bundled by Next.js
+- **Fix:** Use `serverExternalPackages` to externalize it
+- **Fix:** Add library to `asarUnpack` in electron-builder config
 
 **"Controller is already closed" error:**
-- Cause: Events sent after SSE stream closed
-- Fix: Use `streamClosed` flag to prevent sending after close
-- Fix: Wrap `controller.enqueue()` in try-catch
+- **Cause:** Events sent after SSE stream closed
+- **Fix:** Use `streamClosed` flag to prevent sending after close
+- **Fix:** Wrap `controller.enqueue()` in try-catch
 
 ### Error Handling
 
@@ -481,11 +585,12 @@ npm run build:linux       # Build Linux .AppImage
 
 ### Desktop App Features
 
-- ✅ Portable .exe (no installation)
-- ✅ Self-contained Next.js server (port 3456)
-- ✅ Auto-port detection
-- ✅ Debug logging to AppData
-- ✅ Same features as web version
+- ✅ **Portable .exe** - No installation required
+- ✅ **Truly standalone** - Bundled Node.js (v0.5.0), no system dependencies
+- ✅ **Splash screen** - Animated loading with version display (v0.5.0)
+- ✅ **Self-contained Next.js server** - Runs on port 3456 (auto-detection)
+- ✅ **Debug logging** - Logs saved to AppData folder
+- ✅ **Same features** - 100% feature parity with web version
 
 ## Important
 
