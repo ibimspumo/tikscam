@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, dialog } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import net from 'net';
@@ -13,6 +13,9 @@ let PORT = parseInt(process.env.PORT || '3456', 10);
 // Setup logging to file for debugging
 const logFile = path.join(app.getPath('userData'), 'tikscam-debug.log');
 const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+
+// Splash screen window (shown immediately on startup)
+let splashWindow: BrowserWindow | null = null;
 
 function log(...args: any[]) {
   const message = args.map(arg =>
@@ -89,6 +92,133 @@ let mainWindow: BrowserWindow | null = null;
 let serverProcess: ChildProcess | null = null;
 
 /**
+ * Create splash screen - shown IMMEDIATELY on app start
+ */
+function createSplashScreen(): void {
+  splashWindow = new BrowserWindow({
+    width: 500,
+    height: 350,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  const splashHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          background: transparent;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          -webkit-app-region: drag;
+        }
+        .splash {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 20px;
+          padding: 40px;
+          text-align: center;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+        .logo {
+          font-size: 72px;
+          margin-bottom: 20px;
+          animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        h1 {
+          color: white;
+          font-size: 36px;
+          font-weight: 700;
+          margin-bottom: 10px;
+        }
+        .version {
+          color: rgba(255,255,255,0.8);
+          font-size: 14px;
+          margin-bottom: 30px;
+        }
+        .loader {
+          width: 60px;
+          height: 60px;
+          border: 4px solid rgba(255,255,255,0.3);
+          border-top: 4px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .status {
+          color: rgba(255,255,255,0.9);
+          font-size: 14px;
+          margin-top: 20px;
+          min-height: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="splash">
+        <div class="logo">🎭</div>
+        <h1>TikScam</h1>
+        <div class="version">v0.5.0</div>
+        <div class="loader"></div>
+        <div class="status" id="status">Starting application...</div>
+      </div>
+      <script>
+        const statuses = [
+          'Initializing Electron...',
+          'Loading components...',
+          'Preparing server...',
+          'Almost ready...'
+        ];
+        let index = 0;
+        setInterval(() => {
+          document.getElementById('status').textContent = statuses[index];
+          index = (index + 1) % statuses.length;
+        }, 1500);
+      </script>
+    </body>
+    </html>
+  `;
+
+  splashWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(splashHTML)}`);
+  splashWindow.center();
+  log('✅ Splash screen created');
+}
+
+/**
+ * Close splash screen and show main window
+ */
+function closeSplashScreen(): void {
+  if (splashWindow) {
+    splashWindow.close();
+    splashWindow = null;
+    log('✅ Splash screen closed');
+  }
+}
+
+/**
  * Check if a port is available
  */
 function isPortAvailable(port: number): Promise<boolean> {
@@ -131,6 +261,8 @@ async function waitForServer(port: number, maxRetries = 30): Promise<void> {
   // Small initial delay to let the server start
   await new Promise(resolve => setTimeout(resolve, 1000));
 
+  let lastError: any = null;
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       // Try to make an HTTP request to the server
@@ -157,12 +289,14 @@ async function waitForServer(port: number, maxRetries = 30): Promise<void> {
       // Server responded successfully
       return;
     } catch (error) {
-      log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`);
+      lastError = error;
+      log(`⏳ Waiting for server... (${i + 1}/${maxRetries})`, error instanceof Error ? error.message : '');
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
-  throw new Error('❌ Server failed to start within timeout period');
+  const errorMsg = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`Server failed to start within ${maxRetries} seconds.\n\nLast error: ${errorMsg}\n\nPossible causes:\n- Port ${port} is blocked by firewall\n- Server process crashed immediately\n- System resources exhausted\n\nCheck the debug log at:\n${logFile}`);
 }
 
 /**
@@ -195,7 +329,17 @@ function startNextServer(): void {
   if (!serverPath) {
     log('❌ Could not find server.js in any of these locations:');
     possiblePaths.forEach(p => log('  -', p));
-    throw new Error('server.js not found');
+
+    // List what files DO exist in resources path
+    log('📂 Contents of resourcesPath:', process.resourcesPath);
+    try {
+      const files = fs.readdirSync(process.resourcesPath);
+      files.forEach(f => log('  -', f));
+    } catch (e) {
+      log('❌ Could not read resourcesPath:', e);
+    }
+
+    throw new Error(`server.js not found in any of the expected locations. This may indicate a broken installation. Please re-download the application.`);
   }
 
   const serverDir = path.dirname(serverPath);
@@ -225,10 +369,31 @@ function startNextServer(): void {
 
   serverProcess.on('error', (err) => {
     log('❌ Failed to start Next.js server:', err);
+
+    closeSplashScreen();
+
+    showFatalError(
+      'Server Startup Failed',
+      'Failed to start the Next.js server process.',
+      `Error: ${err.message}\n\nThis usually happens when:\n- Node.js is not properly installed in the package\n- The server.js file is corrupted\n- Antivirus is blocking the process\n\nPlease try:\n1. Re-downloading the application\n2. Adding an antivirus exception\n3. Running as administrator`
+    );
   });
 
   serverProcess.on('exit', (code, signal) => {
     log(`⚠️ Next.js server process exited with code ${code} and signal ${signal}`);
+
+    if (code !== 0 && code !== null) {
+      log('❌ Server exited with error code:', code);
+
+      closeSplashScreen();
+
+      showFatalError(
+        'Server Crashed',
+        `The Next.js server stopped unexpectedly (exit code: ${code}).`,
+        `This could be caused by:\n- Port ${PORT} already in use\n- Missing dependencies\n- System resources unavailable\n\nPlease check the debug log file for more details.`
+      );
+    }
+
     serverProcess = null;
   });
 }
@@ -250,13 +415,14 @@ async function createWindow(): Promise<void> {
     backgroundColor: '#000000',
     title: 'TikScam - TikTok Live Stream Analytics',
     show: false,
-    icon: path.join(__dirname, '..', 'resources', 'icon.png'),
   });
 
-  // Open DevTools for debugging (always in production for now)
-  mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow?.webContents.openDevTools();
-  });
+  // Open DevTools only in development mode
+  if (isDev) {
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow?.webContents.openDevTools();
+    });
+  }
 
   // Log console errors from renderer to main process (for debugging)
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
@@ -441,10 +607,9 @@ async function createWindow(): Promise<void> {
     </html>
   `;
 
-  // Load progress screen and show window immediately
+  // Load progress screen but DON'T show yet (splash is visible)
   await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(progressHTML)}`);
-  mainWindow.show();
-  log('✅ Progress screen shown');
+  log('✅ Progress screen loaded');
 
   // Helper function to update progress
   const updateProgress = (step: number, status: 'pending' | 'active' | 'complete' | 'error', port?: number) => {
@@ -465,12 +630,17 @@ async function createWindow(): Promise<void> {
     log('🌐 Loading URL:', url);
 
     try {
+      // Close splash and show main window with progress
+      closeSplashScreen();
+      mainWindow!.show();
+
       await mainWindow!.loadURL(url);
       log('✅ Window loaded successfully');
       updateProgress(5, 'complete');
     } catch (error) {
       log('❌ Failed to load window:', error);
       updateProgress(5, 'error');
+      closeSplashScreen();
 
       // Show error in window
       const errorHTML = `
@@ -517,12 +687,35 @@ async function createWindow(): Promise<void> {
 }
 
 /**
+ * Show fatal error dialog and quit
+ */
+function showFatalError(title: string, message: string, details: string): void {
+  log('💥 FATAL ERROR:', title, message, details);
+
+  dialog.showErrorBox(
+    title,
+    `${message}\n\n📄 Debug log file:\n${logFile}\n\n${details}`
+  );
+
+  app.quit();
+}
+
+/**
  * App ready handler
  */
 app.on('ready', async () => {
   try {
     log('🎬 TikScam Electron starting...');
     log('📍 Mode:', isDev ? 'Development' : 'Production');
+    log('📍 Electron version:', process.versions.electron);
+    log('📍 Node version:', process.versions.node);
+    log('📍 Chrome version:', process.versions.chrome);
+
+    // Show splash screen IMMEDIATELY
+    createSplashScreen();
+
+    // Small delay to ensure splash is visible
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Load environment variables from .env.local (if exists)
     loadEnvFile();
@@ -571,7 +764,18 @@ app.on('ready', async () => {
     log('🎉 TikScam Electron ready!');
   } catch (error) {
     log('❌ Failed to start application:', error);
-    app.quit();
+
+    closeSplashScreen();
+
+    // Show detailed error dialog
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : '';
+
+    showFatalError(
+      'TikScam Startup Failed',
+      'The application failed to start properly.',
+      `Error: ${errorMessage}\n\nPlease check the debug log file for more details.\n\nStack trace:\n${errorStack}`
+    );
   }
 });
 
