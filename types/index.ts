@@ -21,6 +21,7 @@ export type {
   StreamStats,
   UserProfile,
   RoomInfo,
+  ConnectionMode,
   UseTikTokLiveReturn,
 } from './stream';
 

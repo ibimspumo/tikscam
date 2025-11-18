@@ -4,6 +4,8 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { useChartTimeline, defaultValues } from '@/hooks/useChartTimeline';
+import { CHART_INTERVALS } from '@/lib/constants';
 import {
   BarChart,
   Bar,
@@ -31,35 +33,15 @@ interface LikesHistoryChartProps {
 export const LikesHistoryChart = ({ minuteHistory = [] }: LikesHistoryChartProps) => {
   const { t } = useTranslation();
 
+  // Use shared timeline hook
+  const last15Minutes = useChartTimeline({
+    history: minuteHistory,
+    totalIntervals: CHART_INTERVALS.FIFTEEN_MIN,
+    defaultValue: defaultValues.likes,
+  });
+
   // Memoize expensive calculations
   const chartData = useMemo(() => {
-    const totalIntervals = 60; // 15 minutes in 15-second intervals
-
-    // Use the most recent data point's interval as reference, or current time
-    const latestData = minuteHistory.length > 0
-      ? minuteHistory[minuteHistory.length - 1]
-      : null;
-
-    const currentInterval = latestData
-      ? latestData.interval
-      : Math.floor(Date.now() / 15000);
-
-    // Create a complete timeline with all 60 intervals
-    const last15Minutes: MinuteStats[] = [];
-    for (let i = totalIntervals - 1; i >= 0; i--) {
-      const interval = currentInterval - i;
-
-      // Find matching data point by interval number (exact match)
-      const existing = minuteHistory.find(m => m.interval === interval);
-
-      // Use existing data OR create empty interval
-      // IMPORTANT: For empty intervals, use the interval number to calculate timestamp later
-      last15Minutes.push(existing || {
-        interval,
-        likesPerSecond: 0,
-        timestamp: interval * 15000, // Store interval as timestamp base
-      });
-    }
 
     // Prepare data for Recharts with additional fields
     const rechartsData = last15Minutes.map((stat, index) => {
@@ -101,7 +83,7 @@ export const LikesHistoryChart = ({ minuteHistory = [] }: LikesHistoryChartProps
       : 0;
 
     return { rechartsData, average, currentValue, dataRangeMinutes };
-  }, [minuteHistory]);
+  }, [last15Minutes]);
 
   const { rechartsData, average, currentValue, dataRangeMinutes } = chartData;
 

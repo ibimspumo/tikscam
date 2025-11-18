@@ -4,6 +4,8 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gem } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { useChartTimeline, defaultValues } from '@/hooks/useChartTimeline';
+import { CHART_INTERVALS } from '@/lib/constants';
 import {
   BarChart,
   Bar,
@@ -31,35 +33,15 @@ interface DiamondHistoryChartProps {
 export const DiamondHistoryChart= React.memo(({ diamondHistory = [] }: DiamondHistoryChartProps) => {
   const { t } = useTranslation();
 
+  // Use shared timeline hook
+  const last15Minutes = useChartTimeline({
+    history: diamondHistory,
+    totalIntervals: CHART_INTERVALS.FIFTEEN_MIN,
+    defaultValue: defaultValues.diamond,
+  });
+
   // Memoize expensive calculations
   const chartData = useMemo(() => {
-    const totalIntervals = 60; // 15 minutes in 15-second intervals
-
-    // Use the most recent data point's interval as reference, or current time
-    const latestData = diamondHistory.length > 0
-      ? diamondHistory[diamondHistory.length - 1]
-      : null;
-
-    const currentInterval = latestData
-      ? latestData.interval
-      : Math.floor(Date.now() / 15000);
-
-    // Create a complete timeline with all 60 intervals
-    const last15Minutes: IntervalStats[] = [];
-    for (let i = totalIntervals - 1; i >= 0; i--) {
-      const interval = currentInterval - i;
-
-      // Find matching data point by interval number (exact match)
-      const existing = diamondHistory.find(m => m.interval === interval);
-
-      last15Minutes.push(existing || {
-        interval,
-        viewerCount: 0,
-        followerCount: 0,
-        diamondCount: 0,
-        timestamp: Date.now() - (i * 15000),
-      });
-    }
 
     // Prepare data for Recharts
     const rechartsData = last15Minutes.map((stat, index) => {
@@ -86,7 +68,7 @@ export const DiamondHistoryChart= React.memo(({ diamondHistory = [] }: DiamondHi
       : 0;
 
     return { rechartsData, total, currentValue, dataRangeMinutes };
-  }, [diamondHistory]);
+  }, [last15Minutes]);
 
   const { rechartsData, total, currentValue, dataRangeMinutes } = chartData;
 

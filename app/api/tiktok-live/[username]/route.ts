@@ -267,7 +267,7 @@ export async function GET(
         // Available gifts catalog
         tiktokConnection.on('websocketConnected', async () => {
           try {
-            const availableGifts = await tiktokConnection!.getAvailableGifts();
+            const availableGifts = tiktokConnection!.availableGifts;
             sendEvent('availableGifts', { gifts: availableGifts });
           } catch (err) {
             // Ignore gift catalog errors
