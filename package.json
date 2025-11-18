@@ -1,6 +1,6 @@
 {
   "name": "tikscam",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "main": "electron/dist/main.js",
   "scripts": {
@@ -74,13 +74,18 @@
     "win": {
       "target": [
         {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
           "target": "portable",
           "arch": [
             "x64"
           ]
         }
       ],
-      "icon": "resources/icon.ico",
       "sign": null,
       "signingHashAlgorithms": []
     },
@@ -88,21 +93,24 @@
       "target": [
         "dmg"
       ],
-      "icon": "resources/icon.icns",
       "category": "public.app-category.developer-tools"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "icon": "resources/icon.png",
       "category": "Development"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "perMachine": false,
+      "allowElevation": true,
+      "deleteAppDataOnUninstall": true,
+      "runAfterFinish": true,
+      "shortcutName": "TikScam"
     }
   }
 }
