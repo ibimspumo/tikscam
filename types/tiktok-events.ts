@@ -6,27 +6,39 @@
  */
 
 /**
- * User Profile Information
+ * User Profile Information (from tiktok-live-connector)
+ * Flexible to accept all possible fields from the library
  */
 export interface TikTokUserProfile {
-  userId: string;
-  uniqueId: string;
-  nickname: string;
+  userId?: string;
+  uniqueId?: string;
+  nickname?: string;
+  displayName?: string;
   profilePictureUrl?: string;
+  profilePicture?: {
+    url?: string[];
+  };
+  avatarThumb?: string;
+  avatarMedium?: string;
+  avatarLarge?: string;
   followerCount?: number;
   followingCount?: number;
+  verified?: boolean;
+  [key: string]: any; // Allow additional fields from TikTok library
 }
 
 /**
- * Room/Stream Information
+ * Room/Stream Information (from tiktok-live-connector)
+ * Flexible to accept all possible fields from the library
  */
 export interface TikTokRoomData {
-  id: string;
-  title: string;
-  owner: TikTokUserProfile;
-  viewerCount: number;
-  likeCount: number;
+  id?: string;
+  title?: string;
+  owner?: TikTokUserProfile;
+  viewerCount?: number;
+  likeCount?: number;
   startTime?: number;
+  [key: string]: any; // Allow additional fields from TikTok library
 }
 
 /**
@@ -48,65 +60,71 @@ export interface TikTokConnectionOptions {
  * Chat Message Event (from tiktok-live-connector)
  */
 export interface TikTokChatEvent {
-  uniqueId: string;
-  userId: string;
+  uniqueId?: string;
+  userId?: string;
   nickname?: string;
-  comment: string;
+  comment?: string;
   profilePictureUrl?: string;
+  [key: string]: any;
 }
 
 /**
  * Gift Event (from tiktok-live-connector)
  */
 export interface TikTokGiftEvent {
-  uniqueId: string;
-  userId: string;
+  uniqueId?: string;
+  userId?: string;
   nickname?: string;
   profilePictureUrl?: string;
-  giftId: number;
-  giftName: string;
-  repeatCount: number;
+  giftId?: number;
+  giftName?: string;
+  repeatCount?: number;
   repeatEnd?: boolean;
   diamondCount?: number;
   giftPictureUrl?: string;
+  [key: string]: any;
 }
 
 /**
  * Like Event (from tiktok-live-connector)
  */
 export interface TikTokLikeEvent {
-  uniqueId: string;
-  userId: string;
-  likeCount: number;
+  uniqueId?: string;
+  userId?: string;
+  likeCount?: number;
   totalLikeCount?: number;
+  [key: string]: any;
 }
 
 /**
  * Member Join Event (from tiktok-live-connector)
  */
 export interface TikTokMemberEvent {
-  uniqueId: string;
-  userId: string;
+  uniqueId?: string;
+  userId?: string;
   nickname?: string;
   profilePictureUrl?: string;
+  [key: string]: any;
 }
 
 /**
  * Social Event (Follow/Share) (from tiktok-live-connector)
  */
 export interface TikTokSocialEvent {
-  uniqueId: string;
-  userId: string;
+  uniqueId?: string;
+  userId?: string;
   nickname?: string;
   profilePictureUrl?: string;
-  displayType: 'follow' | 'share' | 'pm_main_follow_message_viewer_2';
+  displayType?: 'follow' | 'share' | 'pm_main_follow_message_viewer_2';
+  [key: string]: any;
 }
 
 /**
  * Room User Event (Viewer Count Update) (from tiktok-live-connector)
  */
 export interface TikTokRoomUserEvent {
-  viewerCount: number;
+  viewerCount?: number;
+  [key: string]: any;
 }
 
 /**
