@@ -28,6 +28,7 @@ import {
   ChatActivityStats,
   ConnectionMode,
 } from '@/types';
+import { INTERVALS, LIMITS, CHART_INTERVALS } from '@/lib/constants';
 
 const EMPTY_STATS: StreamStats = {
   viewerCount: 0,
@@ -184,8 +185,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           avatar: chatData.avatar,
         };
 
-        // Keep last 50 messages
-        const messages = [newMessage, ...prev.chatMessages].slice(0, 50);
+        // Keep last N messages
+        const messages = [newMessage, ...prev.chatMessages].slice(0, LIMITS.CHAT_MESSAGES);
 
         // Track interval chat messages
         intervalCountersRef.current.chatMessages++;
@@ -230,8 +231,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           giftImage: giftData.giftImage,
         };
 
-        // Keep last 100 gifts
-        const gifts = [newGift, ...prev.gifts].slice(0, 100);
+        // Keep last N gifts
+        const gifts = [newGift, ...prev.gifts].slice(0, LIMITS.GIFTS);
 
         const diamonds = giftData.diamondCount || 0;
         intervalCountersRef.current.diamonds += diamonds;
@@ -268,8 +269,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
       const likeData = JSON.parse(event.data);
       const now = Date.now();
 
-      // Throttle like updates to once per 500ms
-      if (now - lastLikeUpdateRef.current < 500) {
+      // Throttle like updates
+      if (now - lastLikeUpdateRef.current < INTERVALS.LIKE_THROTTLE) {
         return;
       }
       lastLikeUpdateRef.current = now;
@@ -284,7 +285,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
         }];
 
         // Keep only last 60 seconds of snapshots
-        const recentSnapshots = snapshots.filter(s => now - s.timestamp < 60000);
+        const recentSnapshots = snapshots.filter(s => now - s.timestamp < INTERVALS.MINUTE);
         likeSnapshotsRef.current = recentSnapshots;
 
         // Calculate likes per second for different intervals
@@ -334,8 +335,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           type: 'join',
         };
 
-        // Keep last 50 joins
-        const joins = [newJoin, ...prev.joins].slice(0, 50);
+        // Keep last N joins
+        const joins = [newJoin, ...prev.joins].slice(0, LIMITS.JOINS);
 
         // Update user stats
         const userStats = new Map(prev.userStats);
@@ -372,8 +373,8 @@ export function useTikTokLive(): UseTikTokLiveReturn {
             type: 'follow',
           };
 
-          // Keep last 50 follows
-          const follows = [newFollow, ...prev.follows].slice(0, 50);
+          // Keep last N follows
+          const follows = [newFollow, ...prev.follows].slice(0, LIMITS.FOLLOWS);
           intervalCountersRef.current.followers++;
 
           return {
@@ -473,7 +474,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
     if (!isConnected) return;
 
     const interval = setInterval(() => {
-      const currentInterval = Math.floor(Date.now() / 15000);
+      const currentInterval = Math.floor(Date.now() / INTERVALS.SNAPSHOT);
       const timestamp = Date.now();
 
       setStats(prev => {
@@ -482,7 +483,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           interval: currentInterval,
           likesPerSecond: prev.likesPerSecond.last10s,
           timestamp,
-        }].slice(-240); // Keep last 60 minutes (240 * 15s = 1 hour)
+        }].slice(-CHART_INTERVALS.SIXTY_MIN); // Keep last 60 minutes
 
         // Viewer count snapshot
         const viewerHistory = [...prev.viewerHistory, {
@@ -491,7 +492,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           followerCount: 0,
           diamondCount: 0,
           timestamp,
-        }].slice(-240);
+        }].slice(-CHART_INTERVALS.SIXTY_MIN);
 
         // Follower snapshot
         const followerHistory = [...prev.followerHistory, {
@@ -500,7 +501,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           followerCount: intervalCountersRef.current.followers,
           diamondCount: 0,
           timestamp,
-        }].slice(-240);
+        }].slice(-CHART_INTERVALS.SIXTY_MIN);
 
         // Diamond snapshot
         const diamondHistory = [...prev.diamondHistory, {
@@ -509,7 +510,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           followerCount: 0,
           diamondCount: intervalCountersRef.current.diamonds,
           timestamp,
-        }].slice(-240);
+        }].slice(-CHART_INTERVALS.SIXTY_MIN);
 
         // Engagement rate
         const engagementRate = prev.viewerCount > 0
@@ -519,14 +520,14 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           interval: currentInterval,
           engagementRate,
           timestamp,
-        }].slice(-240);
+        }].slice(-CHART_INTERVALS.SIXTY_MIN);
 
         // Chat activity
         const chatActivityHistory = [...prev.chatActivityHistory, {
           interval: currentInterval,
           messageCount: intervalCountersRef.current.chatMessages,
           timestamp,
-        }].slice(-240);
+        }].slice(-CHART_INTERVALS.SIXTY_MIN);
 
         // Reset interval counters
         intervalCountersRef.current = {
@@ -545,7 +546,7 @@ export function useTikTokLive(): UseTikTokLiveReturn {
           chatActivityHistory,
         };
       });
-    }, 15000);
+    }, INTERVALS.SNAPSHOT);
 
     return () => clearInterval(interval);
   }, [isConnected]);

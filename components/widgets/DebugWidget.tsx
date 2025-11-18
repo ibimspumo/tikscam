@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bug, ChevronDown, ChevronRight } from 'lucide-react';
+import type { RoomInfo } from '@/types';
 
 interface DebugWidgetProps {
-  roomInfo: any;
+  roomInfo: RoomInfo | null;
 }
 
 export const DebugWidget= React.memo(({ roomInfo }: DebugWidgetProps) => {
