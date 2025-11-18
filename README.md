@@ -2,9 +2,9 @@
 
 # 🎭 TikScam
 
-**Real-Time Transparency Tool for TikTok Live Streams**
+**Real-Time Transparency Tool for TikTok Live Timer Streams**
 
-Stop getting scammed by fake timer streams. See the real numbers as they happen.
+Expose streamers who manipulate like/follow values to keep timers running forever.
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
@@ -12,7 +12,7 @@ Stop getting scammed by fake timer streams. See the real numbers as they happen.
 [![Electron](https://img.shields.io/badge/Electron-28-47848F?logo=electron)](https://electronjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Desktop App](#-desktop-app) • [How It Works](#-how-it-works) • [Contributing](#-contributing)
+[The Problem](#-the-problem) • [The Solution](#-the-solution) • [Quick Start](#-quick-start) • [How It Works](#-how-it-works) • [Desktop App](#-desktop-app)
 
 </div>
 
@@ -20,47 +20,91 @@ Stop getting scammed by fake timer streams. See the real numbers as they happen.
 
 ## 🚨 The Problem
 
-TikTok Live timer scams are everywhere. Streamers manipulate viewers with fake countdowns and false promises:
+### The Classic TikTok Timer Scam
 
-### Common Timer Scam Tactics
+You've seen it everywhere on TikTok Live:
 
-**🎯 "Only 100 more roses until the goal!"**
-- Viewers send 150+ roses
-- Streamer only counts 80
-- Goal mysteriously never reached
-- Cycle repeats endlessly
+```
+Streamer: "Every LIKE = 1 point, every FOLLOW = 10 points!"
+Streamer: "We need 5,000 points to reach the goal!"
+Timer: 05:00 → 04:59 → 04:58...
+```
 
-**💰 "Just 50 diamonds left to win!"**
-- Reality: 5,000+ diamonds already received
-- Streamer hides actual earnings
-- Viewers keep sending gifts thinking they're close
+**What viewers think:**
+- Clear rules: 1 like = 1 point, 1 follow = 10 points
+- Goal is reachable if everyone helps
+- Timer will end when goal is reached
 
-**👥 "We need 1,000 followers for the prize!"**
-- Real follower count concealed
-- Numbers reset or manipulated
-- Viewers never see actual progress
+**What actually happens:**
 
-**⏰ The Timer Never Ends**
-- "5 more minutes!" → becomes 2 hours
-- Same promises every stream
-- No accountability, no transparency
+### 🎭 The Manipulation
+
+**Minute 4:30** (Timer almost over)
+```
+Viewers sent: 2,500 likes + 150 follows = 4,000 points
+Streamer claims: "Only 3,200 points! Keep going!"
+```
+
+**Minute 0:30** (Last seconds)
+```
+Viewers sent: 5,000 likes + 300 follows = 8,000 points total
+Streamer secretly changes rules: "Actually, 1 follow = 50 points now!"
+Timer magically needs 15,000 points instead of 5,000
+```
+
+**Minute 0:00** (Timer "ends")
+```
+Streamer: "So close! Just 500 more points! Restarting timer!"
+*Timer resets to 5:00*
+Cycle repeats endlessly...
+```
+
+### 💰 Why They Do This
+
+- **Maximize engagement** – More likes = higher TikTok algorithm ranking
+- **Keep viewers hooked** – "We're so close!" creates false urgency
+- **More gifts** – Frustrated viewers send expensive gifts to "help"
+- **No accountability** – Point values are invisible, can't be verified
+
+### 🔍 How to Spot the Scam
+
+❌ **Red Flags:**
+- Timer keeps resetting "just one more time"
+- Point values change mid-stream ("Oh I meant 20 points per follow!")
+- Streamer can't show exact numbers ("Trust me, we're at 3,200!")
+- Same stream goal repeats every day
+- Chat asks "how many likes?" but streamer ignores
 
 ---
 
 ## ✅ The Solution
 
-**TikScam provides 100% transparent, real-time stream analytics** that streamers can't fake or hide.
+**TikScam shows you the REAL numbers in real-time** – exactly what the streamer sees but won't tell you.
 
-### What You Get
+### What You Can Track
 
-- ✅ **Exact Gift Count** – See every single gift with diamond values in real-time
-- ✅ **Live Earnings Display** – Track actual diamond earnings (convertible to USD)
-- ✅ **Follower Counter** – Real-time new followers per second
-- ✅ **Likes per Second** – Detect fake engagement and bot activity
-- ✅ **15-Minute History Charts** – Document scams with visual proof
-- ✅ **Top Gifters Leaderboard** – See who's actually paying (and how much)
+| Metric | What It Shows | How It Exposes Scams |
+|--------|---------------|----------------------|
+| **👍 Likes per Second** | Exact like rate (10s, 20s, 30s, 60s averages) | Calculate real points vs. streamer claims |
+| **👥 New Followers** | Exact follower count per 15-second interval | Verify if goal was actually reached |
+| **📊 15-Min History** | Visual timeline of all likes and follows | Screenshot proof of manipulation |
+| **📈 Total Likes** | Running total from stream start | Compare against streamer's "point count" |
+| **⏱️ Engagement Rate** | Likes per viewer ratio | Detect if streamer uses bot likes |
 
-**Important:** No TikTok login required. Reads only publicly available stream data.
+### The Key Insight
+
+```
+Streamer says: "We need 5,000 points (1 like = 1 point, 1 follow = 10 points)"
+
+TikScam shows you:
+✅ Total likes received: 4,732
+✅ New followers: 284
+✅ Real points (if rules were honest): 4,732 + (284 × 10) = 7,572 points
+
+Result: Goal was reached 12 minutes ago. Streamer is lying.
+```
+
+**No TikTok login required.** Reads only publicly available stream data.
 
 ---
 
@@ -68,19 +112,28 @@ TikTok Live timer scams are everywhere. Streamers manipulate viewers with fake c
 
 ### 🔍 Anti-Scam Detection
 
-| Feature | Description | Why It Matters |
-|---------|-------------|----------------|
-| **🎁 Gift Transparency** | Every gift tracked with exact diamond values | Catch streamers hiding or undercounting gifts |
-| **💎 Earnings Calculator** | Real-time diamond totals + USD conversion | Verify if streamer is lying about earnings |
-| **📊 Historical Charts** | 15-minute rolling timeline of all metrics | Document proof of manipulation |
-| **👑 Top Gifters** | Leaderboard of biggest spenders | See who's actually contributing |
-| **📈 Engagement Analysis** | Likes/second, viewer trends, chat activity | Detect bot patterns and fake viewers |
-| **⏱️ Live Counters** | Real followers gained, actual like counts | Compare against streamer's fake timers |
+**Real-Time Counters:**
+- ✅ **Likes per Second** – See exact like rates (10s/20s/30s/45s/60s averages)
+- ✅ **Total Likes** – Running total from stream start
+- ✅ **New Followers** – Exact count per 15-second interval
+- ✅ **Viewer Count** – Track viewer trends over time
+
+**Historical Proof:**
+- 📊 **Likes History Chart** – Visual timeline showing like spikes
+- 📊 **Follower History Chart** – Track new followers in real-time
+- 📊 **Combined Timeline** – All metrics in one chart for screenshots
+- 📊 **Engagement Rate** – Detect fake likes and bot activity
+
+**Bonus Features:**
+- 🎁 **Gift Transparency** – See every gift with diamond values (if applicable)
+- 💎 **Earnings Calculator** – Track streamer's real income
+- 👑 **Top Gifters** – Leaderboard of biggest spenders
+- 💬 **Chat Feed** – Live chat messages with user avatars
 
 ### 🛠️ Technical Features
 
 - **🔴 Multi-Stream Support** – Monitor multiple streamers simultaneously
-- **⚡ Real-Time Updates** – Instant event tracking via Server-Sent Events (SSE)
+- **⚡ Real-Time Updates** – Instant event tracking via Server-Sent Events
 - **📊 21 Analytics Widgets** – Comprehensive statistics dashboard
 - **📱 Mobile-First Design** – Responsive on all devices
 - **🌙 Dark Mode** – Eye-friendly interface
@@ -109,6 +162,130 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 **Requirements:** Node.js 20+ ([download here](https://nodejs.org))
+
+---
+
+## 📱 How It Works
+
+### Step 1: Start Monitoring
+
+```
+1. Click "+ Add Stream"
+2. Enter TikTok username (without @)
+3. Click "Start Stream"
+4. View real-time analytics
+```
+
+**Important:** Stream must be **LIVE** for connection to work.
+
+### Step 2: Calculate Real Points
+
+**Streamer's Claim:**
+```
+"Every LIKE = 1 point"
+"Every FOLLOW = 10 points"
+"We need 5,000 points to win!"
+```
+
+**TikScam Shows You:**
+```
+✅ Total Likes: 4,732
+✅ New Followers: 284
+✅ Real Points: 4,732 + (284 × 10) = 7,572 points
+
+Math: Goal was reached! Streamer is lying.
+```
+
+### Step 3: Document the Scam
+
+**Screenshot Evidence:**
+
+Take screenshots of TikScam showing:
+1. **Total likes count** from the stats widget
+2. **Follower history chart** showing 284 new followers
+3. **Timestamp** proving when the goal was actually reached
+4. **Streamer's claim** (record/screenshot from TikTok)
+
+**Compare:**
+- Streamer says: "Only 3,200 points!"
+- Reality (TikScam): 7,572 points
+
+### Step 4: Expose or Exit
+
+**Options:**
+1. **Stop engaging** – Save your likes/follows/gifts
+2. **Share proof** – Post screenshot comparisons
+3. **Warn others** – Comment with facts (politely)
+4. **Report** – Use TikTok's official reporting tools
+
+---
+
+## 🎯 Real-World Examples
+
+### Example 1: The Moving Goalpost
+
+**Stream Rules:**
+```
+Streamer: "1 like = 1 point, 1 follow = 10 points, need 5,000 points!"
+Timer: 5:00 minutes
+```
+
+**What TikScam Shows:**
+
+| Time | Likes | Follows | Real Points | Streamer Claims |
+|------|-------|---------|-------------|-----------------|
+| 5:00 | 0 | 0 | 0 | "0 points, let's go!" |
+| 3:00 | 2,100 | 150 | 3,600 | "Only 2,000 points!" ❌ |
+| 1:00 | 4,200 | 280 | 7,000 | "4,500 points, so close!" ❌ |
+| 0:00 | 5,500 | 320 | 8,700 | "Not enough! Timer reset!" ❌ |
+
+**Proof of Scam:**
+- Goal (5,000 points) was reached at **2:15 remaining**
+- Streamer lied about point totals 3 times
+- Timer reset despite exceeding goal by 174%
+
+---
+
+### Example 2: Secret Rule Changes
+
+**Original Rules:**
+```
+"1 follow = 10 points"
+```
+
+**What Happens:**
+
+| Time | New Followers | Streamer Claims | Real Value Needed |
+|------|---------------|-----------------|-------------------|
+| 5:00 | 50 | "500 points!" ✅ | 10 points/follow |
+| 3:00 | 150 | "1,200 points!" ❌ | Should be 1,500 |
+| 1:00 | 280 | "2,100 points!" ❌ | Should be 2,800 |
+| 0:00 | 320 | "Not enough!" ❌ | Secretly changed to 50 points/follow |
+
+**TikScam Proof:**
+- 320 followers × 10 points = **3,200 points**
+- Streamer claims: "Only 2,100 points"
+- **Missing 1,100 points** = Secret rule change
+
+---
+
+### Example 3: Bot Detection
+
+**Suspicious Stream:**
+```
+8,500 viewers shown
+Likes/second: 0.4 L/s
+Chat messages: 3 in last 5 minutes
+```
+
+**TikScam Analysis:**
+```
+✅ Engagement rate: 0.00005 (extremely low)
+✅ Expected likes/s for 8,500 viewers: ~15-30 L/s
+✅ Actual likes/s: 0.4 L/s
+
+Result: 99% likely using viewer bots
+```
 
 ---
 
@@ -156,75 +333,6 @@ npm run build:linux    # Linux .AppImage
 
 - [ELECTRON.md](ELECTRON.md) – Developer guide for building desktop apps
 - [DESKTOP_USER_GUIDE.md](DESKTOP_USER_GUIDE.md) – End-user documentation
-
----
-
-## 📱 How It Works
-
-### 1. Monitor Any Live Stream
-
-```
-1. Click "+ Add Stream"
-2. Enter TikTok username (without @)
-3. Click "Start Stream"
-4. View real-time analytics
-```
-
-**Important:** Stream must be **LIVE** for connection to work.
-
-### 2. Detect Timer Scams
-
-**Example 1: Countdown Manipulation ⏰**
-
-```
-Streamer says: "Only 100 more roses until the goal!"
-Viewers send:  120 roses
-
-TikScam shows:
-✅ Exact count: 147 roses received
-✅ Top gifter: @user123 (85 roses)
-✅ Total diamonds: 14,700 💎 ≈ $73.50 USD
-
-Result: Streamer lied. Goal was already reached 47 roses ago.
-```
-
-**Example 2: Hidden Earnings 💸**
-
-```
-Streamer says: "I've only received 500 diamonds, please help!"
-Reality:       12,450 diamonds received
-
-TikScam shows:
-✅ Total earnings: 12,450💎 ≈ $62.25 USD
-✅ 147 gifts received
-✅ Top 5 gifters visible
-
-Result: Streamer hiding actual earnings to manipulate more gifts.
-```
-
-**Example 3: Fake Engagement 🤖**
-
-```
-Stream shows:  8,500 viewers
-Chat activity: Completely dead
-
-TikScam shows:
-✅ Engagement rate: 0.02 (extremely low)
-✅ Chat messages: 3 in last 5 minutes
-✅ Likes/second: 0.4 L/s (suspicious)
-
-Result: Likely using viewer bots to appear popular.
-```
-
-### 3. Document & Share Proof
-
-All TikScam widgets update in real-time with **visual charts** you can screenshot:
-
-- 📊 **Likes History Chart** – Shows fake like spikes
-- 📊 **Follower History Chart** – Real follower growth vs. streamer claims
-- 📊 **Diamond History Chart** – Exact earnings timeline
-- 📊 **Engagement Rate Chart** – Bot detection metrics
-- 📊 **Combined Timeline** – All metrics in one view
 
 ---
 
@@ -545,27 +653,30 @@ Found a bug or have a feature request? [Open an issue](https://github.com/ibimsp
 
 ### ✅ Legitimate Use
 
-- Verifying stream promises and goals
-- Documenting fraudulent behavior
-- Protecting yourself from manipulation
-- Exposing timer scams with evidence
+- Verifying streamer's like/follow point calculations
+- Documenting fraudulent timer manipulation
+- Protecting yourself from endless timer loops
+- Exposing rule changes with screenshot evidence
+- Helping others avoid scam streams
 
 ### ❌ Unethical Use
 
 - Harassment of honest streamers
 - Doxxing or personal attacks
-- Spamming chat
-- Defamation without proof
+- Spamming chat with accusations
+- Defamation without clear proof
+- Using data to extort streamers
 
 ### 💡 If You Suspect a Scam
 
-1. **Document** – Take screenshots of TikScam analytics + streamer claims
-2. **Verify** – Could it be a mistake or misunderstanding?
-3. **Communicate** – Try contacting the streamer respectfully first
-4. **If fraud is clear** – Stop sending gifts, warn others with proof
-5. **Report** – Use TikTok's official reporting tools
+1. **Document** – Screenshot TikScam data + streamer's claims side-by-side
+2. **Calculate** – Verify the math (likes + follows × point values)
+3. **Verify** – Could it be an honest mistake? Give benefit of doubt first
+4. **Communicate** – Try politely asking streamer about discrepancy
+5. **If fraud is clear** – Stop engaging, share proof, warn others
+6. **Report** – Use TikTok's official reporting tools for serious cases
 
-**Remember:** Most streamers are honest! TikScam is meant to protect viewers from the bad actors who ruin the platform for everyone.
+**Remember:** Most streamers are honest! TikScam is meant to protect viewers from the manipulative ones who abuse timer mechanics for profit and engagement.
 
 ---
 
@@ -679,7 +790,7 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 **Made with ❤️ (and 🤖 Claude AI) for transparency and fair streams**
 
-*Stop timer scams. Protect viewers. Support honest creators.*
+*Expose timer manipulation. Calculate real points. Protect viewers.*
 
 [⬆ Back to top](#-tikscam)
 
