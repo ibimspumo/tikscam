@@ -215,7 +215,8 @@ Proof of Manipulation:
 - **📱 Mobile-First Design** – Responsive on all devices
 - **🌙 Dark Mode** – Eye-friendly interface
 - **💻 Desktop & Web** – Use in browser or as standalone app
-- **🔑 Smart Connection** – 5-phase fallback system with visual feedback
+- **🔑 Simple Connection** – Free mode (default) or API key mode for reliability
+- **💡 Smart Error Messages** – 10+ contextual error types with clear solutions
 - **📉 Performance Optimized** – 96% fewer re-renders, 70% less CPU usage
 
 ---

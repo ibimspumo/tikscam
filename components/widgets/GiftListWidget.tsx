@@ -17,18 +17,21 @@ interface GiftType {
 }
 
 interface GiftListWidgetProps {
-  giftCatalog: Map<number, GiftType>;
+  giftCatalog?: Map<number, GiftType>;
+  availableGifts?: Map<number, GiftType>;
 }
 
-export const GiftListWidget= React.memo(({ giftCatalog }: GiftListWidgetProps) => {
+export const GiftListWidget= React.memo(({ giftCatalog, availableGifts }: GiftListWidgetProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'diamonds' | 'count'>('count');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isExpanded, setIsExpanded] = useState(false);
   const { t } = useTranslation();
 
+  const gifts = availableGifts || giftCatalog || new Map();
+
   const filteredAndSortedGifts = useMemo(() => {
-    let giftArray = Array.from(giftCatalog.values());
+    let giftArray = Array.from(gifts.values());
 
     // Filter by search term
     if (searchTerm) {
@@ -53,7 +56,7 @@ export const GiftListWidget= React.memo(({ giftCatalog }: GiftListWidgetProps) =
     });
 
     return giftArray;
-  }, [giftCatalog, searchTerm, sortBy, sortOrder]);
+  }, [gifts, searchTerm, sortBy, sortOrder]);
 
   const toggleSort = (newSortBy: 'name' | 'diamonds' | 'count') => {
     if (sortBy === newSortBy) {

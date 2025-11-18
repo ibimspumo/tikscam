@@ -1,5 +1,95 @@
 # TikScam Changelog
 
+## [0.4.0] - 2025-11-18
+
+### 🎯 Simplified Connection System
+
+**Major Overhaul: From 5-Phase to 2-Mode System**
+- Removed complex 5-phase connection logic with automatic retries
+- Implemented simple 2-mode system: Free Mode (default) and API Key Mode
+- Users now have full control over connection attempts
+- No more automatic retry loops - manual retry only
+
+### ✨ New Features
+
+**Simple Connection Modes**
+- **Free Mode (Default):** Direct connection to TikTok without API key
+- **API Key Mode:** Connect using EulerStream API key for better reliability
+- Easy toggle between modes via UI button
+- Inline API key input (no more popup dialogs)
+
+**Intelligent Error Messages**
+- 10+ specific error types with user-friendly messages
+- EulerStream service errors: "Service temporarily unavailable. Try API key mode."
+- Rate limit errors: "TikTok rate limit reached. Wait or use API key."
+- WebSocket errors: "Connection blocked (rate limit/anti-bot). Try API key or wait 5-10 minutes."
+- User not found: "Check username and ensure stream is LIVE."
+- Stream offline: "User must be streaming to connect."
+- Network errors with clear solutions
+
+**Smart UI Enhancements**
+- Contextual hints based on error type
+- Automatic "Use API Key" button for API-solvable errors
+- Color-coded tips (blue for suggestions, yellow for warnings)
+- Clean error display without Next.js error overlay
+
+### 🐛 Bug Fixes
+
+**Fixed Runtime Errors**
+- `StatsCard`: Icon prop now accepts React.ReactNode instead of LucideIcon
+- `StreamInfoWidget`: Username prop is optional with 'Unknown' fallback
+- `GiftListWidget`: Accepts both `giftCatalog` and `availableGifts` props with null-safe handling
+
+**Improved Error Handling**
+- Changed `console.error` to `console.warn` for connection failures
+- Prevents Next.js error overlay from showing on expected failures
+- Better HTML payload parsing for EulerStream errors
+
+### 🔧 Technical Changes
+
+**Backend (`app/api/tiktok-live/[username]/route.ts`)**
+- Simplified from 300+ lines to 286 lines
+- Removed 5-phase retry logic
+- Enhanced `extractErrorMessage()` with 10+ error patterns
+- Added WebSocket connection error detection
+- Improved empty error handling
+
+**Frontend (`hooks/useTikTokLive.ts`)**
+- Reduced from 1068 lines to 577 lines (47% reduction)
+- Removed all automatic retry logic
+- Simple state: `connectionMode` and `apiKey`
+- Manual `retry()` function for user control
+- Clean `connect()` with single attempt
+
+**UI Components**
+- `StreamMonitor.tsx`: Inline API key input, contextual error hints
+- `StatsCard.tsx`: Flexible icon prop with both `label` and `title` support
+- `StreamInfoWidget.tsx`: Optional props with safe defaults
+- `GiftListWidget.tsx`: Dual prop name support for backward compatibility
+
+### 📝 Changed Files
+
+- `package.json` - Version bump to 0.4.0
+- `types/stream.ts` - Simplified connection types, removed phase tracking
+- `app/api/tiktok-live/[username]/route.ts` - Single-attempt logic with smart error parsing
+- `hooks/useTikTokLive.ts` - Simplified hook, removed auto-retry
+- `components/layout/StreamMonitor.tsx` - Inline API key input, contextual hints
+- `components/layout/StatsCard.tsx` - Flexible icon prop
+- `components/widgets/StreamInfoWidget.tsx` - Optional username prop
+- `components/widgets/GiftListWidget.tsx` - Dual prop name support
+- `components/dialogs/ApiKeyDialog.tsx` - Removed (no longer needed)
+
+### 🎨 UX Improvements
+
+- One connection attempt per user action
+- Clear "Retry Connection" button on errors
+- "Use API Key" button appears automatically when relevant
+- No more confusing phase displays
+- No more automatic reconnection loops
+- Users decide when to retry
+
+---
+
 ## [0.3.1] - 2025-11-17
 
 ### 🐛 Bug Fixes

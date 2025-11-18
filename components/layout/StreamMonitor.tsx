@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTikTokLive } from '@/hooks/useTikTokLive';
 import { useTranslation } from '@/lib/i18n';
 import {
@@ -22,21 +22,20 @@ import {
   TopUsersWidget,
   WidgetErrorBoundary,
 } from '@/components/widgets';
-import { ApiKeyDialog } from '@/components/dialogs/ApiKeyDialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Users,
   Heart,
-  Gift,
+  Gift as GiftIcon,
   Gem,
   UserPlus,
   Wifi,
   WifiOff,
   AlertCircle,
   Key,
-  ExternalLink
+  RefreshCw,
 } from 'lucide-react';
 
 interface StreamMonitorProps {
@@ -49,67 +48,53 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
   const {
     connect,
     disconnect,
+    retry,
+    setConnectionMode,
+    setApiKey,
     isConnected,
     isConnecting,
+    connectionMode,
+    apiKey,
     stats,
     roomInfo,
     error,
-    usingApiKey,
-    retryingWithApiKey,
-    needsUserApiKey,
-    setUserApiKey,
-    userApiKey,
-    connectionStatus,
-    permanentError,
-    currentPhase,
-    currentAttempt,
-    maxAttempts,
-    lastError,
   } = useTikTokLive();
 
-  // Helper to get phase display info
-  const getPhaseInfo = (phase: typeof currentPhase) => {
-    switch (phase) {
-      case 'direct':
-        return { icon: '📡', label: 'Phase 1: Direct Connection', color: 'text-blue-500' };
-      case 'server-api':
-        return { icon: '🔑', label: 'Phase 2: Server API Key', color: 'text-yellow-500' };
-      case 'user-api':
-        return { icon: '👤', label: 'Phase 3: Your API Key', color: 'text-green-500' };
-      case 'needs-user-api':
-        return { icon: '💬', label: 'Waiting for API Key', color: 'text-orange-500' };
-      default:
-        return { icon: '⚡', label: 'Connecting', color: 'text-primary' };
+  // Local state for API key input
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+
+  // Auto-connect when username changes
+  useEffect(() => {
+    if (isActive && username) {
+      connect(username);
+    }
+
+    return () => {
+      if (isActive) {
+        disconnect();
+      }
+    };
+  }, [username, isActive]); // Only reconnect when username or active status changes
+
+  const handleModeToggle = () => {
+    if (connectionMode === 'free') {
+      setShowApiKeyInput(true);
+    } else {
+      setConnectionMode('free');
+      setApiKey('');
+      setApiKeyInput('');
+      setShowApiKeyInput(false);
     }
   };
 
-  const phaseInfo = getPhaseInfo(currentPhase);
-
-  // Auto-connect when component mounts (ONLY on username change)
-  useEffect(() => {
-    // ONLY auto-connect when username changes (component mount or tab switch)
-    // All other cases (reconnection) should be handled manually by user clicking "Reconnect"
-    console.log(`[StreamMonitor] ✅ Mounting for username: @${username}`);
-    connect(username);
-
-    return () => {
-      console.log(`[StreamMonitor] 🧹 Unmounting for @${username}`);
-      disconnect();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]); // ONLY username - prevents reconnection loops!
-
-  // Auto-Reconnect (DISABLED - we use 5-phase system now, no auto-reconnect)
-  // The backend will go through all phases automatically:
-  // Phase 1: 5x direct -> Phase 2: 5x server API -> Phase 3: ask user for API key
-  // No need for auto-reconnect, the connection logic is handled entirely by the backend
-  useEffect(() => {
-    // Auto-reconnect is DISABLED - permanent errors should NOT reconnect
-    // The user must manually click "Reconnect" button
-    if (permanentError) {
-      console.log(`[StreamMonitor] 🛑 Permanent error detected - auto-reconnect DISABLED`);
+  const handleApiKeySubmit = () => {
+    if (apiKeyInput.trim()) {
+      setApiKey(apiKeyInput.trim());
+      setConnectionMode('api-key');
+      setShowApiKeyInput(false);
     }
-  }, [permanentError]);
+  };
 
   if (!isActive) {
     return null;
@@ -120,248 +105,251 @@ export function StreamMonitor({ username, isActive }: StreamMonitorProps) {
       {/* Connection Status */}
       <Card className={isConnected ? "border-l-4 border-l-green-500" : "border-l-4 border-l-red-500"}>
         <CardContent className="p-4">
-          {retryingWithApiKey ? (
-            <div className="flex flex-col items-center gap-3 py-2">
+          <div className="flex flex-col gap-4">
+            {/* Status Header */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="font-semibold">
-                  <Key className="inline h-4 w-4 mr-1" />
-                  {t('streamMonitor.activatingApi')}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground text-center">
-                {t('streamMonitor.rateLimitReached')}
-              </p>
-            </div>
-          ) : isConnecting ? (
-            <div className="flex flex-col gap-4 py-2">
-              {/* Phase Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <span className="font-semibold">{t('streamMonitor.connectingTo')} @{username}</span>
-                </div>
-                {currentPhase && (
-                  <span className={`text-sm font-medium ${phaseInfo.color}`}>
-                    {phaseInfo.icon} {phaseInfo.label}
-                  </span>
+                {isConnecting ? (
+                  <>
+                    <div className="w-5 h-5 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-semibold">
+                      {connectionMode === 'api-key' ? 'Connecting with API key...' : 'Connecting (free mode)...'}
+                    </span>
+                  </>
+                ) : isConnected ? (
+                  <>
+                    <Wifi className="h-5 w-5 text-green-500" />
+                    <span className="font-semibold text-green-500">Connected to @{username}</span>
+                  </>
+                ) : error ? (
+                  <>
+                    <WifiOff className="h-5 w-5 text-red-500" />
+                    <span className="font-semibold text-red-500">Disconnected</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-semibold text-muted-foreground">Not connected</span>
+                  </>
                 )}
               </div>
 
-              {/* Progress Bar */}
-              {currentAttempt > 0 && maxAttempts > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Attempt {currentAttempt} of {maxAttempts}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {Math.round((currentAttempt / maxAttempts) * 100)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300 ease-out"
-                      style={{ width: `${(currentAttempt / maxAttempts) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              {/* Status Message */}
-              {connectionStatus && (
-                <div className="text-sm text-center p-2 bg-muted/50 rounded-md">
-                  {connectionStatus}
-                </div>
-              )}
-
-              {/* Last Error (if any) */}
-              {lastError && (
-                <div className="text-xs p-2 bg-destructive/10 border border-destructive/20 rounded-md">
-                  <div className="font-semibold text-destructive mb-1">Last Error:</div>
-                  <div className="text-muted-foreground line-clamp-2">{lastError}</div>
-                </div>
-              )}
+              {/* Mode Badge */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {connectionMode === 'api-key' ? 'API Key Mode' : 'Free Mode'}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleModeToggle}
+                  disabled={isConnecting}
+                >
+                  <Key className="h-3 w-3 mr-1" />
+                  {connectionMode === 'api-key' ? 'Switch to Free' : 'Use API Key'}
+                </Button>
+              </div>
             </div>
-          ) : isConnected ? (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Wifi className="h-5 w-5 text-green-500" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{t('streamMonitor.connectedTo')} @{username}</span>
-                    {usingApiKey && (
-                      <Badge variant="secondary" className="gap-1">
-                        <Key className="h-3 w-3" /> API
-                      </Badge>
+
+            {/* API Key Input */}
+            {showApiKeyInput && (
+              <div className="flex gap-2 p-3 bg-muted rounded-lg">
+                <Input
+                  type="password"
+                  placeholder="Enter your EulerStream API key"
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleApiKeySubmit()}
+                  className="flex-1"
+                />
+                <Button onClick={handleApiKeySubmit} disabled={!apiKeyInput.trim()}>
+                  Connect
+                </Button>
+                <Button variant="ghost" onClick={() => setShowApiKeyInput(false)}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {error && !isConnecting && (
+              <div className="flex flex-col gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-destructive">Connection Error</p>
+                    <p className="text-sm text-muted-foreground mt-1">{error}</p>
+
+                    {/* Contextual hints based on error type */}
+                    {error.includes('EulerStream') && connectionMode === 'free' && (
+                      <p className="text-xs text-blue-400 mt-2 flex items-center gap-1">
+                        <Key className="h-3 w-3" />
+                        Tip: Try switching to API key mode for more reliable connections
+                      </p>
+                    )}
+                    {error.includes('rate limit') && connectionMode === 'free' && (
+                      <p className="text-xs text-blue-400 mt-2 flex items-center gap-1">
+                        <Key className="h-3 w-3" />
+                        Tip: Use an API key to bypass rate limits
+                      </p>
+                    )}
+                    {error.includes('not live') && (
+                      <p className="text-xs text-yellow-400 mt-2">
+                        Make sure the user is currently streaming on TikTok
+                      </p>
+                    )}
+                    {error.includes('User not found') && (
+                      <p className="text-xs text-yellow-400 mt-2">
+                        Double-check the username spelling (without @)
+                      </p>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {usingApiKey ? t('streamMonitor.apiActive') : t('streamMonitor.liveDataActive')}
-                  </p>
                 </div>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={disconnect}
-                aria-label={`Disconnect from @${username}`}
-              >
-                {t('streamMonitor.disconnect')}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <WifiOff className="h-5 w-5 text-muted-foreground" />
-                <span className="font-semibold text-muted-foreground">{t('streamMonitor.disconnected')} @{username}</span>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => connect(username)}
-                aria-label={`Reconnect to @${username}`}
-              >
-                {t('streamMonitor.reconnect')}
-              </Button>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <div className="font-semibold flex items-center gap-2 mb-2">
-                <AlertCircle className="h-4 w-4" />
-                {t('streamMonitor.error')}
-              </div>
-              <p className="text-sm whitespace-pre-line">{error}</p>
-              {error.includes('eulerstream') && (
-                <div className="mt-3 pt-3 border-t border-destructive/20">
+                <div className="flex gap-2">
                   <Button
-                    size="sm"
+                    onClick={retry}
                     variant="outline"
-                    asChild
+                    size="sm"
+                    className="flex-1"
                   >
-                    <a
-                      href="https://www.eulerstream.com/pricing"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="gap-2"
-                      aria-label="Get free EulerStream API key"
-                    >
-                      <Key className="h-4 w-4" />
-                      Kostenlosen API-Key holen
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry Connection
                   </Button>
+                  {connectionMode === 'free' && (error.includes('EulerStream') || error.includes('rate limit') || error.includes('blocked')) && (
+                    <Button
+                      onClick={() => setShowApiKeyInput(true)}
+                      variant="default"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <Key className="h-4 w-4 mr-2" />
+                      Use API Key
+                    </Button>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+
+            {/* Connected Info */}
+            {isConnected && roomInfo && (
+              <div className="text-sm text-muted-foreground">
+                <p>Stream: {roomInfo.title || 'Untitled'}</p>
+                {connectionMode === 'api-key' && (
+                  <p className="text-xs text-green-600 mt-1">Using API key connection</p>
+                )}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Dashboard */}
+      {/* Stats Cards (only when connected) */}
       {isConnected && (
         <>
-          {/* Stats Overview */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <StatsCard
-              title="Viewers"
+              icon={<Users className="h-4 w-4 text-blue-500" />}
+              label={t('stats.viewers')}
               value={stats.viewerCount.toLocaleString('en-US')}
-              icon={Users}
+              color="blue"
             />
             <StatsCard
-              title="Likes"
-              value={(stats.streamTotalLikes || stats.totalLikes).toLocaleString('en-US')}
-              icon={Heart}
+              icon={<Heart className="h-4 w-4 text-pink-500" />}
+              label={t('stats.totalLikes')}
+              value={stats.totalLikes.toLocaleString('en-US')}
+              color="pink"
             />
             <StatsCard
-              title="Gifts"
+              icon={<GiftIcon className="h-4 w-4 text-purple-500" />}
+              label={t('stats.gifts')}
               value={stats.totalGifts.toLocaleString('en-US')}
-              icon={Gift}
+              color="purple"
             />
             <StatsCard
-              title="Diamonds"
+              icon={<Gem className="h-4 w-4 text-cyan-500" />}
+              label={t('stats.diamonds')}
               value={stats.totalDiamonds.toLocaleString('en-US')}
-              icon={Gem}
+              color="cyan"
             />
             <StatsCard
-              title="Follower"
+              icon={<UserPlus className="h-4 w-4 text-orange-500" />}
+              label={t('stats.newFollowers')}
               value={stats.followCount.toLocaleString('en-US')}
-              icon={UserPlus}
+              color="orange"
             />
-            <LikesPerSecondWidget likesPerSecond={stats.likesPerSecond} />
           </div>
 
-          {/* Live Gifts Feed */}
-          <WidgetErrorBoundary>
-            <GiftsFeedWidget gifts={stats.gifts} />
-          </WidgetErrorBoundary>
-
-          {/* Top Users */}
-          <TopUsersWidget userStats={stats.userStats} />
-
-          {/* 3-Column Layout */}
+          {/* Main Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Column 1 */}
-            <div className="space-y-4">
-              <StreamInfoWidget
-                roomInfo={roomInfo}
-                username={username}
-                totalFollowers={stats.totalFollowers}
-              />
-              <ActivityWidget joins={stats.joins} follows={stats.follows} />
+            {/* Left Column - Widgets */}
+            <div className="lg:col-span-1 space-y-4">
+              <StreamInfoWidget roomInfo={roomInfo} username={username} stats={stats} />
+              <LikesPerSecondWidget likesPerSecond={stats.likesPerSecond} />
               <ViewerTrendWidget
-                viewerHistory={stats.viewerHistory}
+                viewerCount={stats.viewerCount}
                 peakViewers={stats.peakViewers}
-                currentViewers={stats.viewerCount}
+              />
+              <ActivityWidget
+                joins={stats.joins}
+                follows={stats.follows}
               />
             </div>
 
-            {/* Column 2 */}
-            <div className="space-y-4">
-              <LikesHistoryChart minuteHistory={stats.minuteHistory} />
-              <ViewerHistoryChart viewerHistory={stats.viewerHistory} />
-              <EngagementRateChart engagementHistory={stats.engagementHistory} />
+            {/* Middle Column - Charts */}
+            <div className="lg:col-span-2 space-y-4">
               <WidgetErrorBoundary>
-              <ChatWidget messages={stats.chatMessages} />
-            </WidgetErrorBoundary>
-            </div>
+                <CombinedTimelineChart
+                  viewerHistory={stats.viewerHistory}
+                  minuteHistory={stats.minuteHistory}
+                  followerHistory={stats.followerHistory}
+                  diamondHistory={stats.diamondHistory}
+                  chatActivityHistory={stats.chatActivityHistory}
+                />
+              </WidgetErrorBoundary>
 
-            {/* Column 3 */}
-            <div className="space-y-4">
-              <FollowerHistoryChart followerHistory={stats.followerHistory} />
-              <DiamondHistoryChart diamondHistory={stats.diamondHistory} />
-              <GiftListWidget giftCatalog={stats.availableGifts} />
-              <DebugWidget roomInfo={roomInfo} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <LikesHistoryChart minuteHistory={stats.minuteHistory} />
+                <ViewerHistoryChart viewerHistory={stats.viewerHistory} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FollowerHistoryChart followerHistory={stats.followerHistory} />
+                <DiamondHistoryChart diamondHistory={stats.diamondHistory} />
+              </div>
+
+              <EngagementRateChart engagementHistory={stats.engagementHistory} />
             </div>
           </div>
 
-          {/* Combined Timeline Chart */}
-          <CombinedTimelineChart
-            viewerHistory={stats.viewerHistory}
-            minuteHistory={stats.minuteHistory}
-            followerHistory={stats.followerHistory}
-            diamondHistory={stats.diamondHistory}
-            chatActivityHistory={stats.chatActivityHistory}
+          {/* Bottom Section - Gifts, Chat, Users */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <WidgetErrorBoundary>
+              <GiftsFeedWidget
+                gifts={stats.gifts}
+                availableGifts={stats.availableGifts}
+              />
+            </WidgetErrorBoundary>
+
+            <WidgetErrorBoundary>
+              <ChatWidget chatMessages={stats.chatMessages} />
+            </WidgetErrorBoundary>
+          </div>
+
+          {/* Top Users & Gift List */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <TopUsersWidget userStats={stats.userStats} />
+            <GiftListWidget availableGifts={stats.availableGifts} />
+          </div>
+
+          {/* Debug Widget (collapsed by default) */}
+          <DebugWidget
+            stats={stats}
+            roomInfo={roomInfo}
+            isConnected={isConnected}
           />
         </>
       )}
-
-      {/* API Key Dialog */}
-      <ApiKeyDialog
-        isOpen={needsUserApiKey}
-        onClose={() => {
-          // User cancelled - close the dialog by reconnecting without API key
-          // This will trigger a new connection attempt
-          disconnect();
-        }}
-        onSubmit={(apiKey) => {
-          setUserApiKey(apiKey);
-          // Reconnect with the user's API key
-          connect(username, apiKey);
-        }}
-        error={error}
-      />
     </div>
   );
 }

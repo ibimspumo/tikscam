@@ -179,26 +179,25 @@ export interface RoomInfo {
 }
 
 /**
+ * Connection mode for TikTok Live
+ */
+export type ConnectionMode = 'free' | 'api-key';
+
+/**
  * Connection state for TikTok Live hook
  */
 export interface UseTikTokLiveReturn {
-  connect: (uniqueId: string, customApiKey?: string) => Promise<void>;
+  connect: (uniqueId: string) => Promise<void>;
   disconnect: () => void;
+  retry: () => void;
+  setConnectionMode: (mode: ConnectionMode) => void;
+  setApiKey: (key: string) => void;
   isConnected: boolean;
   isConnecting: boolean;
+  connectionMode: ConnectionMode;
+  apiKey: string;
   stats: StreamStats;
   roomInfo: RoomInfo | null;
   error: string | null;
   eventSource: EventSource | null;
-  usingApiKey: boolean; // Flag to show if EulerStream API key is active
-  retryingWithApiKey: boolean; // Flag to show when retrying with API key
-  needsUserApiKey: boolean; // Flag to show API key dialog
-  setUserApiKey: (key: string) => void; // Function to set user's API key
-  userApiKey: string; // Current user API key value
-  connectionStatus: string; // Current connection status message
-  permanentError: boolean; // Flag to indicate permanent errors (no auto-reconnect)
-  currentPhase: 'direct' | 'server-api' | 'user-api' | 'needs-user-api' | null; // Current connection phase
-  currentAttempt: number; // Current attempt number (1-5)
-  maxAttempts: number; // Maximum attempts for current phase (always 5)
-  lastError: string | null; // Last error message from connection attempt
 }

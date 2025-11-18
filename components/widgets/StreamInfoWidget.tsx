@@ -7,11 +7,12 @@ import { useTranslation } from '@/lib/i18n';
 
 interface StreamInfoWidgetProps {
   roomInfo: any;
-  username: string;
+  username?: string;
   totalFollowers?: number;
+  stats?: any;
 }
 
-export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers = 0 }: StreamInfoWidgetProps) => {
+export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers = 0, stats }: StreamInfoWidgetProps) => {
   const { t } = useTranslation();
   if (!roomInfo) {
     return (
@@ -32,7 +33,7 @@ export const StreamInfoWidget= React.memo(({ roomInfo, username, totalFollowers 
   }
 
   const streamTitle = roomInfo.title || t('streamInfo.noTitle');
-  const streamerName = roomInfo.owner?.displayName || roomInfo.owner?.nickname || username;
+  const streamerName = roomInfo.owner?.displayName || roomInfo.owner?.nickname || username || 'Unknown';
   const followerCount = totalFollowers || roomInfo.owner?.followerCount || roomInfo.owner?.stats?.followerCount || 0;
   const totalUsers = roomInfo.viewerCount || roomInfo.totalViewers || roomInfo.totalUserCount || roomInfo.userCount || roomInfo.currentViewers || 0;
   const streamTotalLikes =
